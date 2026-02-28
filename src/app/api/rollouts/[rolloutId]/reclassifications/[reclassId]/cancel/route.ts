@@ -1,0 +1,47 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+import { supabaseAdmin } from "@/server/supabaseAdmin";
+
+export const runtime = "nodejs";
+
+const ParamsSchema = z.object({
+  rolloutId: z.string().uuid(),
+  reclassId: z.string().uuid(),
+});
+
+export async function POST(
+  _req: Request,
+  ctx: { params: Promise<{ rolloutId: string; reclassId: string }> }
+) {
+  const paramsRaw = await ctx.params;
+  const parsed = ParamsSchema.safeParse(paramsRaw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid route params", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const { rolloutId, reclassId } = parsed.data;
+
+  const { error } = await supabaseAdmin.rpc(
+    "osai_cancel_reclassification_proposal",
+    {
+      p_rollout_id: rolloutId,
+      p_reclassification_id: reclassId,
+    }
+  );
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Cancel failed", details: error.message },
+      { status: 409 }
+    );
+  }
+
+  return NextResponse.json(
+    { ok: true, rollout_id: rolloutId, reclassification_id: reclassId, cancelled: true },
+    { status: 200 }
+  );
+}
