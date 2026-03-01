@@ -3,9 +3,38 @@
 // Pure, deterministic functions for generating artifact content_json payloads.
 // Each function takes the rollout's decision inputs + outputs and returns a
 // structured JSON object. No DB calls. No side effects. Independently testable.
+//
+// Assembly pattern (REVIEW_MODEL, ROLLOUT_PLAN, POLICY):
+//   1. Select tone block(s) from toneLibrary keyed by policy_tone
+//   2. Select clause block(s) from clauseLibrary keyed by tier/depth/mode
+//   3. Inject known noun-level placeholders where required
+//   4. Return structured section objects
+//
+// No prose is written at runtime. The engine selects; it does not compose.
 
 import type { DecisionInputs } from "@/decision-engine/options";
 import type { DecisionOutput } from "@/decision-engine/engine";
+import {
+  getPurposeFraming,
+  getRestrictionFraming,
+  getEnforcementFraming,
+  getPermissionLead,
+  getExceptionLine,
+  getChangeControlLine,
+} from "@/governance/content/toneLibrary";
+import {
+  getDataHandlingRestrictions,
+  getProhibitedDataCategories,
+  getClientConfidentiality,
+  getApprovedToolsConstraint,
+  getReviewRequirementLanguage,
+  getDelegationRule,
+  getRoleAccountability,
+  getEscalationTriggers,
+  getStabilizationControls,
+  getRollbackAdjustmentTrigger,
+  getExpansionCriteria,
+} from "@/governance/content/clauseLibrary";
 
 // ------------------------------
 // Shared input type
@@ -341,65 +370,107 @@ function deriveContextNote(sensitivity: DecisionInputs["sensitivity_anchor"]): s
 // ------------------------------
 
 /**
- * REVIEW_MODEL — Defines how outputs are reviewed: depth, cadence, and
- * who is responsible. Derived from review_depth and leadership posture.
+ * REVIEW_MODEL — Four sections per locked schema.
+ *
+ * S1: Review Authority   — role, accountability, delegation rule
+ * S2: Review Scope       — approved tools constraint + review requirement language
+ * S3: Review Frequency   — cadence per review_depth; bumped if needs_stabilization or CAUTIOUS
+ * S4: Escalation Path    — escalation triggers + enforcement framing
+ *
+ * Drivers: review_depth, leadership_posture, sensitivity_tier, needs_stabilization
  */
 export function generateReviewModelArtifact(ctx: ArtifactInputs): Record<string, unknown> {
   const { inputs, outputs } = ctx;
+  const tier = outputs.sensitivity_tier;
 
   return {
-    artifact_type: "REVIEW_MODEL",
-    schema_version: 1,
-    review_depth: outputs.review_depth,
-    leadership_posture: inputs.leadership_posture,
-    review_cadence: deriveReviewCadence(outputs.review_depth),
-    review_requirements: deriveReviewRequirements(outputs.review_depth, inputs.leadership_posture),
+    artifact_type:  "REVIEW_MODEL",
+    schema_version: 2,
+    review_depth:   outputs.review_depth,
+    sections: [
+      buildReviewAuthority(outputs.review_depth, inputs.leadership_posture, tier),
+      buildReviewScope(outputs.review_depth, tier),
+      buildReviewFrequency(outputs.review_depth, inputs.leadership_posture, outputs.needs_stabilization),
+      buildEscalationPath(tier, outputs.policy_tone),
+    ],
   };
 }
 
-function deriveReviewCadence(depth: DecisionOutput["review_depth"]): string {
-  switch (depth) {
-    case "LIGHT":      return "Ad hoc — review when issues arise.";
-    case "STANDARD":   return "Monthly spot checks on AI output quality.";
-    case "STRUCTURED": return "Bi-weekly structured review with a designated reviewer.";
-    case "FORMAL":     return "Weekly formal review with documented sign-off.";
-  }
+function buildReviewAuthority(
+  depth: DecisionOutput["review_depth"],
+  posture: DecisionInputs["leadership_posture"],
+  tier: DecisionOutput["sensitivity_tier"]
+): Record<string, unknown> {
+  return {
+    id:    "review_authority",
+    title: "Review Authority",
+    items: [
+      { label: "Reviewer role",     value: "[Designated Reviewer]" },
+      { label: "Accountability",    value: getRoleAccountability(depth).text },
+      { label: "Delegation rule",   value: getDelegationRule(depth, tier).text },
+    ],
+  };
 }
 
-function deriveReviewRequirements(
+function buildReviewScope(
   depth: DecisionOutput["review_depth"],
-  posture: DecisionInputs["leadership_posture"]
-): string[] {
-  const reqs: string[] = [];
+  tier: DecisionOutput["sensitivity_tier"]
+): Record<string, unknown> {
+  return {
+    id:    "review_scope",
+    title: "Review Scope",
+    items: [
+      { label: "Tool constraint",        value: getApprovedToolsConstraint(tier).text },
+      { label: "Review requirement",     value: getReviewRequirementLanguage(depth).text },
+    ],
+  };
+}
 
-  if (depth === "LIGHT") {
-    reqs.push("No mandatory reviewer role required.");
-    reqs.push("Team members self-assess output quality.");
+function buildReviewFrequency(
+  depth: DecisionOutput["review_depth"],
+  posture: DecisionInputs["leadership_posture"],
+  needsStabilization: boolean
+): Record<string, unknown> {
+  // Base cadence per review_depth
+  const CADENCE: Readonly<Record<DecisionOutput["review_depth"], string>> = {
+    LIGHT:      "Ad hoc — review when issues arise.",
+    STANDARD:   "Monthly spot checks on AI output quality.",
+    STRUCTURED: "Bi-weekly structured review with a designated reviewer.",
+    FORMAL:     "Weekly formal review with documented sign-off.",
+  };
+
+  // Bump note if stabilization or cautious posture applies
+  const bumpReasons: string[] = [];
+  if (needsStabilization) bumpReasons.push("Cadence increased: stabilization period active.");
+  if (posture === "CAUTIOUS") bumpReasons.push("Cadence increased: cautious leadership posture requires additional oversight.");
+
+  const items: Array<Record<string, unknown>> = [
+    { label: "Standard cadence", value: CADENCE[depth] },
+  ];
+
+  if (bumpReasons.length > 0) {
+    items.push({ label: "Cadence adjustment", value: bumpReasons, conditional: true });
   }
 
-  if (depth === "STANDARD") {
-    reqs.push("At least one designated reviewer per team.");
-    reqs.push("Reviewer checks a sample of outputs monthly.");
-  }
+  return {
+    id:    "review_frequency",
+    title: "Review Frequency",
+    items,
+  };
+}
 
-  if (depth === "STRUCTURED") {
-    reqs.push("Named reviewer(s) confirmed before rollout proceeds.");
-    reqs.push("Bi-weekly review sessions with documented outcomes.");
-    reqs.push("Issues escalated to leadership within 48 hours.");
-  }
-
-  if (depth === "FORMAL") {
-    reqs.push("Formal review committee established.");
-    reqs.push("Weekly review with written sign-off retained.");
-    reqs.push("All issues tracked in a dedicated register.");
-    reqs.push("Leadership must be notified of all high-severity findings within 24 hours.");
-  }
-
-  if (posture === "CAUTIOUS") {
-    reqs.push("Leadership spot-checks required at least monthly.");
-  }
-
-  return reqs;
+function buildEscalationPath(
+  tier: DecisionOutput["sensitivity_tier"],
+  tone: DecisionOutput["policy_tone"]
+): Record<string, unknown> {
+  return {
+    id:    "escalation_path",
+    title: "Escalation Path",
+    items: [
+      { label: "Escalation triggers", value: getEscalationTriggers(tier).text },
+      { label: "Enforcement",         value: getEnforcementFraming(tone).text },
+    ],
+  };
 }
 
 // ------------------------------
@@ -407,84 +478,231 @@ function deriveReviewRequirements(
 // ------------------------------
 
 /**
- * ROLLOUT_PLAN — Defines the pacing, mode, and phasing approach for this
- * rollout. Derived from rollout_mode, adoption_state, and needs_stabilization.
+ * ROLLOUT_PLAN — Four sections per locked schema.
+ *
+ * S1: Rollout Overview      — declared mode, pacing statement, duration estimate
+ * S2: Phase Structure       — numbered phases with entry + exit criteria
+ * S3: Stabilization Controls — monitoring checkpoints, adjustment triggers, rollback clause
+ * S4: Expansion Criteria    — conditions for expanding usage
+ *
+ * Drivers: rollout_mode, needs_stabilization, sensitivity_tier, leadership_posture
  */
 export function generateRolloutPlanArtifact(ctx: ArtifactInputs): Record<string, unknown> {
   const { inputs, outputs } = ctx;
+  const tier = outputs.sensitivity_tier;
 
   return {
-    artifact_type: "ROLLOUT_PLAN",
-    schema_version: 1,
-    rollout_mode: outputs.rollout_mode,
-    adoption_state: inputs.adoption_state,
+    artifact_type:       "ROLLOUT_PLAN",
+    schema_version:      2,
+    rollout_mode:        outputs.rollout_mode,
     needs_stabilization: outputs.needs_stabilization,
-    pacing_description: derivePacingDescription(outputs.rollout_mode),
-    phases: deriveRolloutPhases(outputs.rollout_mode, outputs.needs_stabilization),
+    sections: [
+      buildRolloutOverview(outputs.rollout_mode, outputs.needs_stabilization),
+      buildPhaseStructure(outputs.rollout_mode, outputs.needs_stabilization),
+      buildStabilizationControls(outputs.rollout_mode, outputs.needs_stabilization),
+      buildExpansionCriteria(outputs.rollout_mode, tier, inputs.leadership_posture),
+    ],
   };
 }
 
-function derivePacingDescription(mode: DecisionOutput["rollout_mode"]): string {
-  switch (mode) {
-    case "CONTROLLED":
-      return "Controlled rollout — small cohort, gated progression, full review at each stage.";
-    case "PHASED":
-      return "Phased rollout — structured expansion across teams with checkpoints between phases.";
-    case "FAST":
-      return "Fast rollout — broad adoption enabled quickly; monitoring emphasis over gating.";
-    case "SPLIT_DEPLOYMENT":
-      return "Split deployment — parallel tracks with independent governance for each population.";
-  }
-}
-
-function deriveRolloutPhases(
+function buildRolloutOverview(
   mode: DecisionOutput["rollout_mode"],
   needsStabilization: boolean
-): Array<{ phase: number; name: string; description: string }> {
-  const phases: Array<{ phase: number; name: string; description: string }> = [];
+): Record<string, unknown> {
+  const PACING: Readonly<Record<DecisionOutput["rollout_mode"], string>> = {
+    CONTROLLED:       "Controlled rollout — small cohort, gated progression, full review at each stage.",
+    PHASED:           "Phased rollout — structured expansion across teams with checkpoints between phases.",
+    FAST:             "Fast rollout — broad adoption enabled quickly; monitoring emphasis over gating.",
+    SPLIT_DEPLOYMENT: "Split deployment — parallel tracks with independent governance for each population.",
+  };
+
+  const DURATION: Readonly<Record<DecisionOutput["rollout_mode"], string>> = {
+    CONTROLLED:       "Estimated 8 to 12 weeks depending on pilot outcomes and leadership sign-off.",
+    PHASED:           "Estimated 6 to 10 weeks across phase transitions.",
+    FAST:             "Estimated 2 to 4 weeks to broad enablement; monitoring continues beyond.",
+    SPLIT_DEPLOYMENT: "Tracks proceed in parallel; estimated 8 to 14 weeks to convergence review.",
+  };
+
+  const items: Array<Record<string, unknown>> = [
+    { label: "Declared mode",  value: mode },
+    { label: "Pacing",         value: PACING[mode] },
+    { label: "Duration estimate", value: DURATION[mode] },
+  ];
+
+  if (needsStabilization) {
+    items.push({
+      label: "Stabilization note",
+      value: "A stabilization phase precedes normal rollout pacing. Current AI usage must be documented and standardized before expansion begins.",
+      conditional: true,
+    });
+  }
+
+  return {
+    id:    "rollout_overview",
+    title: "Rollout Overview",
+    items,
+  };
+}
+
+function buildPhaseStructure(
+  mode: DecisionOutput["rollout_mode"],
+  needsStabilization: boolean
+): Record<string, unknown> {
+  type Phase = {
+    phase: number;
+    name: string;
+    entry_criteria: string;
+    exit_criteria: string;
+  };
+
+  const phases: Phase[] = [];
 
   if (needsStabilization) {
     phases.push({
       phase: 0,
-      name: "Stabilization",
-      description: "Establish baseline usage standards before expanding. Document current patterns and identify gaps.",
+      name:  "Stabilization",
+      entry_criteria: "Rollout authorized by leadership. Current AI usage has been identified and documented.",
+      exit_criteria:  "Baseline usage standards defined. Existing gaps addressed. Leadership confirms readiness to proceed.",
     });
   }
 
   switch (mode) {
     case "CONTROLLED":
       phases.push(
-        { phase: 1, name: "Pilot", description: "Deploy to a small pilot group (≤10% of target users). Collect structured feedback." },
-        { phase: 2, name: "Evaluation", description: "Review pilot outcomes. Confirm guardrails are functioning. Obtain leadership sign-off." },
-        { phase: 3, name: "Controlled Expansion", description: "Expand to approved teams only. Maintain review cadence throughout." }
+        {
+          phase: 1,
+          name:  "Pilot",
+          entry_criteria: "Guardrails confirmed. Pilot group identified. Reviewer assigned.",
+          exit_criteria:  "Pilot feedback collected. No unresolved escalations. Leadership sign-off obtained.",
+        },
+        {
+          phase: 2,
+          name:  "Evaluation",
+          entry_criteria: "Pilot phase complete. Outcomes documented.",
+          exit_criteria:  "Review confirms guardrails functioning. Expansion scope approved by leadership.",
+        },
+        {
+          phase: 3,
+          name:  "Controlled Expansion",
+          entry_criteria: "Evaluation complete. Expansion scope defined and approved.",
+          exit_criteria:  "All approved teams onboarded. Review cadence maintained. No active escalations.",
+        }
       );
       break;
 
     case "PHASED":
       phases.push(
-        { phase: 1, name: "Phase 1 — Early Adopters", description: "Roll out to motivated early adopters. Establish feedback loop." },
-        { phase: 2, name: "Phase 2 — Structured Expansion", description: "Expand to additional teams after Phase 1 checkpoint review." },
-        { phase: 3, name: "Phase 3 — Broad Rollout", description: "Full team rollout with ongoing monitoring." }
+        {
+          phase: 1,
+          name:  "Early Adopters",
+          entry_criteria: "Guardrails confirmed. Early adopter group identified. Feedback mechanism established.",
+          exit_criteria:  "Phase 1 checkpoint review complete. Findings documented. No blocking issues.",
+        },
+        {
+          phase: 2,
+          name:  "Structured Expansion",
+          entry_criteria: "Phase 1 exit criteria met. Additional teams identified for expansion.",
+          exit_criteria:  "Expanded teams onboarded. Review cadence confirmed across all teams.",
+        }
       );
       break;
 
     case "FAST":
       phases.push(
-        { phase: 1, name: "Broad Enablement", description: "Enable access broadly. Communicate guardrails clearly to all users." },
-        { phase: 2, name: "Monitoring", description: "Active monitoring of usage patterns for the first 30 days. Flag anomalies for review." }
+        {
+          phase: 1,
+          name:  "Broad Enablement",
+          entry_criteria: "Guardrails communicated to all users. Access provisioned.",
+          exit_criteria:  "All users enabled. Monitoring active. No critical issues in first 14 days.",
+        },
+        {
+          phase: 2,
+          name:  "Active Monitoring",
+          entry_criteria: "Broad enablement complete.",
+          exit_criteria:  "30-day monitoring window closed. Usage patterns reviewed. Anomalies resolved or escalated.",
+        }
       );
       break;
 
     case "SPLIT_DEPLOYMENT":
       phases.push(
-        { phase: 1, name: "Track A Setup", description: "Deploy to lower-sensitivity population with standard guardrails." },
-        { phase: 2, name: "Track B Setup", description: "Deploy to higher-sensitivity population with elevated guardrails and formal review." },
-        { phase: 3, name: "Convergence Review", description: "Compare outcomes across tracks. Align governance model before full unification." }
+        {
+          phase: 1,
+          name:  "Track A — Lower-Sensitivity Population",
+          entry_criteria: "Track A population identified. Standard guardrails confirmed.",
+          exit_criteria:  "Track A stable. Governance model functioning. No unresolved escalations.",
+        },
+        {
+          phase: 2,
+          name:  "Track B — Higher-Sensitivity Population",
+          entry_criteria: "Elevated guardrails confirmed. Formal review process established for Track B.",
+          exit_criteria:  "Track B stable. Formal review cadence maintained. No unresolved escalations.",
+        },
+        {
+          phase: 3,
+          name:  "Convergence Review",
+          entry_criteria: "Both tracks stable. Outcomes documented across both populations.",
+          exit_criteria:  "Governance model aligned. Leadership approves unified model. Convergence complete.",
+        }
       );
       break;
   }
 
-  return phases;
+  return {
+    id:     "phase_structure",
+    title:  "Phase Structure",
+    phases,
+  };
+}
+
+function buildStabilizationControls(
+  mode: DecisionOutput["rollout_mode"],
+  needsStabilization: boolean
+): Record<string, unknown> {
+  const items: Array<Record<string, unknown>> = [
+    { label: "Rollback trigger", value: getRollbackAdjustmentTrigger(mode).text },
+  ];
+
+  const stabilizationClause = getStabilizationControls(needsStabilization);
+  if (stabilizationClause) {
+    items.push({ label: "Stabilization controls", value: stabilizationClause.text, conditional: true });
+  }
+
+  if (mode === "FAST") {
+    items.push({
+      label: "Rollback clause",
+      value: "Fast rollout may be paused or reversed at leadership discretion if monitoring identifies systemic issues within the first 30 days.",
+      conditional: true,
+    });
+  }
+
+  if (mode === "SPLIT_DEPLOYMENT") {
+    items.push({
+      label: "Dual-track rule",
+      value: "Track A and Track B operate under independent governance. Issues on one track do not automatically pause the other unless shared root cause is identified.",
+      conditional: true,
+    });
+  }
+
+  return {
+    id:    "stabilization_controls",
+    title: "Stabilization Controls",
+    items,
+  };
+}
+
+function buildExpansionCriteria(
+  mode: DecisionOutput["rollout_mode"],
+  tier: DecisionOutput["sensitivity_tier"],
+  posture: DecisionInputs["leadership_posture"]
+): Record<string, unknown> {
+  return {
+    id:    "expansion_criteria",
+    title: "Expansion Criteria",
+    items: [
+      { label: "Expansion conditions", value: getExpansionCriteria(mode, tier, posture).text },
+    ],
+  };
 }
 
 // ------------------------------
@@ -492,79 +710,139 @@ function deriveRolloutPhases(
 // ------------------------------
 
 /**
- * POLICY — The governance policy document for this rollout. Captures the
- * policy_tone, key behavioral expectations, and escalation path.
+ * POLICY — Six sections per locked schema.
+ *
+ * S1: Purpose and Scope          — why AI is used, who it applies to, authority statement
+ * S2: Permitted Uses             — permission lead + approved tools constraint
+ * S3: Prohibited Uses            — restriction framing + prohibited data categories
+ * S4: Review and Oversight       — review requirement language + escalation triggers
+ * S5: Data Handling Standards    — data handling restrictions + role accountability
+ * S6: Policy Modification Clause — change control line + client confidentiality
+ *
+ * Drivers: policy_tone, sensitivity_tier, review_depth, primary_goal, primary_risk_driver
  */
 export function generatePolicyArtifact(ctx: ArtifactInputs): Record<string, unknown> {
   const { inputs, outputs } = ctx;
+  const tier = outputs.sensitivity_tier;
 
   return {
-    artifact_type: "POLICY",
-    schema_version: 1,
-    policy_tone: outputs.policy_tone,
-    primary_goal: inputs.primary_goal,
-    sensitivity_anchor: inputs.sensitivity_anchor,
-    leadership_posture: inputs.leadership_posture,
-    behavioral_expectations: deriveBehavioralExpectations(outputs.policy_tone, inputs.primary_goal),
-    escalation_path: deriveEscalationPath(outputs.policy_tone, inputs.sensitivity_anchor),
+    artifact_type:  "POLICY",
+    schema_version: 2,
+    policy_tone:    outputs.policy_tone,
+    sections: [
+      buildPurposeAndScope(outputs.policy_tone, inputs.primary_goal),
+      buildPermittedUses(outputs.policy_tone, tier),
+      buildProhibitedUses(outputs.policy_tone, tier),
+      buildReviewAndOversight(outputs.review_depth, tier, outputs.policy_tone),
+      buildDataHandlingStandards(outputs.review_depth, tier),
+      buildPolicyModificationClause(outputs.policy_tone, tier),
+    ],
   };
 }
 
-function deriveBehavioralExpectations(
+function buildPurposeAndScope(
   tone: DecisionOutput["policy_tone"],
   goal: DecisionInputs["primary_goal"]
-): string[] {
-  const expectations: string[] = [];
+): Record<string, unknown> {
+  const GOAL_LABEL: Readonly<Record<DecisionInputs["primary_goal"], string>> = {
+    CLIENT_COMMUNICATION:   "client communication",
+    INTERNAL_DOCUMENTATION: "internal documentation",
+    MARKETING_CONTENT:      "marketing and content production",
+    SALES_PROPOSALS:        "sales proposals",
+    DATA_REPORTING:         "data analysis and reporting",
+    OPERATIONS_ADMIN:       "operations and administration",
+  };
 
-  // Tone-based expectations
-  switch (tone) {
-    case "EMPOWERING":
-      expectations.push("Team members are trusted to use AI judgment within guardrails.");
-      expectations.push("Experimentation is encouraged; document and share learnings.");
-      break;
-    case "STRUCTURED":
-      expectations.push("AI usage follows documented workflows and approved use cases.");
-      expectations.push("Deviations from approved workflows must be flagged to a reviewer.");
-      break;
-    case "PROTECTIVE":
-      expectations.push("All AI outputs must be reviewed before any downstream use.");
-      expectations.push("Team members may not expand AI use cases without prior approval.");
-      expectations.push("Any unexpected AI behavior must be reported immediately.");
-      break;
-    case "CONTROLLED_ENABLEMENT":
-      expectations.push("AI use is restricted to explicitly pre-approved use cases only.");
-      expectations.push("All outputs must be reviewed and logged before use.");
-      expectations.push("Compliance team must be notified of any new proposed use case before testing begins.");
-      expectations.push("All AI interactions involving regulated data must be documented.");
-      break;
-  }
-
-  // Goal-specific additions
-  if (goal === "CLIENT_COMMUNICATION") {
-    expectations.push("AI-drafted client communications must be reviewed by a human before sending.");
-  }
-  if (goal === "DATA_REPORTING") {
-    expectations.push("AI-generated data or figures must be cross-checked against source data before publication.");
-  }
-  if (goal === "SALES_PROPOSALS") {
-    expectations.push("AI-drafted proposals must be reviewed for accuracy of commitments and pricing before submission.");
-  }
-
-  return expectations;
+  return {
+    id:    "purpose_and_scope",
+    title: "Purpose and Scope",
+    items: [
+      { label: "Policy purpose",    value: getPurposeFraming(tone).text },
+      { label: "Primary use area",  value: GOAL_LABEL[goal] },
+      { label: "Applies to",        value: "All firm employees and contractors using AI tools in connection with firm work." },
+    ],
+  };
 }
 
-function deriveEscalationPath(
+function buildPermittedUses(
   tone: DecisionOutput["policy_tone"],
-  sensitivity: DecisionInputs["sensitivity_anchor"]
-): string {
-  if (sensitivity === "REGULATED_CONFIDENTIAL") {
-    return "Compliance lead → Legal → Executive sponsor. Any breach or near-miss must be escalated within 1 hour.";
+  tier: DecisionOutput["sensitivity_tier"]
+): Record<string, unknown> {
+  return {
+    id:    "permitted_uses",
+    title: "Permitted Uses",
+    items: [
+      { label: "Permission statement", value: getPermissionLead(tone).text },
+      { label: "Tool constraint",      value: getApprovedToolsConstraint(tier).text },
+      { label: "Exception rule",       value: getExceptionLine(tone).text },
+    ],
+  };
+}
+
+function buildProhibitedUses(
+  tone: DecisionOutput["policy_tone"],
+  tier: DecisionOutput["sensitivity_tier"]
+): Record<string, unknown> {
+  return {
+    id:    "prohibited_uses",
+    title: "Prohibited Uses",
+    items: [
+      { label: "Prohibition statement",   value: getRestrictionFraming(tone).text },
+      { label: "Prohibited data categories", value: getProhibitedDataCategories(tier).text },
+    ],
+  };
+}
+
+function buildReviewAndOversight(
+  depth: DecisionOutput["review_depth"],
+  tier: DecisionOutput["sensitivity_tier"],
+  tone: DecisionOutput["policy_tone"]
+): Record<string, unknown> {
+  return {
+    id:    "review_and_oversight",
+    title: "Review and Oversight",
+    items: [
+      { label: "Review requirement", value: getReviewRequirementLanguage(depth).text },
+      { label: "Escalation triggers", value: getEscalationTriggers(tier).text },
+      { label: "Non-compliance",     value: getEnforcementFraming(tone).text },
+    ],
+  };
+}
+
+function buildDataHandlingStandards(
+  depth: DecisionOutput["review_depth"],
+  tier: DecisionOutput["sensitivity_tier"]
+): Record<string, unknown> {
+  return {
+    id:    "data_handling_standards",
+    title: "Data Handling Standards",
+    items: [
+      { label: "Data handling",    value: getDataHandlingRestrictions(tier).text },
+      { label: "Role accountability", value: getRoleAccountability(depth).text },
+    ],
+  };
+}
+
+function buildPolicyModificationClause(
+  tone: DecisionOutput["policy_tone"],
+  tier: DecisionOutput["sensitivity_tier"]
+): Record<string, unknown> {
+  const items: Array<Record<string, unknown>> = [
+    { label: "Modification requirement", value: getChangeControlLine(tone).text },
+    { label: "Confidentiality obligations", value: getClientConfidentiality(tier).text },
+  ];
+
+  if (tier === "CLIENT" || tier === "HIGH" || tier === "REGULATED") {
+    items.push({
+      label: "Formal review requirement",
+      value: "Modifications affecting permitted uses or data handling standards require formal review before adoption.",
+      conditional: true,
+    });
   }
-  if (sensitivity === "FINANCIAL_OPERATIONAL_RECORDS") {
-    return "Finance lead → Department head → Executive sponsor. Escalate material discrepancies within 24 hours.";
-  }
-  if (tone === "PROTECTIVE" || tone === "CONTROLLED_ENABLEMENT") {
-    return "Reviewer → Team lead → Department head. Escalate within 48 hours.";
-  }
-  return "Team lead → Department head. Escalate significant issues within one week.";
+
+  return {
+    id:    "policy_modification_clause",
+    title: "Policy Modification Clause",
+    items,
+  };
 }

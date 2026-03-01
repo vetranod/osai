@@ -113,6 +113,7 @@ async function generateArtifactsForMilestone(
     maturity_state:       string;
     primary_risk_driver:  string;
     needs_stabilization:  boolean;
+    sensitivity_tier:     string;
   };
 
   const { data: rolloutRaw, error: rolloutErr } = await supabaseAdmin
@@ -120,7 +121,7 @@ async function generateArtifactsForMilestone(
     .select(
       "primary_goal, adoption_state, sensitivity_anchor, leadership_posture, " +
       "rollout_mode, guardrail_strictness, review_depth, policy_tone, " +
-      "maturity_state, primary_risk_driver, needs_stabilization"
+      "maturity_state, primary_risk_driver, needs_stabilization, sensitivity_tier"
     )
     .eq("id", rolloutId)
     .single();
@@ -147,6 +148,7 @@ async function generateArtifactsForMilestone(
       maturity_state:       rollout.maturity_state       as DecisionOutput["maturity_state"],
       primary_risk_driver:  rollout.primary_risk_driver,
       needs_stabilization:  rollout.needs_stabilization,
+      sensitivity_tier:     rollout.sensitivity_tier     as DecisionOutput["sensitivity_tier"],
     },
   };
 

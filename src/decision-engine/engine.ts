@@ -1,4 +1,6 @@
 import type { DecisionInputs, PrimaryGoal, SensitivityAnchor, AdoptionState, LeadershipPosture } from "@/decision-engine/options";
+import { deriveSensitivityTier } from "@/governance/content/sensitivityTier";
+import type { SensitivityTier } from "@/governance/content/sensitivityTier";
 
 export type RolloutMode = "CONTROLLED" | "PHASED" | "FAST" | "SPLIT_DEPLOYMENT";
 
@@ -29,6 +31,7 @@ export type DecisionOutput = Readonly<{
   maturity_state: MaturityState;
   primary_risk_driver: string;
   needs_stabilization: boolean;
+  sensitivity_tier: SensitivityTier;
 }>;
 
 export type EngineTraceStep = Readonly<{
@@ -350,14 +353,16 @@ function evaluateSplitDeploymentTrigger(inputs: DecisionInputs): SplitDeployment
     inputs.sensitivity_anchor === "FINANCIAL_OPERATIONAL_RECORDS" ||
     inputs.sensitivity_anchor === "REGULATED_CONFIDENTIAL";
 
-  const highAdoption = inputs.adoption_state === "WIDELY_USED_UNSTANDARDIZED";
+  const highAdoption =
+    inputs.adoption_state === "ENCOURAGED_UNSTRUCTURED" ||
+    inputs.adoption_state === "WIDELY_USED_UNSTANDARDIZED";
   const movingQuickly = inputs.leadership_posture === "MOVE_QUICKLY";
 
   const triggered = highSensitivity && highAdoption && movingQuickly;
 
   const notes: string[] = [
     `highSensitivity=${highSensitivity}`,
-    `highAdoption=${highAdoption}`,
+    `highAdoption=${highAdoption} (ENCOURAGED_UNSTRUCTURED or WIDELY_USED_UNSTANDARDIZED)`,
     `movingQuickly=${movingQuickly}`,
     `triggered=${triggered}`,
     "Scope: affects rollout_mode pacing only (no effect on strictness/review floors).",
@@ -401,6 +406,8 @@ function finalizeOutputs(
 
   const primary_risk_driver = computePrimaryRiskDriver(inputs.primary_goal);
 
+  const sensitivity_tier = deriveSensitivityTier(inputs.sensitivity_anchor);
+
   return {
     rollout_mode,
     guardrail_strictness,
@@ -409,6 +416,7 @@ function finalizeOutputs(
     maturity_state,
     primary_risk_driver,
     needs_stabilization,
+    sensitivity_tier,
   };
 }
 

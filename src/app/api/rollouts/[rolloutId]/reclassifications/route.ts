@@ -56,6 +56,7 @@ function buildDecisionTraceSnapshot(args: {
     maturity_state: string;
     primary_risk_driver: string;
     needs_stabilization: boolean;
+    sensitivity_tier: string;
   };
   trace: TraceStep[];
 }): Record<string, unknown> {
@@ -104,6 +105,7 @@ function buildDecisionTraceSnapshot(args: {
       policy_tone: outputs.policy_tone,
       maturity_state: outputs.maturity_state,
       primary_risk_driver: outputs.primary_risk_driver,
+      sensitivity_tier: outputs.sensitivity_tier,
     },
     flags: {
       needs_stabilization: outputs.needs_stabilization,
@@ -163,7 +165,7 @@ export async function POST(
     .select(
       "id, primary_goal, adoption_state, sensitivity_anchor, leadership_posture, " +
       "rollout_mode, guardrail_strictness, review_depth, policy_tone, maturity_state, " +
-      "primary_risk_driver, needs_stabilization, decision_trace"
+      "primary_risk_driver, needs_stabilization, sensitivity_tier, decision_trace"
     )
     .eq("id", rolloutId)
     .single();
@@ -188,6 +190,7 @@ export async function POST(
     maturity_state: string;
     primary_risk_driver: string;
     needs_stabilization: boolean;
+    sensitivity_tier: string;
     decision_trace: Record<string, unknown>;
   };
 
@@ -209,6 +212,7 @@ export async function POST(
       maturity_state:       rollout.maturity_state,
       primary_risk_driver:  rollout.primary_risk_driver,
       needs_stabilization:  rollout.needs_stabilization,
+      sensitivity_tier:     rollout.sensitivity_tier,
     },
     decision_trace: rollout.decision_trace,
   };

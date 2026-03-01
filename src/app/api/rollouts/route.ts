@@ -57,6 +57,7 @@ function buildDecisionTraceSnapshot(args: {
     maturity_state: string;
     primary_risk_driver: string;
     needs_stabilization: boolean;
+    sensitivity_tier: string;
   };
   trace: TraceStep[];
 }): Record<string, unknown> {
@@ -105,6 +106,7 @@ function buildDecisionTraceSnapshot(args: {
       policy_tone: outputs.policy_tone,
       maturity_state: outputs.maturity_state,
       primary_risk_driver: outputs.primary_risk_driver,
+      sensitivity_tier: outputs.sensitivity_tier,
     },
     flags: {
       needs_stabilization: outputs.needs_stabilization,
@@ -153,6 +155,7 @@ export async function POST(request: Request): Promise<Response> {
       maturity_state: result.output.maturity_state,
       primary_risk_driver: result.output.primary_risk_driver,
       needs_stabilization: result.output.needs_stabilization,
+      sensitivity_tier: result.output.sensitivity_tier,
       decision_trace,
     })
     .select("*")
