@@ -49,24 +49,24 @@ type Reclassification = {
 // ---- Constants ----
 
 const MILESTONE_LABELS: Record<MilestoneCode, string> = {
-  M1: "Profile & Guardrails",
-  M2: "Review Setup",
-  M3: "Rollout Plan",
-  M4: "Governance Policy",
+  M1: "Establish usage rules",
+  M2: "Define your review process",
+  M3: "Confirm your rollout plan",
+  M4: "Adopt the governance policy",
 };
 
 // What this milestone stage produces — shown below the title
 const MILESTONE_DESCRIPTIONS: Record<MilestoneCode, string> = {
-  M1: "Defines what this rollout is, what data is involved, and what rules are in place before anyone starts using AI.",
-  M2: "Establishes who reviews AI outputs, how often, and what gets escalated — before the rollout goes wider.",
-  M3: "Sets the pacing and phasing for how AI access expands across the team or organization.",
-  M4: "Creates the governance policy: what's allowed, what isn't, and what happens when something goes wrong.",
+  M1: "This is your starting point. You'll confirm how AI can and can't be used at your firm, and what data it should never touch. Once you record this stage as complete, your org profile and usage rules are locked in.",
+  M2: "Before AI use expands, document who is responsible for reviewing AI outputs, how often, and what gets escalated. This creates a clear accountability record.",
+  M3: "Confirm the phased plan for how AI access will roll out across your team — what happens first, what happens next, and what signals that each phase is working.",
+  M4: "The final step. Review and adopt the formal governance policy for your firm — what's permitted, what isn't, and what happens if something goes wrong. This is your shareable, signable document.",
 };
 
-// What "submit" means at each stage — the specific ask
+// Contextual note shown beneath the action button
 const MILESTONE_SUBMIT_CONTEXT: Partial<Record<MilestoneStatus, string>> = {
-  IN_PROGRESS: "When you're ready, submit this for leadership review. Nothing changes until it's confirmed.",
-  AWAITING_CONFIRMATION: "Review the generated documents on the right, then confirm to lock them in and generate the next stage.",
+  IN_PROGRESS: "When you've completed the work for this stage, record it as done. Your documents will generate automatically.",
+  AWAITING_CONFIRMATION: "Your documents are ready to review on the right. Once you're satisfied, mark this stage complete to continue.",
 };
 
 const MILESTONE_ARTIFACTS: Record<MilestoneCode, ArtifactType[]> = {
@@ -97,9 +97,9 @@ const STATUS_LABELS: Record<MilestoneStatus, string> = {
 };
 
 const TRANSITION_CTA: Partial<Record<MilestoneStatus, string>> = {
-  IN_PROGRESS: "Submit for review →",
-  AWAITING_CONFIRMATION: "Approve & generate documents →",
-  CONFIRMED: "Mark as live →",
+  IN_PROGRESS: "Record this stage as done →",
+  AWAITING_CONFIRMATION: "Mark complete & generate documents →",
+  CONFIRMED: "Confirm this stage is live →",
 };
 
 const ARTIFACT_LABELS: Record<ArtifactType, string> = {
@@ -111,11 +111,11 @@ const ARTIFACT_LABELS: Record<ArtifactType, string> = {
 };
 
 const ARTIFACT_DESCRIPTIONS: Record<ArtifactType, string> = {
-  PROFILE: "A snapshot of your organization's AI context — goals, sensitivity level, adoption state, and risk classification.",
-  GUARDRAILS: "The specific rules governing how AI can be used in this rollout — what requires review, what's prohibited, and what must be logged.",
-  REVIEW_MODEL: "Who reviews AI outputs, how often, and what the escalation path looks like when something needs attention.",
-  ROLLOUT_PLAN: "The phased plan for expanding AI access — how fast, in what order, and with what checkpoints along the way.",
-  POLICY: "The formal governance policy for this rollout — behavioral expectations, approved use cases, and what happens if something goes wrong.",
+  PROFILE: "A record of your firm's AI context — what you're using it for, what data is involved, and how your adoption is classified. This is the foundation every other document builds on.",
+  GUARDRAILS: "The rules that govern AI use at your firm. What's permitted, what requires a human review before use, and what AI must never be involved in — categorised by task type.",
+  REVIEW_MODEL: "Who is accountable for reviewing AI outputs, how often that review happens, and what the escalation path looks like if something needs attention.",
+  ROLLOUT_PLAN: "The phased plan for expanding AI access across your team — what happens in each phase, what needs to be true before moving forward, and how you know a phase is complete.",
+  POLICY: "Your formal AI governance policy. This is the document you can print, sign, and share — covering what's allowed, what isn't, how decisions get made, and what happens if the rules aren't followed.",
 };
 
 const BADGE_COLORS: Record<string, string> = {
@@ -720,7 +720,7 @@ export default function RolloutDashboard() {
         <div className={styles.leftCol}>
           {/* Milestone tracker */}
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Milestones</h2>
+            <h2 className={styles.cardTitle}>Your governance stages</h2>
             <div className={styles.milestoneTrack}>
               {milestones.map((m, idx) => {
                 const nextStatus = STATUS_TRANSITIONS[m.status];
@@ -782,7 +782,7 @@ export default function RolloutDashboard() {
                                 }
                               }}
                               disabled={!art?.generated}
-                              title={art?.generated ? `View ${ARTIFACT_LABELS[at]}` : `Generated when this stage is approved`}
+                              title={art?.generated ? `View ${ARTIFACT_LABELS[at]}` : `Generated when you complete this stage`}
                             >
                               {art?.generated ? "↗ " : "⊘ "}{ARTIFACT_LABELS[at]}
                             </button>
@@ -823,16 +823,16 @@ export default function RolloutDashboard() {
         {/* Right column: artifact viewer */}
         <div className={styles.rightCol}>
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Generated Documents</h2>
+            <h2 className={styles.cardTitle}>Your governance documents</h2>
             <p className={styles.cardSubtitle}>
-              Documents are generated automatically when each stage is approved. Click a document to view it.
+              Each document is generated when you complete its stage. Click any document below to read it.
             </p>
 
             {generatedArtifacts.length === 0 ? (
               <div className={styles.artifactEmpty}>
-                <p className={styles.artifactEmptyTitle}>No documents generated yet.</p>
+                <p className={styles.artifactEmptyTitle}>No documents yet.</p>
                 <p className={styles.artifactEmptyHint}>
-                  Approve the first stage — Profile &amp; Guardrails — to generate your first two documents.
+                  Complete the first stage — establishing your usage rules — to generate your first documents.
                 </p>
               </div>
             ) : (

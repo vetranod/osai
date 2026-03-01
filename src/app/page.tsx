@@ -4,36 +4,40 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 
+// ---- Options ----
+
 const PRIMARY_GOAL_OPTIONS = [
-  { value: "CLIENT_COMMUNICATION", label: "Client Communication", desc: "Emails, messages, and correspondence with clients" },
-  { value: "INTERNAL_DOCUMENTATION", label: "Internal Documentation", desc: "SOPs, wikis, and internal knowledge bases" },
-  { value: "MARKETING_CONTENT", label: "Marketing Content", desc: "Copy, campaigns, and brand materials" },
-  { value: "SALES_PROPOSALS", label: "Sales Proposals", desc: "Quotes, pitches, and sales materials" },
-  { value: "DATA_REPORTING", label: "Data Reporting", desc: "Dashboards, reports, and analytical summaries" },
-  { value: "OPERATIONS_ADMIN", label: "Operations & Admin", desc: "Workflows, scheduling, and operational tasks" },
+  { value: "CLIENT_COMMUNICATION",   label: "Client Communication",   desc: "Drafting, summarising, or responding to client correspondence" },
+  { value: "INTERNAL_DOCUMENTATION", label: "Internal Documentation", desc: "SOPs, knowledge bases, internal memos and reference docs" },
+  { value: "MARKETING_CONTENT",      label: "Marketing Content",      desc: "Copy, campaigns, website content, and brand materials" },
+  { value: "SALES_PROPOSALS",        label: "Sales Proposals",        desc: "Quotes, pitches, RFP responses, and sales materials" },
+  { value: "DATA_REPORTING",         label: "Data Reporting",         desc: "Dashboards, summaries, and analytical outputs" },
+  { value: "OPERATIONS_ADMIN",       label: "Operations & Admin",     desc: "Workflows, scheduling, and day-to-day operational tasks" },
 ] as const;
 
 const ADOPTION_STATE_OPTIONS = [
-  { value: "NONE", label: "None", desc: "No one is using AI tools yet" },
-  { value: "FEW_EXPERIMENTING", label: "A few experimenting", desc: "Small number trying things on their own" },
-  { value: "MULTIPLE_REGULAR", label: "Multiple using regularly", desc: "Several people use AI tools routinely" },
-  { value: "ENCOURAGED_UNSTRUCTURED", label: "Encouraged but unstructured", desc: "Leadership supports it but no standards exist" },
-  { value: "WIDELY_USED_UNSTANDARDIZED", label: "Widely used, unstandardized", desc: "Broad adoption with no governance in place" },
+  { value: "NONE",                      label: "Not yet",                         desc: "No one in the firm is using AI tools yet" },
+  { value: "FEW_EXPERIMENTING",         label: "A few people, on their own",      desc: "Some individuals have started experimenting independently" },
+  { value: "MULTIPLE_REGULAR",          label: "Several using it regularly",      desc: "A meaningful group uses AI tools as part of their routine work" },
+  { value: "ENCOURAGED_UNSTRUCTURED",   label: "We encourage it, but no rules",  desc: "Leadership supports AI use but there are no standards or guidelines" },
+  { value: "WIDELY_USED_UNSTANDARDIZED", label: "Widespread, but unmanaged",     desc: "Most people use AI tools, but usage is inconsistent and ungoverned" },
 ] as const;
 
 const SENSITIVITY_OPTIONS = [
-  { value: "PUBLIC_CONTENT", label: "Public Content", desc: "No sensitive information involved" },
-  { value: "INTERNAL_BUSINESS_INFO", label: "Internal Business Info", desc: "Internal data not meant for public" },
-  { value: "CLIENT_MATERIALS", label: "Client Materials", desc: "Documents or data belonging to clients" },
-  { value: "FINANCIAL_OPERATIONAL_RECORDS", label: "Financial & Operational Records", desc: "Revenue, budgets, or operational data" },
-  { value: "REGULATED_CONFIDENTIAL", label: "Regulated / Confidential", desc: "PII, PHI, legal, or compliance-sensitive data" },
+  { value: "PUBLIC_CONTENT",                label: "Public-facing content",          desc: "Nothing sensitive — marketing copy, public communications" },
+  { value: "INTERNAL_BUSINESS_INFO",        label: "Internal business information",  desc: "Internal documents not intended for outside the firm" },
+  { value: "CLIENT_MATERIALS",              label: "Client materials",               desc: "Documents, data, or communications belonging to clients" },
+  { value: "FINANCIAL_OPERATIONAL_RECORDS", label: "Financial or operational data",  desc: "Revenue figures, budgets, contracts, or operational records" },
+  { value: "REGULATED_CONFIDENTIAL",        label: "Regulated or confidential data", desc: "Anything subject to legal, compliance, or confidentiality obligations" },
 ] as const;
 
 const LEADERSHIP_OPTIONS = [
-  { value: "MOVE_QUICKLY", label: "Move quickly", desc: "Prioritize speed and enablement" },
-  { value: "BALANCED", label: "Balanced", desc: "Equal weight to speed and caution" },
-  { value: "CAUTIOUS", label: "Cautious", desc: "Prioritize risk management and control" },
+  { value: "MOVE_QUICKLY", label: "Move quickly",  desc: "Get this in place fast — we'll refine as we go" },
+  { value: "BALANCED",     label: "Balanced",      desc: "Move at a reasonable pace with appropriate checkpoints" },
+  { value: "CAUTIOUS",     label: "Carefully",     desc: "We want thorough controls before expanding AI use" },
 ] as const;
+
+// ---- Types ----
 
 type FormState = {
   primary_goal: string;
@@ -42,7 +46,7 @@ type FormState = {
   leadership_posture: string;
 };
 
-type DecisionOutput = {
+type EngineOutput = {
   rollout_mode: string;
   guardrail_strictness: string;
   review_depth: string;
@@ -50,48 +54,31 @@ type DecisionOutput = {
   maturity_state: string;
   primary_risk_driver: string;
   needs_stabilization: boolean;
+  sensitivity_tier: string;
 };
 
-type CreateRolloutResponse = {
-  ok: boolean;
-  rollout: { id: string };
-  output: DecisionOutput;
-  message?: string;
+type FinalizeState = {
+  initiative_lead_name: string;
+  initiative_lead_title: string;
+  approving_authority_name: string;
+  approving_authority_title: string;
 };
 
-const BADGE_COLORS: Record<string, string> = {
-  CONTROLLED: "info",
-  PHASED: "warning",
-  FAST: "success",
-  SPLIT_DEPLOYMENT: "accent",
-  LOW: "success",
-  MODERATE: "info",
-  HIGH: "warning",
-  VERY_HIGH: "danger",
-  LIGHT: "success",
-  STANDARD: "info",
-  STRUCTURED: "warning",
-  FORMAL: "danger",
-  EMPOWERING: "success",
-  BALANCED_TONE: "info",
-  PROTECTIVE: "warning",
-  CONTROLLED_ENABLEMENT: "danger",
-  YES: "danger",
-  NO: "success",
-};
+// ---- Helpers ----
 
-function Badge({ value }: { value: string }) {
-  const colorKey = value === "BALANCED" ? "BALANCED_TONE" : value;
-  const color = BADGE_COLORS[colorKey] ?? "info";
+function isSoloMode(f: FinalizeState): boolean {
+  if (!f.initiative_lead_name || !f.approving_authority_name) return false;
   return (
-    <span className={`${styles.badge} ${styles[`badge_${color}`]}`}>
-      {value.replace(/_/g, " ")}
-    </span>
+    f.initiative_lead_name.trim().toLowerCase() ===
+      f.approving_authority_name.trim().toLowerCase() &&
+    f.initiative_lead_title.trim().toLowerCase() ===
+      f.approving_authority_title.trim().toLowerCase()
   );
 }
 
-export default function HomePage() {
-  const router = useRouter();
+// ---- Step 1: Intake Form ----
+
+function IntakeForm({ onComplete }: { onComplete: (rolloutId: string, output: EngineOutput, inputs: FormState) => void }) {
   const [form, setForm] = useState<FormState>({
     primary_goal: "",
     adoption_state: "",
@@ -100,7 +87,6 @@ export default function HomePage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ rolloutId: string; output: DecisionOutput } | null>(null);
 
   const allFilled = Object.values(form).every(Boolean);
 
@@ -114,12 +100,12 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data: CreateRolloutResponse = await res.json();
+      const data = await res.json();
       if (!res.ok || !data.ok) {
-        setError(data.message ?? "Failed to create rollout.");
+        setError(data.message ?? "Something went wrong. Please try again.");
         return;
       }
-      setResult({ rolloutId: data.rollout.id, output: data.output });
+      onComplete(data.rollout.id, data.output, form);
     } catch {
       setError("Network error — please try again.");
     } finally {
@@ -127,92 +113,22 @@ export default function HomePage() {
     }
   }
 
-  if (result) {
-    const { output, rolloutId } = result;
-    return (
-      <div className={styles.wrap}>
-        <div className={styles.successCard}>
-          <div className={styles.successHeader}>
-            <div className={styles.successIcon}>✓</div>
-            <div>
-              <h2 className={styles.successTitle}>Rollout Created</h2>
-              <p className={styles.successSub}>Decision engine has analyzed your inputs.</p>
-            </div>
-          </div>
-
-          <div className={styles.outputGrid}>
-            <div className={styles.outputItem}>
-              <span className={styles.outputLabel}>Rollout Mode</span>
-              <Badge value={output.rollout_mode} />
-            </div>
-            <div className={styles.outputItem}>
-              <span className={styles.outputLabel}>Guardrail Strictness</span>
-              <Badge value={output.guardrail_strictness} />
-            </div>
-            <div className={styles.outputItem}>
-              <span className={styles.outputLabel}>Review Depth</span>
-              <Badge value={output.review_depth} />
-            </div>
-            <div className={styles.outputItem}>
-              <span className={styles.outputLabel}>Policy Tone</span>
-              <Badge value={output.policy_tone} />
-            </div>
-            <div className={styles.outputItem}>
-              <span className={styles.outputLabel}>Maturity State</span>
-              <Badge value={output.maturity_state} />
-            </div>
-            <div className={styles.outputItem}>
-              <span className={styles.outputLabel}>Needs Stabilization</span>
-              <Badge value={output.needs_stabilization ? "YES" : "NO"} />
-            </div>
-            <div className={`${styles.outputItem} ${styles.outputFull}`}>
-              <span className={styles.outputLabel}>Primary Risk Driver</span>
-              <span className={styles.outputValue}>{output.primary_risk_driver}</span>
-            </div>
-          </div>
-
-          <div className={styles.successActions}>
-            <button
-              className={styles.btnPrimary}
-              onClick={() => router.push(`/rollouts/${rolloutId}`)}
-            >
-              Open Dashboard →
-            </button>
-            <button
-              className={styles.btnSecondary}
-              onClick={() => {
-                setResult(null);
-                setForm({ primary_goal: "", adoption_state: "", sensitivity_anchor: "", leadership_posture: "" });
-              }}
-            >
-              Create Another
-            </button>
-          </div>
-
-          <p className={styles.rolloutId}>
-            Rollout ID: <code>{rolloutId}</code>
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.wrap}>
       <div className={styles.formCard}>
         <div className={styles.formHeader}>
-          <h1 className={styles.title}>New AI Rollout</h1>
+          <h1 className={styles.title}>Set up your AI governance framework</h1>
           <p className={styles.subtitle}>
-            Answer four questions to generate your governance profile, guardrails, and rollout plan.
+            Answer four questions about your firm. We&apos;ll generate a tailored governance framework — including usage rules, a review process, a rollout plan, and a formal policy — ready to adopt or share with your team.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Primary Goal */}
+
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>
               <span className={styles.legendNum}>1</span>
-              What is the primary goal of this AI rollout?
+              Where will AI be used most in your firm?
             </legend>
             <div className={styles.optionGrid}>
               {PRIMARY_GOAL_OPTIONS.map((opt) => (
@@ -235,11 +151,10 @@ export default function HomePage() {
             </div>
           </fieldset>
 
-          {/* Adoption State */}
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>
               <span className={styles.legendNum}>2</span>
-              What is the current adoption state?
+              How much is AI already being used at your firm?
             </legend>
             <div className={styles.optionList}>
               {ADOPTION_STATE_OPTIONS.map((opt) => (
@@ -262,11 +177,10 @@ export default function HomePage() {
             </div>
           </fieldset>
 
-          {/* Sensitivity Anchor */}
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>
               <span className={styles.legendNum}>3</span>
-              What is the sensitivity of data involved?
+              What kind of information will AI be working with?
             </legend>
             <div className={styles.optionList}>
               {SENSITIVITY_OPTIONS.map((opt) => (
@@ -289,11 +203,10 @@ export default function HomePage() {
             </div>
           </fieldset>
 
-          {/* Leadership Posture */}
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>
               <span className={styles.legendNum}>4</span>
-              What is leadership&apos;s posture on this rollout?
+              How does leadership want to approach this rollout?
             </legend>
             <div className={styles.optionGrid3}>
               {LEADERSHIP_OPTIONS.map((opt) => (
@@ -324,16 +237,306 @@ export default function HomePage() {
               className={styles.btnPrimary}
               disabled={!allFilled || loading}
             >
-              {loading ? "Analyzing…" : "Generate Governance Profile →"}
+              {loading ? "Building your framework…" : "Continue →"}
             </button>
             <p className={styles.hint}>
-              {allFilled
-                ? "Ready to analyze."
-                : "Select all four options above to continue."}
+              {allFilled ? "One more step after this." : "Answer all four questions to continue."}
             </p>
           </div>
         </form>
       </div>
     </div>
+  );
+}
+
+// ---- Step 2: Finalize (identity fields + mode framing) ----
+
+function FinalizeStep({
+  rolloutId,
+  output,
+  inputs,
+  onComplete,
+}: {
+  rolloutId: string;
+  output: EngineOutput;
+  inputs: FormState;
+  onComplete: () => void;
+}) {
+  const [form, setForm] = useState<FinalizeState>({
+    initiative_lead_name: "",
+    initiative_lead_title: "",
+    approving_authority_name: "",
+    approving_authority_title: "",
+  });
+  const [sameAsLead, setSameAsLead] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isRegulated = output.sensitivity_tier === "REGULATED";
+
+  // When "same as lead" is toggled, mirror lead values into authority fields
+  function handleSameAsLead(checked: boolean) {
+    setSameAsLead(checked);
+    if (checked) {
+      setForm((f) => ({
+        ...f,
+        approving_authority_name: f.initiative_lead_name,
+        approving_authority_title: f.initiative_lead_title,
+      }));
+    }
+  }
+
+  function handleLeadChange(field: "initiative_lead_name" | "initiative_lead_title", value: string) {
+    setForm((f) => {
+      const next = { ...f, [field]: value };
+      if (sameAsLead) {
+        if (field === "initiative_lead_name") next.approving_authority_name = value;
+        if (field === "initiative_lead_title") next.approving_authority_title = value;
+      }
+      return next;
+    });
+  }
+
+  const leadPairFilled = Boolean(form.initiative_lead_name && form.initiative_lead_title);
+  const authorityPairFilled = Boolean(form.approving_authority_name && form.approving_authority_title);
+  const canSkip = !isRegulated;
+  const canSubmit = isRegulated
+    ? leadPairFilled && authorityPairFilled
+    : (!form.initiative_lead_name && !form.initiative_lead_title && !form.approving_authority_name && !form.approving_authority_title) ||
+      (leadPairFilled && authorityPairFilled) ||
+      (leadPairFilled && !form.approving_authority_name && !form.approving_authority_title) ||
+      (!form.initiative_lead_name && !form.initiative_lead_title && authorityPairFilled);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    // Build payload — only send non-empty fields
+    const payload: Record<string, string> = {};
+    if (form.initiative_lead_name)      payload.initiative_lead_name      = form.initiative_lead_name.trim();
+    if (form.initiative_lead_title)     payload.initiative_lead_title     = form.initiative_lead_title.trim();
+    if (form.approving_authority_name)  payload.approving_authority_name  = form.approving_authority_name.trim();
+    if (form.approving_authority_title) payload.approving_authority_title = form.approving_authority_title.trim();
+
+    try {
+      const res = await fetch(`/api/rollouts/${rolloutId}/finalize`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data.message ?? "Something went wrong. Please try again.");
+        return;
+      }
+      onComplete();
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSkip() {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/rollouts/${rolloutId}/finalize`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data.message ?? "Something went wrong.");
+        return;
+      }
+      onComplete();
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const solo = isSoloMode(form);
+  const goalLabel = inputs.primary_goal.replace(/_/g, " ").toLowerCase();
+
+  return (
+    <div className={styles.wrap}>
+      <div className={styles.formCard}>
+        <div className={styles.formHeader}>
+          <h1 className={styles.title}>Name the people responsible</h1>
+          <p className={styles.subtitle}>
+            Your governance framework will reference two roles: the person running this initiative day-to-day, and the person who has authority to approve it. These names appear in your policy and review documents.
+            {isRegulated && (
+              <> <strong>Because this rollout involves regulated or confidential data, both roles are required.</strong></>
+            )}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className={styles.form}>
+
+          {/* Framework context note */}
+          <div className={styles.contextBanner}>
+            <span className={styles.contextBannerLabel}>Your framework at a glance</span>
+            <p className={styles.contextBannerText}>
+              Based on your answers, we&apos;ve built a <strong>{output.rollout_mode.replace(/_/g, " ").toLowerCase()} rollout</strong> framework focused on <strong>{goalLabel}</strong>
+              {output.needs_stabilization ? ", with a stabilization phase to bring existing usage in line first" : ""}.
+              Your usage rules, review process, rollout plan, and governance policy are ready — you just need to record who owns this.
+            </p>
+          </div>
+
+          {/* Initiative Lead */}
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>
+              <span className={styles.legendNum}>A</span>
+              Who is leading this initiative?
+            </legend>
+            <p className={styles.fieldsetHint}>
+              The person responsible for implementing the framework and ensuring reviews happen. In smaller firms this is often the owner, partner, or the person filling out this form.
+            </p>
+            <div className={styles.nameGrid}>
+              <div className={styles.nameField}>
+                <label className={styles.nameLabel}>Full name</label>
+                <input
+                  type="text"
+                  className={styles.nameInput}
+                  placeholder="e.g. Sarah Mitchell"
+                  value={form.initiative_lead_name}
+                  maxLength={120}
+                  onChange={(e) => handleLeadChange("initiative_lead_name", e.target.value)}
+                />
+              </div>
+              <div className={styles.nameField}>
+                <label className={styles.nameLabel}>Title or role</label>
+                <input
+                  type="text"
+                  className={styles.nameInput}
+                  placeholder="e.g. Managing Partner"
+                  value={form.initiative_lead_title}
+                  maxLength={120}
+                  onChange={(e) => handleLeadChange("initiative_lead_title", e.target.value)}
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          {/* Approving Authority */}
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>
+              <span className={styles.legendNum}>B</span>
+              Who has authority to approve this framework?
+            </legend>
+            <p className={styles.fieldsetHint}>
+              The person whose sign-off makes this governance official. If that&apos;s the same person as above, check the box.
+            </p>
+
+            {leadPairFilled && (
+              <label className={styles.sameAsLeadToggle}>
+                <input
+                  type="checkbox"
+                  checked={sameAsLead}
+                  onChange={(e) => handleSameAsLead(e.target.checked)}
+                />
+                <span>Same person as the initiative lead</span>
+              </label>
+            )}
+
+            <div className={styles.nameGrid}>
+              <div className={styles.nameField}>
+                <label className={styles.nameLabel}>Full name</label>
+                <input
+                  type="text"
+                  className={styles.nameInput}
+                  placeholder="e.g. James Okafor"
+                  value={form.approving_authority_name}
+                  maxLength={120}
+                  disabled={sameAsLead}
+                  onChange={(e) => setForm((f) => ({ ...f, approving_authority_name: e.target.value }))}
+                />
+              </div>
+              <div className={styles.nameField}>
+                <label className={styles.nameLabel}>Title or role</label>
+                <input
+                  type="text"
+                  className={styles.nameInput}
+                  placeholder="e.g. Principal"
+                  value={form.approving_authority_title}
+                  maxLength={120}
+                  disabled={sameAsLead}
+                  onChange={(e) => setForm((f) => ({ ...f, approving_authority_title: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            {solo && (
+              <p className={styles.soloNote}>
+                You&apos;re establishing this framework as both the initiative lead and approving authority. Your documents will reflect that — no approval routing needed.
+              </p>
+            )}
+          </fieldset>
+
+          {error && <div className={styles.errorBox}>{error}</div>}
+
+          <div className={styles.formFooter}>
+            <button
+              type="submit"
+              className={styles.btnPrimary}
+              disabled={!canSubmit || loading}
+            >
+              {loading ? "Saving…" : "Open my governance framework →"}
+            </button>
+            {canSkip && (
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={handleSkip}
+                disabled={loading}
+              >
+                Skip for now
+              </button>
+            )}
+          </div>
+          {canSkip && (
+            <p className={styles.hint} style={{ marginTop: 8 }}>
+              You can add names later from the framework dashboard.
+            </p>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ---- Root Page ----
+
+export default function HomePage() {
+  const router = useRouter();
+
+  type Stage =
+    | { step: "intake" }
+    | { step: "finalize"; rolloutId: string; output: EngineOutput; inputs: FormState };
+
+  const [stage, setStage] = useState<Stage>({ step: "intake" });
+
+  if (stage.step === "intake") {
+    return (
+      <IntakeForm
+        onComplete={(rolloutId, output, inputs) =>
+          setStage({ step: "finalize", rolloutId, output, inputs })
+        }
+      />
+    );
+  }
+
+  return (
+    <FinalizeStep
+      rolloutId={stage.rolloutId}
+      output={stage.output}
+      inputs={stage.inputs}
+      onComplete={() => router.push(`/rollouts/${stage.rolloutId}`)}
+    />
   );
 }

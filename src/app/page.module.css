@@ -348,6 +348,112 @@
   font-size: 11px;
 }
 
+/* ---- Fieldset hint ---- */
+.fieldsetHint {
+  font-size: 13px;
+  color: var(--foreground-muted);
+  line-height: 1.5;
+  margin-bottom: 14px;
+  margin-top: -6px;
+}
+
+/* ---- Context banner (finalize step) ---- */
+.contextBanner {
+  margin: 24px 0 4px;
+  padding: 14px 18px;
+  background: var(--accent-light);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.contextBannerLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.contextBannerText {
+  font-size: 14px;
+  color: var(--foreground);
+  line-height: 1.6;
+}
+
+/* ---- Name fields (finalize step) ---- */
+.nameGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.nameField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nameLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground-muted);
+}
+
+.nameInput {
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.nameInput:focus {
+  border-color: var(--accent);
+}
+
+.nameInput:disabled {
+  background: var(--surface-raised);
+  color: var(--foreground-muted);
+  cursor: not-allowed;
+}
+
+/* ---- Same-as-lead toggle ---- */
+.sameAsLeadToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+
+.sameAsLeadToggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ---- Solo mode note ---- */
+.soloNote {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--foreground-muted);
+  line-height: 1.5;
+  padding: 10px 14px;
+  background: var(--success-light);
+  border-left: 3px solid var(--success);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 640px) {
   .formHeader,
