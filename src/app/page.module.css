@@ -1,141 +1,381 @@
-.page {
-  --background: #fafafa;
-  --foreground: #fff;
+/* ---- Layout ---- */
+.wrap {
+  max-width: 780px;
+  margin: 0 auto;
+}
 
-  --text-primary: #000;
-  --text-secondary: #666;
+/* ---- Form Card ---- */
+.formCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
 
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
+.formHeader {
+  padding: 32px 36px 24px;
+  border-bottom: 1px solid var(--border);
+}
 
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--foreground);
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--foreground-muted);
+  line-height: 1.5;
+}
+
+/* ---- Form ---- */
+.form {
+  padding: 0 36px 36px;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 28px 0 0;
+}
+
+.legend {
   display: flex;
-  min-height: 100vh;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 14px;
+}
+
+.legendNum {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
-.main {
+/* Radio hiding */
+.radioHidden {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Grid cards (primary_goal, leadership) */
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.optionGrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.optionCard {
   display: flex;
-  min-height: 100vh;
-  width: 100%;
-  max-width: 800px;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.intro {
+.optionCard:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.optionCardSelected {
+  border-color: var(--accent) !important;
+  background: var(--accent-light) !important;
+}
+
+/* List rows (adoption, sensitivity) */
+.optionList {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
+  gap: 6px;
 }
 
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
+.optionRow {
   display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.optionRow:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.optionRowSelected {
+  border-color: var(--accent) !important;
+  background: var(--accent-light) !important;
+}
+
+.optionLabel {
   font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
 }
 
-.ctas a {
+.optionDesc {
+  font-size: 12px;
+  color: var(--foreground-muted);
+  line-height: 1.4;
+}
+
+/* ---- Error ---- */
+.errorBox {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--danger);
+}
+
+/* ---- Submit ---- */
+.formFooter {
+  margin-top: 28px;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--foreground-subtle);
+}
+
+/* ---- Buttons ---- */
+.btnPrimary {
+  display: inline-flex;
   align-items: center;
   height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
+  padding: 0 20px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
   cursor: pointer;
-  width: fit-content;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  background: var(--surface-raised);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btnSecondary:hover {
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+/* ---- Success Card ---- */
+.successCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 36px;
+}
+
+.successHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.successIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--success-light);
+  color: var(--success);
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.successTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+
+.successSub {
+  font-size: 14px;
+  color: var(--foreground-muted);
+}
+
+/* ---- Output Grid ---- */
+.outputGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.outputItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.outputFull {
+  grid-column: 1 / -1;
+}
+
+.outputLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--foreground-muted);
+}
+
+.outputValue {
+  font-size: 14px;
+  color: var(--foreground);
   font-weight: 500;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
+/* ---- Badge ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  width: fit-content;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.badge_success {
+  background: var(--success-light);
+  color: var(--success);
+}
+.badge_warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+.badge_danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+.badge_info {
+  background: var(--info-light);
+  color: var(--info);
+}
+.badge_accent {
+  background: var(--accent-light);
+  color: var(--accent);
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
+/* ---- Success Actions ---- */
+.successActions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* ---- Rollout ID ---- */
+.rolloutId {
+  font-size: 12px;
+  color: var(--foreground-subtle);
+}
+
+.rolloutId code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .formHeader,
+  .form {
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
+  .optionGrid,
+  .optionGrid3,
+  .outputGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .formFooter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .successCard {
+    padding: 24px 20px;
   }
 }
 
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
-  }
-
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
-  }
-
-  .page {
-    --background: #000;
-    --foreground: #000;
-
-    --text-primary: #ededed;
-    --text-secondary: #999;
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+@media (max-width: 420px) {
+  .optionGrid,
+  .optionGrid3,
+  .outputGrid {
+    grid-template-columns: 1fr;
   }
 }
