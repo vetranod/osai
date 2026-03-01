@@ -230,9 +230,10 @@ function renderArtifactContent(artifact: Artifact) {
     }
 
     case "REVIEW_MODEL": {
-      const reqs = Array.isArray(json.review_requirements)
-        ? (json.review_requirements as string[])
-        : [];
+      type SectionItem = { label: string; value: string | string[]; conditional?: boolean };
+      type Section = { id: string; title: string; items: SectionItem[] };
+      const sections = Array.isArray(json.sections) ? (json.sections as Section[]) : [];
+
       return (
         <div className={styles.artifactBody}>
           <div className={styles.artifactMeta}>
@@ -240,27 +241,36 @@ function renderArtifactContent(artifact: Artifact) {
               <span className={styles.fieldLabel}>Review Depth</span>
               <Badge value={String(json.review_depth ?? "")} />
             </div>
-            <div className={styles.artifactField}>
-              <span className={styles.fieldLabel}>Cadence</span>
-              <span className={styles.fieldValue}>{String(json.review_cadence ?? "—")}</span>
-            </div>
           </div>
-          <ul className={styles.ruleList}>
-            {reqs.map((req, i) => (
-              <li key={i} className={styles.ruleItem}>
-                <span className={styles.ruleDot}>•</span>
-                {req}
-              </li>
-            ))}
-          </ul>
+          {sections.map((section) => (
+            <div key={section.id} className={styles.zoneSection}>
+              <h4 className={styles.zoneSectionTitle}>{section.title}</h4>
+              <ul className={styles.ruleList}>
+                {section.items.map((item, i) => {
+                  const values = Array.isArray(item.value) ? item.value : [item.value];
+                  return values.map((v, j) => (
+                    <li key={`${i}-${j}`} className={styles.ruleItem}>
+                      <span className={styles.ruleDot}>•</span>
+                      <span>
+                        <span className={styles.fieldLabel} style={{ display: "inline", marginRight: 6 }}>{item.label}:</span>
+                        {String(v)}
+                      </span>
+                    </li>
+                  ));
+                })}
+              </ul>
+            </div>
+          ))}
         </div>
       );
     }
 
     case "ROLLOUT_PLAN": {
-      const phases = Array.isArray(json.phases)
-        ? (json.phases as { phase: number; name: string; description: string }[])
-        : [];
+      type PhaseItem = { phase: number; name: string; entry_criteria: string; exit_criteria: string };
+      type OverviewItem = { label: string; value: string; conditional?: boolean };
+      type Section = { id: string; title: string; items: (PhaseItem | OverviewItem)[] };
+      const sections = Array.isArray(json.sections) ? (json.sections as Section[]) : [];
+
       return (
         <div className={styles.artifactBody}>
           <div className={styles.artifactMeta}>
@@ -268,32 +278,53 @@ function renderArtifactContent(artifact: Artifact) {
               <span className={styles.fieldLabel}>Mode</span>
               <Badge value={String(json.rollout_mode ?? "")} />
             </div>
-            <div className={styles.artifactField}>
-              <span className={styles.fieldLabel}>Pacing</span>
-              <span className={styles.fieldValue}>{String(json.pacing_description ?? "—")}</span>
+          </div>
+          {sections.map((section) => (
+            <div key={section.id} className={styles.zoneSection}>
+              <h4 className={styles.zoneSectionTitle}>{section.title}</h4>
+              {section.id === "phase_structure" ? (
+                <div className={styles.phaseList}>
+                  {(section.items as PhaseItem[]).map((p) => (
+                    <div key={p.phase} className={styles.phaseItem}>
+                      <div className={styles.phaseNum}>
+                        {p.phase === 0 ? "S" : String(p.phase)}
+                      </div>
+                      <div>
+                        <div className={styles.phaseName}>{p.name}</div>
+                        <div className={styles.phaseDesc}>
+                          <strong>Enter:</strong> {p.entry_criteria}
+                        </div>
+                        <div className={styles.phaseDesc}>
+                          <strong>Exit:</strong> {p.exit_criteria}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ul className={styles.ruleList}>
+                  {(section.items as OverviewItem[]).map((item, i) => (
+                    <li key={i} className={styles.ruleItem}>
+                      <span className={styles.ruleDot}>•</span>
+                      <span>
+                        <span className={styles.fieldLabel} style={{ display: "inline", marginRight: 6 }}>{item.label}:</span>
+                        {String(item.value)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </div>
-          <div className={styles.phaseList}>
-            {phases.map((p) => (
-              <div key={p.phase} className={styles.phaseItem}>
-                <div className={styles.phaseNum}>
-                  {p.phase === 0 ? "Ø" : String(p.phase)}
-                </div>
-                <div>
-                  <div className={styles.phaseName}>{p.name}</div>
-                  <div className={styles.phaseDesc}>{p.description}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       );
     }
 
     case "POLICY": {
-      const expectations = Array.isArray(json.behavioral_expectations)
-        ? (json.behavioral_expectations as string[])
-        : [];
+      type SectionItem = { label: string; value: string };
+      type Section = { id: string; title: string; items: SectionItem[] };
+      const sections = Array.isArray(json.sections) ? (json.sections as Section[]) : [];
+
       return (
         <div className={styles.artifactBody}>
           <div className={styles.artifactMeta}>
@@ -302,20 +333,22 @@ function renderArtifactContent(artifact: Artifact) {
               <Badge value={String(json.policy_tone ?? "")} />
             </div>
           </div>
-          <ul className={styles.ruleList}>
-            {expectations.map((exp, i) => (
-              <li key={i} className={styles.ruleItem}>
-                <span className={styles.ruleDot}>•</span>
-                {exp}
-              </li>
-            ))}
-          </ul>
-          {Boolean(json.escalation_path) && (
-            <div className={styles.escalationBox}>
-              <span className={styles.fieldLabel}>Escalation Path</span>
-              <p className={styles.fieldValue}>{String(json.escalation_path)}</p>
+          {sections.map((section) => (
+            <div key={section.id} className={styles.zoneSection}>
+              <h4 className={styles.zoneSectionTitle}>{section.title}</h4>
+              <ul className={styles.ruleList}>
+                {section.items.map((item, i) => (
+                  <li key={i} className={styles.ruleItem}>
+                    <span className={styles.ruleDot}>•</span>
+                    <span>
+                      <span className={styles.fieldLabel} style={{ display: "inline", marginRight: 6 }}>{item.label}:</span>
+                      {String(item.value)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
+          ))}
         </div>
       );
     }
