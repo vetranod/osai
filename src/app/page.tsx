@@ -367,24 +367,29 @@ function FinalizeStep({
     <div className={styles.wrap}>
       <div className={styles.formCard}>
         <div className={styles.formHeader}>
-          <h1 className={styles.title}>Name the people responsible</h1>
+          <h1 className={styles.title}>Finalize governance ownership</h1>
           <p className={styles.subtitle}>
-            Your governance framework will reference two roles: the person running this initiative day-to-day, and the person who has authority to approve it. These names appear in your policy and review documents.
-            {isRegulated && (
-              <> <strong>Because this rollout involves regulated or confidential data, both roles are required.</strong></>
-            )}
+            These names are used in the generated documents. They do not change the decision outputs.
           </p>
+          {isRegulated && (
+            <div className={styles.regulatedGate}>
+              <strong className={styles.regulatedGateTitle}>Ownership required</strong>
+              <p className={styles.regulatedGateBody}>
+                This rollout is anchored to regulated or confidential information. Governance ownership must be recorded before activation.
+              </p>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
 
           {/* Framework context note */}
           <div className={styles.contextBanner}>
-            <span className={styles.contextBannerLabel}>Your framework at a glance</span>
+            <span className={styles.contextBannerLabel}>Your governance framework at a glance</span>
             <p className={styles.contextBannerText}>
-              Based on your answers, we&apos;ve built a <strong>{output.rollout_mode.replace(/_/g, " ").toLowerCase()} rollout</strong> framework focused on <strong>{goalLabel}</strong>
-              {output.needs_stabilization ? ", with a stabilization phase to bring existing usage in line first" : ""}.
-              Your usage rules, review process, rollout plan, and governance policy are ready — you just need to record who owns this.
+              Based on your answers, your framework uses a <strong>{output.rollout_mode.replace(/_/g, " ").toLowerCase()} rollout</strong> focused on <strong>{goalLabel}</strong>
+              {output.needs_stabilization ? ", with a stabilization phase to document and standardize current usage before expansion begins" : ""}.
+              Your usage guardrails, review standard, adoption plan, and AI usage policy are ready — record who owns this to complete the framework.
             </p>
           </div>
 
@@ -392,10 +397,10 @@ function FinalizeStep({
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>
               <span className={styles.legendNum}>A</span>
-              Who is leading this initiative?
+              Initiative Lead
             </legend>
             <p className={styles.fieldsetHint}>
-              The person responsible for implementing the framework and ensuring reviews happen. In smaller firms this is often the owner, partner, or the person filling out this form.
+              The person responsible for implementing this framework and ensuring review requirements are met.
             </p>
             <div className={styles.nameGrid}>
               <div className={styles.nameField}>
@@ -427,10 +432,10 @@ function FinalizeStep({
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>
               <span className={styles.legendNum}>B</span>
-              Who has authority to approve this framework?
+              Approving Authority
             </legend>
             <p className={styles.fieldsetHint}>
-              The person whose sign-off makes this governance official. If that&apos;s the same person as above, check the box.
+              The person with authority over this governance framework. If that&apos;s the same person as above, check the box.
             </p>
 
             {leadPairFilled && (
@@ -486,7 +491,7 @@ function FinalizeStep({
               className={styles.btnPrimary}
               disabled={!canSubmit || loading}
             >
-              {loading ? "Saving…" : "Open my governance framework →"}
+              {loading ? "Saving…" : "Save and continue →"}
             </button>
             {canSkip && (
               <button
@@ -501,7 +506,7 @@ function FinalizeStep({
           </div>
           {canSkip && (
             <p className={styles.hint} style={{ marginTop: 8 }}>
-              You can add names later from the framework dashboard.
+              You can add names later from the governance dashboard.
             </p>
           )}
         </form>

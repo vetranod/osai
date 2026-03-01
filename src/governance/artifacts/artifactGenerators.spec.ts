@@ -8,6 +8,7 @@ import {
   generateRolloutPlanArtifact,
   generatePolicyArtifact,
   type ArtifactInputs,
+  type IdentityFields,
   type UsageZoneSection,
 } from "./artifactGenerators";
 import type { DecisionInputs } from "@/decision-engine/options";
@@ -43,10 +44,18 @@ function makeOutputs(overrides: Partial<DecisionOutput> = {}): DecisionOutput {
 
 function makeCtx(
   inputOverrides: Partial<DecisionInputs> = {},
-  outputOverrides: Partial<DecisionOutput> = {}
+  outputOverrides: Partial<DecisionOutput> = {},
+  identity?: IdentityFields
 ): ArtifactInputs {
-  return { inputs: makeInputs(inputOverrides), outputs: makeOutputs(outputOverrides) };
+  return { inputs: makeInputs(inputOverrides), outputs: makeOutputs(outputOverrides), identity };
 }
+
+const TEST_IDENTITY: IdentityFields = {
+  initiative_lead_name:      "Sarah Mitchell",
+  initiative_lead_title:     "Managing Partner",
+  approving_authority_name:  "James Okafor",
+  approving_authority_title: "Principal",
+};
 
 // Helper: get sections array from a generated artifact
 function getSections(result: Record<string, unknown>): Array<Record<string, unknown>> {
@@ -475,10 +484,10 @@ describe("generatePolicyArtifact", () => {
     expect(handling.toLowerCase()).toContain("formally approved");
   });
 
-  it("review_and_oversight section has three items", () => {
+  it("review_and_oversight section has four items (including Approved by)", () => {
     const result = generatePolicyArtifact(makeCtx());
     const section = getSection(result, "review_and_oversight")!;
-    expect(getItems(section).length).toBe(3);
+    expect(getItems(section).length).toBe(4);
   });
 
   it("CLIENT tier policy_modification_clause includes formal review requirement", () => {
@@ -501,5 +510,130 @@ describe("generatePolicyArtifact", () => {
       (i) => i.label === "Formal review requirement"
     );
     expect(hasFormal).toBe(false);
+  });
+});
+
+// ------------------------------
+// Identity injection
+// ------------------------------
+
+describe("identity injection — REVIEW_MODEL", () => {
+  it("reviewer role defaults to [Designated Reviewer] when no identity provided", () => {
+    const result = generateReviewModelArtifact(makeCtx());
+    const section = getSection(result, "review_authority")!;
+    expect(getItem(section, "Reviewer role")?.value).toBe("[Designated Reviewer]");
+  });
+
+  it("reviewer role shows formatted name+title when identity is provided", () => {
+    const result = generateReviewModelArtifact(makeCtx({}, {}, TEST_IDENTITY));
+    const section = getSection(result, "review_authority")!;
+    expect(getItem(section, "Reviewer role")?.value).toBe("Sarah Mitchell, Managing Partner");
+  });
+
+  it("no Approved by item when depth is STANDARD and tier is LOW", () => {
+    const result = generateReviewModelArtifact(
+      makeCtx({}, { review_depth: "STANDARD", sensitivity_tier: "LOW" }, TEST_IDENTITY)
+    );
+    const section = getSection(result, "review_authority")!;
+    expect(getItem(section, "Approved by")).toBeUndefined();
+  });
+
+  it("Approved by appears when review_depth is FORMAL", () => {
+    const result = generateReviewModelArtifact(
+      makeCtx({}, { review_depth: "FORMAL" }, TEST_IDENTITY)
+    );
+    const section = getSection(result, "review_authority")!;
+    expect(getItem(section, "Approved by")?.value).toBe("James Okafor, Principal");
+  });
+
+  it("Approved by appears when tier is REGULATED", () => {
+    const result = generateReviewModelArtifact(
+      makeCtx({}, { sensitivity_tier: "REGULATED" }, TEST_IDENTITY)
+    );
+    const section = getSection(result, "review_authority")!;
+    expect(getItem(section, "Approved by")?.value).toBe("James Okafor, Principal");
+  });
+
+  it("Approved by falls back to [Approving Authority] when FORMAL and no identity", () => {
+    const result = generateReviewModelArtifact(
+      makeCtx({}, { review_depth: "FORMAL" })
+    );
+    const section = getSection(result, "review_authority")!;
+    expect(getItem(section, "Approved by")?.value).toBe("[Approving Authority]");
+  });
+});
+
+describe("identity injection — ROLLOUT_PLAN", () => {
+  it("no Approved by when tier is LOW and posture is BALANCED", () => {
+    const result = generateRolloutPlanArtifact(
+      makeCtx({ leadership_posture: "BALANCED" }, { sensitivity_tier: "LOW" }, TEST_IDENTITY)
+    );
+    const section = getSection(result, "rollout_overview")!;
+    expect(getItem(section, "Approved by")).toBeUndefined();
+  });
+
+  it("Approved by appears when tier is REGULATED", () => {
+    const result = generateRolloutPlanArtifact(
+      makeCtx({}, { sensitivity_tier: "REGULATED" }, TEST_IDENTITY)
+    );
+    const section = getSection(result, "rollout_overview")!;
+    expect(getItem(section, "Approved by")?.value).toBe("James Okafor, Principal");
+  });
+
+  it("Approved by appears when posture is CAUTIOUS", () => {
+    const result = generateRolloutPlanArtifact(
+      makeCtx({ leadership_posture: "CAUTIOUS" }, { sensitivity_tier: "LOW" }, TEST_IDENTITY)
+    );
+    const section = getSection(result, "rollout_overview")!;
+    expect(getItem(section, "Approved by")?.value).toBe("James Okafor, Principal");
+  });
+
+  it("Approved by falls back to [Approving Authority] when CAUTIOUS and no identity", () => {
+    const result = generateRolloutPlanArtifact(
+      makeCtx({ leadership_posture: "CAUTIOUS" }, { sensitivity_tier: "LOW" })
+    );
+    const section = getSection(result, "rollout_overview")!;
+    expect(getItem(section, "Approved by")?.value).toBe("[Approving Authority]");
+  });
+});
+
+describe("identity injection — POLICY", () => {
+  it("Approved by in review_and_oversight defaults to [Approving Authority] when no identity", () => {
+    const result = generatePolicyArtifact(makeCtx());
+    const section = getSection(result, "review_and_oversight")!;
+    expect(getItem(section, "Approved by")?.value).toBe("[Approving Authority]");
+  });
+
+  it("Approved by in review_and_oversight shows formatted name when identity provided", () => {
+    const result = generatePolicyArtifact(makeCtx({}, {}, TEST_IDENTITY));
+    const section = getSection(result, "review_and_oversight")!;
+    expect(getItem(section, "Approved by")?.value).toBe("James Okafor, Principal");
+  });
+
+  it("Approved by in data_handling_standards defaults to [Approving Authority] when no identity", () => {
+    const result = generatePolicyArtifact(makeCtx());
+    const section = getSection(result, "data_handling_standards")!;
+    expect(getItem(section, "Approved by")?.value).toBe("[Approving Authority]");
+  });
+
+  it("Approved by in data_handling_standards shows formatted name when identity provided", () => {
+    const result = generatePolicyArtifact(makeCtx({}, {}, TEST_IDENTITY));
+    const section = getSection(result, "data_handling_standards")!;
+    expect(getItem(section, "Approved by")?.value).toBe("James Okafor, Principal");
+  });
+
+  it("partial identity (lead only) shows lead as reviewer but [Approving Authority] for approver", () => {
+    const partialIdentity: IdentityFields = {
+      initiative_lead_name:      "Sarah Mitchell",
+      initiative_lead_title:     "Managing Partner",
+      approving_authority_name:  null,
+      approving_authority_title: null,
+    };
+    const result = generateReviewModelArtifact(
+      makeCtx({}, { review_depth: "FORMAL" }, partialIdentity)
+    );
+    const section = getSection(result, "review_authority")!;
+    expect(getItem(section, "Reviewer role")?.value).toBe("Sarah Mitchell, Managing Partner");
+    expect(getItem(section, "Approved by")?.value).toBe("[Approving Authority]");
   });
 });

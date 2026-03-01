@@ -63,10 +63,20 @@ const MILESTONE_DESCRIPTIONS: Record<MilestoneCode, string> = {
   M4: "The final step. Review and adopt the formal governance policy for your firm — what's permitted, what isn't, and what happens if something goes wrong. This is your shareable, signable document.",
 };
 
-// Contextual note shown beneath the action button
-const MILESTONE_SUBMIT_CONTEXT: Partial<Record<MilestoneStatus, string>> = {
-  IN_PROGRESS: "When you've completed the work for this stage, record it as done. Your documents will generate automatically.",
-  AWAITING_CONFIRMATION: "Your documents are ready to review on the right. Once you're satisfied, mark this stage complete to continue.",
+// Status-level description shown beneath the milestone title (spec section C)
+const MILESTONE_STATUS_DESCRIPTIONS: Partial<Record<MilestoneStatus, { title: string; description: string }>> = {
+  AWAITING_CONFIRMATION: {
+    title: "Draft complete",
+    description: "Draft artifacts for this checkpoint have been generated and reviewed for completeness. This checkpoint is ready for internal review under the review model.",
+  },
+  CONFIRMED: {
+    title: "Review complete",
+    description: "Review has been completed in accordance with the review model. Any required revisions have been incorporated.",
+  },
+  ACTIVATED: {
+    title: "Active",
+    description: "This checkpoint is the organization's current governance position. Future work should follow the controls and pacing defined here.",
+  },
 };
 
 const MILESTONE_ARTIFACTS: Record<MilestoneCode, ArtifactType[]> = {
@@ -89,33 +99,64 @@ const STATUS_TRANSITIONS: Record<MilestoneStatus, MilestoneStatus | null> = {
 const STATUS_LABELS: Record<MilestoneStatus, string> = {
   LOCKED: "Not started",
   IN_PROGRESS: "In progress",
-  AWAITING_CONFIRMATION: "Pending review",
-  CONFIRMED: "Approved",
-  ACTIVATED: "Live",
+  AWAITING_CONFIRMATION: "Draft complete",
+  CONFIRMED: "Review complete",
+  ACTIVATED: "Active",
   PAUSED: "Paused",
-  INVALIDATED: "Voided",
+  INVALIDATED: "Invalidated",
 };
 
-const TRANSITION_CTA: Partial<Record<MilestoneStatus, string>> = {
-  IN_PROGRESS: "Record this stage as done →",
-  AWAITING_CONFIRMATION: "Mark complete & generate documents →",
-  CONFIRMED: "Confirm this stage is live →",
+// Button labels per the language pack — "Record" as the verb throughout
+const TRANSITION_BUTTON_LABEL: Partial<Record<MilestoneStatus, string>> = {
+  IN_PROGRESS: "Record Draft Complete",
+  AWAITING_CONFIRMATION: "Record Review Complete",
+  CONFIRMED: "Record Active",
+};
+
+// Helper text shown below each button
+const TRANSITION_HELPER_TEXT: Partial<Record<MilestoneStatus, string>> = {
+  IN_PROGRESS: "Records that this checkpoint draft has been completed for internal review.",
+  AWAITING_CONFIRMATION: "Records that required review for this checkpoint has been completed.",
+  CONFIRMED: "Records that this checkpoint is now the active governance position.",
+};
+
+// Modal copy per transition
+const TRANSITION_MODAL: Partial<Record<MilestoneStatus, {
+  title: string;
+  body: string;
+  confirm: string;
+}>> = {
+  IN_PROGRESS: {
+    title: "Record Draft Complete",
+    body: "This marks the checkpoint as drafted. It does not notify anyone. It records that the next review step can occur.",
+    confirm: "Record",
+  },
+  AWAITING_CONFIRMATION: {
+    title: "Record Review Complete",
+    body: "This records that review has been completed under the review model. This does not create approvals or route requests.",
+    confirm: "Record",
+  },
+  CONFIRMED: {
+    title: "Record Active",
+    body: "This records that the checkpoint is now active for the organization. This does not enforce controls. It documents the current governance stance.",
+    confirm: "Record",
+  },
 };
 
 const ARTIFACT_LABELS: Record<ArtifactType, string> = {
-  PROFILE: "Org Profile",
-  GUARDRAILS: "Usage Rules",
-  REVIEW_MODEL: "Review Process",
-  ROLLOUT_PLAN: "Rollout Plan",
-  POLICY: "Governance Policy",
+  PROFILE:      "Governance Profile",
+  GUARDRAILS:   "Usage Guardrails",
+  REVIEW_MODEL: "Review Standard",
+  ROLLOUT_PLAN: "Adoption Plan",
+  POLICY:       "AI Usage Policy",
 };
 
 const ARTIFACT_DESCRIPTIONS: Record<ArtifactType, string> = {
-  PROFILE: "A record of your firm's AI context — what you're using it for, what data is involved, and how your adoption is classified. This is the foundation every other document builds on.",
-  GUARDRAILS: "The rules that govern AI use at your firm. What's permitted, what requires a human review before use, and what AI must never be involved in — categorised by task type.",
-  REVIEW_MODEL: "Who is accountable for reviewing AI outputs, how often that review happens, and what the escalation path looks like if something needs attention.",
-  ROLLOUT_PLAN: "The phased plan for expanding AI access across your team — what happens in each phase, what needs to be true before moving forward, and how you know a phase is complete.",
-  POLICY: "Your formal AI governance policy. This is the document you can print, sign, and share — covering what's allowed, what isn't, how decisions get made, and what happens if the rules aren't followed.",
+  PROFILE:      "Snapshot of posture and risk context for this rollout.",
+  GUARDRAILS:   "Allowed use boundaries and restricted areas for AI use.",
+  REVIEW_MODEL: "Who reviews AI output, how review occurs, and escalation triggers.",
+  ROLLOUT_PLAN: "Pacing, phases, stabilization controls, and expansion criteria.",
+  POLICY:       "The consolidated internal policy statement for the firm.",
 };
 
 const BADGE_COLORS: Record<string, string> = {
@@ -619,23 +660,46 @@ function ReclassificationPanel({
 
 // ---- Main Dashboard ----
 
+type RolloutMeta = {
+  id: string;
+  rollout_mode: string;
+  sensitivity_tier: string;
+  needs_stabilization: boolean;
+  initiative_lead_name:      string | null;
+  initiative_lead_title:     string | null;
+  approving_authority_name:  string | null;
+  approving_authority_title: string | null;
+  created_at: string | null;
+};
+
+type ConfirmModal = {
+  milestoneId: number;
+  toStatus: MilestoneStatus;
+  title: string;
+  body: string;
+  confirmLabel: string;
+};
+
 export default function RolloutDashboard() {
   const params = useParams();
   const rolloutId = params.rolloutId as string;
 
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const [rolloutMeta, setRolloutMeta] = useState<RolloutMeta | null>(null);
   const [selectedArtifact, setSelectedArtifact] = useState<ArtifactType | null>(null);
   const [transitioning, setTransitioning] = useState<number | null>(null);
   const [transitionError, setTransitionError] = useState<string | null>(null);
+  const [confirmModal, setConfirmModal] = useState<ConfirmModal | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-      const [mRes, aRes] = await Promise.all([
+      const [mRes, aRes, rRes] = await Promise.all([
         fetch(`/api/rollouts/${rolloutId}/milestones`),
         fetch(`/api/rollouts/${rolloutId}/artifacts`),
+        fetch(`/api/rollouts/${rolloutId}`),
       ]);
       if (!mRes.ok || !aRes.ok) {
         setLoadError("Failed to load rollout data.");
@@ -644,6 +708,11 @@ export default function RolloutDashboard() {
       const [mData, aData] = await Promise.all([mRes.json(), aRes.json()]);
       if (mData.ok) setMilestones(mData.milestones);
       if (aData.ok) setArtifacts(aData.artifacts);
+      // Rollout meta is best-effort (endpoint may not exist yet; graceful fallback)
+      if (rRes.ok) {
+        const rData = await rRes.json();
+        if (rData.ok && rData.rollout) setRolloutMeta(rData.rollout as RolloutMeta);
+      }
     } catch {
       setLoadError("Network error.");
     } finally {
@@ -655,7 +724,17 @@ export default function RolloutDashboard() {
     void loadData();
   }, [loadData]);
 
-  async function handleTransition(milestoneId: number, toStatus: MilestoneStatus) {
+  function handleTransitionClick(milestoneId: number, fromStatus: MilestoneStatus, toStatus: MilestoneStatus) {
+    const modal = TRANSITION_MODAL[fromStatus];
+    if (modal) {
+      setConfirmModal({ milestoneId, toStatus, title: modal.title, body: modal.body, confirmLabel: modal.confirm });
+    } else {
+      void handleConfirmedTransition(milestoneId, toStatus);
+    }
+  }
+
+  async function handleConfirmedTransition(milestoneId: number, toStatus: MilestoneStatus) {
+    setConfirmModal(null);
     setTransitionError(null);
     setTransitioning(milestoneId);
     try {
@@ -703,12 +782,72 @@ export default function RolloutDashboard() {
     );
   }
 
+  // Derive artifact milestone status for drawer header
+  function artifactMilestoneStatus(at: ArtifactType): MilestoneStatus | null {
+    const code = (Object.entries(MILESTONE_ARTIFACTS) as [MilestoneCode, ArtifactType[]][])
+      .find(([, types]) => types.includes(at))?.[0];
+    if (!code) return null;
+    return milestones.find((m) => m.code === code)?.status ?? null;
+  }
+
+  // Deterministic banner for an artifact type (spec J)
+  function artifactBanner(at: ArtifactType): { label: string; text: string } | null {
+    if (!rolloutMeta) return null;
+    if (at === "ROLLOUT_PLAN" && rolloutMeta.needs_stabilization) {
+      return { label: "Stabilization required", text: "Expansion is paused until review cadence and error thresholds stabilize." };
+    }
+    if (at === "ROLLOUT_PLAN" && rolloutMeta.rollout_mode === "SPLIT_DEPLOYMENT") {
+      return { label: "Split deployment", text: "High-risk and low-risk tracks operate under different controls." };
+    }
+    if (at === "POLICY" && rolloutMeta.sensitivity_tier === "REGULATED") {
+      return { label: "Regulated controls", text: "Approved tools and documented oversight are required." };
+    }
+    return null;
+  }
+
+  const STATUS_DISPLAY: Record<MilestoneStatus, string> = {
+    LOCKED: "Not started",
+    IN_PROGRESS: "In progress",
+    AWAITING_CONFIRMATION: "Draft complete",
+    CONFIRMED: "Review complete",
+    ACTIVATED: "Active",
+    PAUSED: "Paused",
+    INVALIDATED: "Invalidated",
+  };
+
   return (
     <div className={styles.dashWrap}>
-      {/* Header */}
+      {/* Confirmation modal */}
+      {confirmModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <h3 className={styles.modalTitle}>{confirmModal.title}</h3>
+            <p className={styles.modalBody}>{confirmModal.body}</p>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.btnPrimary}
+                onClick={() => void handleConfirmedTransition(confirmModal.milestoneId, confirmModal.toStatus)}
+              >
+                {confirmModal.confirmLabel}
+              </button>
+              <button
+                className={styles.btnSecondary}
+                onClick={() => setConfirmModal(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header — Governance Checkpoints (spec D) */}
       <div className={styles.dashHeader}>
         <div>
-          <h1 className={styles.dashTitle}>Rollout Dashboard</h1>
+          <h1 className={styles.dashTitle}>Governance Checkpoints</h1>
+          <p className={styles.dashSubheader}>
+            Each checkpoint records a documented governance position. Actions record completion; they do not route requests or enforce compliance.
+          </p>
           <p className={styles.dashId}>
             <code>{rolloutId}</code>
           </p>
@@ -720,11 +859,12 @@ export default function RolloutDashboard() {
         <div className={styles.leftCol}>
           {/* Milestone tracker */}
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Your governance stages</h2>
             <div className={styles.milestoneTrack}>
               {milestones.map((m, idx) => {
                 const nextStatus = STATUS_TRANSITIONS[m.status];
-                const cta = nextStatus ? TRANSITION_CTA[m.status] : null;
+                const btnLabel = nextStatus ? TRANSITION_BUTTON_LABEL[m.status] : null;
+                const helperText = nextStatus ? TRANSITION_HELPER_TEXT[m.status] : null;
+                const statusDesc = MILESTONE_STATUS_DESCRIPTIONS[m.status];
                 const isTransitioning = transitioning === m.milestone_id;
 
                 return (
@@ -767,43 +907,60 @@ export default function RolloutDashboard() {
                         {MILESTONE_DESCRIPTIONS[m.code]}
                       </p>
 
+                      {/* Status-level description (spec C) */}
+                      {statusDesc && (
+                        <div className={styles.milestoneStatusDesc}>
+                          <span className={styles.milestoneStatusDescTitle}>{statusDesc.title}</span>
+                          <span> — </span>
+                          {statusDesc.description}
+                        </div>
+                      )}
+
+                      {/* Artifact pills */}
                       <div className={styles.milestoneArtifacts}>
                         {MILESTONE_ARTIFACTS[m.code].map((at) => {
                           const art = artifacts.find((a) => a.artifact_type === at);
+                          const banner = art?.generated ? artifactBanner(at) : null;
                           return (
-                            <button
-                              key={at}
-                              className={`${styles.artifactPill} ${
-                                art?.generated ? styles.artifactPillReady : styles.artifactPillLocked
-                              } ${selectedArtifact === at ? styles.artifactPillActive : ""}`}
-                              onClick={() => {
-                                if (art?.generated) {
-                                  setSelectedArtifact(at === selectedArtifact ? null : at);
-                                }
-                              }}
-                              disabled={!art?.generated}
-                              title={art?.generated ? `View ${ARTIFACT_LABELS[at]}` : `Generated when you complete this stage`}
-                            >
-                              {art?.generated ? "↗ " : "⊘ "}{ARTIFACT_LABELS[at]}
-                            </button>
+                            <div key={at} className={styles.artifactPillWrap}>
+                              <button
+                                className={`${styles.artifactPill} ${
+                                  art?.generated ? styles.artifactPillReady : styles.artifactPillLocked
+                                } ${selectedArtifact === at ? styles.artifactPillActive : ""}`}
+                                onClick={() => {
+                                  if (art?.generated) {
+                                    setSelectedArtifact(at === selectedArtifact ? null : at);
+                                  }
+                                }}
+                                disabled={!art?.generated}
+                                title={art?.generated ? `View ${ARTIFACT_LABELS[at]}` : `Generated when you complete this stage`}
+                              >
+                                {art?.generated ? "↗ " : "⊘ "}{ARTIFACT_LABELS[at]}
+                              </button>
+                              {banner && (
+                                <span className={styles.artifactBannerBadge} title={banner.text}>
+                                  {banner.label}
+                                </span>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
 
-                      {MILESTONE_SUBMIT_CONTEXT[m.status] && (
-                        <p className={styles.milestoneSubmitNote}>
-                          {MILESTONE_SUBMIT_CONTEXT[m.status]}
-                        </p>
-                      )}
-
-                      {cta && (
-                        <button
-                          className={styles.transitionBtn}
-                          disabled={isTransitioning}
-                          onClick={() => handleTransition(m.milestone_id, nextStatus!)}
-                        >
-                          {isTransitioning ? "Processing…" : cta}
-                        </button>
+                      {/* Transition button + helper text (spec A) */}
+                      {btnLabel && (
+                        <div className={styles.transitionArea}>
+                          <button
+                            className={styles.transitionBtn}
+                            disabled={isTransitioning}
+                            onClick={() => handleTransitionClick(m.milestone_id, m.status, nextStatus!)}
+                          >
+                            {isTransitioning ? "Recording…" : btnLabel}
+                          </button>
+                          {helperText && (
+                            <p className={styles.transitionHelper}>{helperText}</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -823,16 +980,16 @@ export default function RolloutDashboard() {
         {/* Right column: artifact viewer */}
         <div className={styles.rightCol}>
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Your governance documents</h2>
+            <h2 className={styles.cardTitle}>Governance documents</h2>
             <p className={styles.cardSubtitle}>
-              Each document is generated when you complete its stage. Click any document below to read it.
+              Each document is generated when you complete its checkpoint. Click any document to view it.
             </p>
 
             {generatedArtifacts.length === 0 ? (
               <div className={styles.artifactEmpty}>
                 <p className={styles.artifactEmptyTitle}>No documents yet.</p>
                 <p className={styles.artifactEmptyHint}>
-                  Complete the first stage — establishing your usage rules — to generate your first documents.
+                  Complete the first checkpoint to generate your Governance Profile and Usage Guardrails.
                 </p>
               </div>
             ) : (
@@ -859,20 +1016,85 @@ export default function RolloutDashboard() {
 
                 {activeArtifact ? (
                   <div className={styles.artifactViewer}>
+                    {/* Artifact drawer header (spec F) */}
                     <div className={styles.artifactViewerHeader}>
-                      <h3 className={styles.artifactViewerTitle}>
-                        {ARTIFACT_LABELS[activeArtifact.artifact_type]}
-                      </h3>
-                      {activeArtifact.version && (
-                        <span className={styles.artifactVersion}>
-                          v{activeArtifact.version}
-                        </span>
-                      )}
+                      <div>
+                        <h3 className={styles.artifactViewerTitle}>
+                          {ARTIFACT_LABELS[activeArtifact.artifact_type]}
+                        </h3>
+                        {activeArtifact.version && (
+                          <span className={styles.artifactVersion}>
+                            v{activeArtifact.version}
+                          </span>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Artifact metadata block (spec F) */}
+                    <div className={styles.artifactMetaBlock}>
+                      <div className={styles.artifactMetaRow}>
+                        <span className={styles.artifactMetaLabel}>Rollout ID</span>
+                        <span className={styles.artifactMetaValue}>
+                          <code>{rolloutId.slice(0, 8)}…</code>
+                        </span>
+                      </div>
+                      {activeArtifact.created_at && (
+                        <div className={styles.artifactMetaRow}>
+                          <span className={styles.artifactMetaLabel}>Effective as of</span>
+                          <span className={styles.artifactMetaValue}>
+                            {new Date(activeArtifact.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+                          </span>
+                        </div>
+                      )}
+                      <div className={styles.artifactMetaRow}>
+                        <span className={styles.artifactMetaLabel}>Prepared by</span>
+                        <span className={styles.artifactMetaValue}>
+                          {rolloutMeta?.initiative_lead_name && rolloutMeta.initiative_lead_title
+                            ? `${rolloutMeta.initiative_lead_name}, ${rolloutMeta.initiative_lead_title}`
+                            : "Initiative Lead"}
+                        </span>
+                      </div>
+                      {(rolloutMeta?.approving_authority_name && rolloutMeta.approving_authority_title) && (
+                        <div className={styles.artifactMetaRow}>
+                          <span className={styles.artifactMetaLabel}>Approved by</span>
+                          <span className={styles.artifactMetaValue}>
+                            {`${rolloutMeta.approving_authority_name}, ${rolloutMeta.approving_authority_title}`}
+                          </span>
+                        </div>
+                      )}
+                      {(() => {
+                        const st = artifactMilestoneStatus(activeArtifact.artifact_type);
+                        return st ? (
+                          <div className={styles.artifactMetaRow}>
+                            <span className={styles.artifactMetaLabel}>Status</span>
+                            <span className={styles.artifactMetaValue}>{STATUS_DISPLAY[st]}</span>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+
+                    {/* Description */}
                     <p className={styles.artifactDescription}>
                       {ARTIFACT_DESCRIPTIONS[activeArtifact.artifact_type]}
                     </p>
+
+                    {/* Deterministic banner (spec J) */}
+                    {(() => {
+                      const banner = artifactBanner(activeArtifact.artifact_type);
+                      return banner ? (
+                        <div className={styles.artifactBanner}>
+                          <span className={styles.artifactBannerLabel}>{banner.label}</span>
+                          <span className={styles.artifactBannerText}>{banner.text}</span>
+                        </div>
+                      ) : null;
+                    })()}
+
                     {renderArtifactContent(activeArtifact)}
+
+                    {/* Footer line (spec F) */}
+                    <p className={styles.artifactFooter}>
+                      This document records the current governance stance. It does not create legal obligations beyond existing firm duties.
+                    </p>
                   </div>
                 ) : (
                   <div className={styles.artifactSelectHint}>

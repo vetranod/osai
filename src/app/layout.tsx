@@ -41,6 +41,9 @@ export default function RootLayout({
           </div>
         </header>
         <main className={styles.main}>{children}</main>
+        <footer className={styles.footer}>
+          This product provides internal governance structure. It is not legal advice.
+        </footer>
       </body>
     </html>
   );

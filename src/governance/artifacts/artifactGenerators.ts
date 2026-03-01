@@ -40,10 +40,48 @@ import {
 // Shared input type
 // ------------------------------
 
-export type ArtifactInputs = Readonly<{
-  inputs:  DecisionInputs;
-  outputs: DecisionOutput;
+export type IdentityFields = Readonly<{
+  initiative_lead_name:      string | null;
+  initiative_lead_title:     string | null;
+  approving_authority_name:  string | null;
+  approving_authority_title: string | null;
 }>;
+
+export type ArtifactInputs = Readonly<{
+  inputs:   DecisionInputs;
+  outputs:  DecisionOutput;
+  identity?: IdentityFields;
+}>;
+
+// ------------------------------
+// Identity helpers
+// ------------------------------
+
+/**
+ * Format a person's name + title as a single display string.
+ * Returns null if either field is absent.
+ * Example: "Sarah Mitchell, Managing Partner"
+ */
+function formatPerson(name: string | null | undefined, title: string | null | undefined): string | null {
+  if (!name || !title) return null;
+  return `${name}, ${title}`;
+}
+
+/**
+ * Returns the reviewer display string.
+ * Falls back to "[Designated Reviewer]" when identity is absent.
+ */
+function resolveReviewer(identity: IdentityFields | undefined): string {
+  return formatPerson(identity?.initiative_lead_name, identity?.initiative_lead_title)
+    ?? "[Designated Reviewer]";
+}
+
+/**
+ * Returns the approving authority display string, or null if not set.
+ */
+function resolveApprover(identity: IdentityFields | undefined): string | null {
+  return formatPerson(identity?.approving_authority_name, identity?.approving_authority_title);
+}
 
 // ------------------------------
 // PROFILE artifact
@@ -380,7 +418,7 @@ function deriveContextNote(sensitivity: DecisionInputs["sensitivity_anchor"]): s
  * Drivers: review_depth, leadership_posture, sensitivity_tier, needs_stabilization
  */
 export function generateReviewModelArtifact(ctx: ArtifactInputs): Record<string, unknown> {
-  const { inputs, outputs } = ctx;
+  const { inputs, outputs, identity } = ctx;
   const tier = outputs.sensitivity_tier;
 
   return {
@@ -388,7 +426,7 @@ export function generateReviewModelArtifact(ctx: ArtifactInputs): Record<string,
     schema_version: 2,
     review_depth:   outputs.review_depth,
     sections: [
-      buildReviewAuthority(outputs.review_depth, inputs.leadership_posture, tier),
+      buildReviewAuthority(outputs.review_depth, inputs.leadership_posture, tier, identity),
       buildReviewScope(outputs.review_depth, tier),
       buildReviewFrequency(outputs.review_depth, inputs.leadership_posture, outputs.needs_stabilization),
       buildEscalationPath(tier, outputs.policy_tone),
@@ -399,17 +437,25 @@ export function generateReviewModelArtifact(ctx: ArtifactInputs): Record<string,
 function buildReviewAuthority(
   depth: DecisionOutput["review_depth"],
   posture: DecisionInputs["leadership_posture"],
-  tier: DecisionOutput["sensitivity_tier"]
+  tier: DecisionOutput["sensitivity_tier"],
+  identity: IdentityFields | undefined
 ): Record<string, unknown> {
-  return {
-    id:    "review_authority",
-    title: "Review Authority",
-    items: [
-      { label: "Reviewer role",     value: "[Designated Reviewer]" },
-      { label: "Accountability",    value: getRoleAccountability(depth).text },
-      { label: "Delegation rule",   value: getDelegationRule(depth, tier).text },
-    ],
-  };
+  const items: Array<Record<string, unknown>> = [
+    { label: "Reviewer role",   value: resolveReviewer(identity) },
+    { label: "Accountability",  value: getRoleAccountability(depth).text },
+    { label: "Delegation rule", value: getDelegationRule(depth, tier).text },
+  ];
+
+  // "Approved by" line: present when review_depth is FORMAL or tier is REGULATED
+  if (depth === "FORMAL" || tier === "REGULATED") {
+    const approver = resolveApprover(identity);
+    items.push({
+      label: "Approved by",
+      value: approver ?? "[Approving Authority]",
+    });
+  }
+
+  return { id: "review_authority", title: "Review Authority", items };
 }
 
 function buildReviewScope(
@@ -488,7 +534,7 @@ function buildEscalationPath(
  * Drivers: rollout_mode, needs_stabilization, sensitivity_tier, leadership_posture
  */
 export function generateRolloutPlanArtifact(ctx: ArtifactInputs): Record<string, unknown> {
-  const { inputs, outputs } = ctx;
+  const { inputs, outputs, identity } = ctx;
   const tier = outputs.sensitivity_tier;
 
   return {
@@ -497,7 +543,7 @@ export function generateRolloutPlanArtifact(ctx: ArtifactInputs): Record<string,
     rollout_mode:        outputs.rollout_mode,
     needs_stabilization: outputs.needs_stabilization,
     sections: [
-      buildRolloutOverview(outputs.rollout_mode, outputs.needs_stabilization),
+      buildRolloutOverview(outputs.rollout_mode, outputs.needs_stabilization, tier, inputs.leadership_posture, identity),
       buildPhaseStructure(outputs.rollout_mode, outputs.needs_stabilization),
       buildStabilizationControls(outputs.rollout_mode, outputs.needs_stabilization),
       buildExpansionCriteria(outputs.rollout_mode, tier, inputs.leadership_posture),
@@ -507,7 +553,10 @@ export function generateRolloutPlanArtifact(ctx: ArtifactInputs): Record<string,
 
 function buildRolloutOverview(
   mode: DecisionOutput["rollout_mode"],
-  needsStabilization: boolean
+  needsStabilization: boolean,
+  tier: DecisionOutput["sensitivity_tier"],
+  posture: DecisionInputs["leadership_posture"],
+  identity: IdentityFields | undefined
 ): Record<string, unknown> {
   const PACING: Readonly<Record<DecisionOutput["rollout_mode"], string>> = {
     CONTROLLED:       "Controlled rollout — small cohort, gated progression, full review at each stage.",
@@ -534,6 +583,15 @@ function buildRolloutOverview(
       label: "Stabilization note",
       value: "A stabilization phase precedes normal rollout pacing. Current AI usage must be documented and standardized before expansion begins.",
       conditional: true,
+    });
+  }
+
+  // "Approved by" line: present when tier is REGULATED or posture is CAUTIOUS
+  if (tier === "REGULATED" || posture === "CAUTIOUS") {
+    const approver = resolveApprover(identity);
+    items.push({
+      label: "Approved by",
+      value: approver ?? "[Approving Authority]",
     });
   }
 
@@ -722,7 +780,7 @@ function buildExpansionCriteria(
  * Drivers: policy_tone, sensitivity_tier, review_depth, primary_goal, primary_risk_driver
  */
 export function generatePolicyArtifact(ctx: ArtifactInputs): Record<string, unknown> {
-  const { inputs, outputs } = ctx;
+  const { inputs, outputs, identity } = ctx;
   const tier = outputs.sensitivity_tier;
 
   return {
@@ -733,8 +791,8 @@ export function generatePolicyArtifact(ctx: ArtifactInputs): Record<string, unkn
       buildPurposeAndScope(outputs.policy_tone, inputs.primary_goal),
       buildPermittedUses(outputs.policy_tone, tier),
       buildProhibitedUses(outputs.policy_tone, tier),
-      buildReviewAndOversight(outputs.review_depth, tier, outputs.policy_tone),
-      buildDataHandlingStandards(outputs.review_depth, tier),
+      buildReviewAndOversight(outputs.review_depth, tier, outputs.policy_tone, identity),
+      buildDataHandlingStandards(outputs.review_depth, tier, identity),
       buildPolicyModificationClause(outputs.policy_tone, tier),
     ],
   };
@@ -796,29 +854,35 @@ function buildProhibitedUses(
 function buildReviewAndOversight(
   depth: DecisionOutput["review_depth"],
   tier: DecisionOutput["sensitivity_tier"],
-  tone: DecisionOutput["policy_tone"]
+  tone: DecisionOutput["policy_tone"],
+  identity: IdentityFields | undefined
 ): Record<string, unknown> {
+  const approver = resolveApprover(identity);
   return {
     id:    "review_and_oversight",
     title: "Review and Oversight",
     items: [
-      { label: "Review requirement", value: getReviewRequirementLanguage(depth).text },
-      { label: "Escalation triggers", value: getEscalationTriggers(tier).text },
-      { label: "Non-compliance",     value: getEnforcementFraming(tone).text },
+      { label: "Review requirement",   value: getReviewRequirementLanguage(depth).text },
+      { label: "Escalation triggers",  value: getEscalationTriggers(tier).text },
+      { label: "Non-compliance",       value: getEnforcementFraming(tone).text },
+      { label: "Approved by",          value: approver ?? "[Approving Authority]" },
     ],
   };
 }
 
 function buildDataHandlingStandards(
   depth: DecisionOutput["review_depth"],
-  tier: DecisionOutput["sensitivity_tier"]
+  tier: DecisionOutput["sensitivity_tier"],
+  identity: IdentityFields | undefined
 ): Record<string, unknown> {
+  const approver = resolveApprover(identity);
   return {
     id:    "data_handling_standards",
     title: "Data Handling Standards",
     items: [
-      { label: "Data handling",    value: getDataHandlingRestrictions(tier).text },
+      { label: "Data handling",       value: getDataHandlingRestrictions(tier).text },
       { label: "Role accountability", value: getRoleAccountability(depth).text },
+      { label: "Approved by",         value: approver ?? "[Approving Authority]" },
     ],
   };
 }

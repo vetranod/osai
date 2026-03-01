@@ -382,6 +382,30 @@
   line-height: 1.6;
 }
 
+/* ---- Regulated gate block (spec H) ---- */
+.regulatedGate {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+}
+
+.regulatedGateTitle {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 6px;
+}
+
+.regulatedGateBody {
+  font-size: 13px;
+  color: var(--foreground);
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* ---- Name fields (finalize step) ---- */
 .nameGrid {
   display: grid;

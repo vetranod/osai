@@ -17,6 +17,7 @@ import {
   generateRolloutPlanArtifact,
   generatePolicyArtifact,
   type ArtifactInputs,
+  type IdentityFields,
 } from "@/governance/artifacts/artifactGenerators";
 import type { DecisionInputs } from "@/decision-engine/options";
 import type { DecisionOutput } from "@/decision-engine/engine";
@@ -102,18 +103,22 @@ async function generateArtifactsForMilestone(
 
   // Fetch rollout inputs + outputs
   type RolloutRow = {
-    primary_goal:         string;
-    adoption_state:       string;
-    sensitivity_anchor:   string;
-    leadership_posture:   string;
-    rollout_mode:         string;
-    guardrail_strictness: string;
-    review_depth:         string;
-    policy_tone:          string;
-    maturity_state:       string;
-    primary_risk_driver:  string;
-    needs_stabilization:  boolean;
-    sensitivity_tier:     string;
+    primary_goal:              string;
+    adoption_state:            string;
+    sensitivity_anchor:        string;
+    leadership_posture:        string;
+    rollout_mode:              string;
+    guardrail_strictness:      string;
+    review_depth:              string;
+    policy_tone:               string;
+    maturity_state:            string;
+    primary_risk_driver:       string;
+    needs_stabilization:       boolean;
+    sensitivity_tier:          string;
+    initiative_lead_name:      string | null;
+    initiative_lead_title:     string | null;
+    approving_authority_name:  string | null;
+    approving_authority_title: string | null;
   };
 
   const { data: rolloutRaw, error: rolloutErr } = await supabaseAdmin
@@ -121,7 +126,9 @@ async function generateArtifactsForMilestone(
     .select(
       "primary_goal, adoption_state, sensitivity_anchor, leadership_posture, " +
       "rollout_mode, guardrail_strictness, review_depth, policy_tone, " +
-      "maturity_state, primary_risk_driver, needs_stabilization, sensitivity_tier"
+      "maturity_state, primary_risk_driver, needs_stabilization, sensitivity_tier, " +
+      "initiative_lead_name, initiative_lead_title, " +
+      "approving_authority_name, approving_authority_title"
     )
     .eq("id", rolloutId)
     .single();
@@ -133,6 +140,13 @@ async function generateArtifactsForMilestone(
   const rollout = rolloutRaw as unknown as RolloutRow;
 
   // Cast DB strings to engine types (DB constraints guarantee valid values)
+  const identity: IdentityFields = {
+    initiative_lead_name:      rollout.initiative_lead_name      ?? null,
+    initiative_lead_title:     rollout.initiative_lead_title     ?? null,
+    approving_authority_name:  rollout.approving_authority_name  ?? null,
+    approving_authority_title: rollout.approving_authority_title ?? null,
+  };
+
   const ctx: ArtifactInputs = {
     inputs: {
       primary_goal:       rollout.primary_goal       as DecisionInputs["primary_goal"],
@@ -150,6 +164,7 @@ async function generateArtifactsForMilestone(
       needs_stabilization:  rollout.needs_stabilization,
       sensitivity_tier:     rollout.sensitivity_tier     as DecisionOutput["sensitivity_tier"],
     },
+    identity,
   };
 
   const generated: ArtifactType[] = [];
