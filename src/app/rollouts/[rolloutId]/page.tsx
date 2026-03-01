@@ -188,7 +188,17 @@ function renderArtifactContent(artifact: Artifact) {
       );
 
     case "GUARDRAILS": {
-      const rules = Array.isArray(json.rules) ? (json.rules as string[]) : [];
+      type ZoneItem = { label: string; zone: "SAFE" | "RESTRICTED" | "HUMAN_ONLY" };
+      type ZoneSection = { title: string; items: ZoneItem[] };
+      const sections = Array.isArray(json.sections) ? (json.sections as ZoneSection[]) : [];
+      const contextNote = json.context_note ? String(json.context_note) : null;
+
+      const ZONE_LABEL: Record<string, string> = {
+        SAFE:       "Safe",
+        RESTRICTED: "Restricted",
+        HUMAN_ONLY: "Human Only",
+      };
+
       return (
         <div className={styles.artifactBody}>
           <div className={styles.artifactMeta}>
@@ -197,14 +207,24 @@ function renderArtifactContent(artifact: Artifact) {
               <Badge value={String(json.guardrail_strictness ?? "")} />
             </div>
           </div>
-          <ul className={styles.ruleList}>
-            {rules.map((rule, i) => (
-              <li key={i} className={styles.ruleItem}>
-                <span className={styles.ruleDot}>•</span>
-                {rule}
-              </li>
-            ))}
-          </ul>
+
+          {contextNote && (
+            <div className={styles.contextNote}>{contextNote}</div>
+          )}
+
+          {sections.map((section, si) => (
+            <div key={si} className={styles.zoneSection}>
+              <h4 className={styles.zoneSectionTitle}>{section.title}</h4>
+              <ul className={styles.zoneList}>
+                {section.items.map((item, ii) => (
+                  <li key={ii} className={`${styles.zoneItem} ${styles[`zone_${item.zone}`]}`}>
+                    <span className={styles.zoneTag}>{ZONE_LABEL[item.zone] ?? item.zone}</span>
+                    <span className={styles.zoneLabel}>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       );
     }

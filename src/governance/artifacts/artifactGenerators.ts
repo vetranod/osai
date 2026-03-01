@@ -46,62 +46,294 @@ export function generateProfileArtifact(ctx: ArtifactInputs): Record<string, unk
 // ------------------------------
 
 /**
- * GUARDRAILS — The specific guardrail configuration derived from the decision
- * engine. Defines what restrictions and controls are active for this rollout.
+ * Zone classification for a single task or use case.
+ * SAFE        — AI may produce; no mandatory review before use.
+ * RESTRICTED  — AI may assist; [Designated Reviewer] must review before use.
+ * HUMAN_ONLY  — AI must not be used for this task in any form.
+ */
+export type UsageZone = "SAFE" | "RESTRICTED" | "HUMAN_ONLY";
+
+export type UsageZoneItem = {
+  label: string;
+  zone: UsageZone;
+};
+
+export type UsageZoneSection = {
+  title: string;
+  items: UsageZoneItem[];
+};
+
+/**
+ * GUARDRAILS — Three-zone usage classification for the rollout's primary goal.
+ * Zones are modulated by sensitivity_anchor and leadership_posture.
+ * [Designated Reviewer] is the visible placeholder for the reviewer role
+ * to be assigned before the rollout goes live.
  */
 export function generateGuardrailsArtifact(ctx: ArtifactInputs): Record<string, unknown> {
   const { inputs, outputs } = ctx;
 
+  const sections = deriveUsageZones(
+    inputs.primary_goal,
+    inputs.sensitivity_anchor,
+    inputs.leadership_posture
+  );
+
   return {
-    artifact_type: "GUARDRAILS",
-    schema_version: 1,
+    artifact_type:        "GUARDRAILS",
+    schema_version:       2,
     guardrail_strictness: outputs.guardrail_strictness,
-    sensitivity_anchor: inputs.sensitivity_anchor,
-    rules: deriveGuardrailRules(outputs.guardrail_strictness, inputs.sensitivity_anchor),
+    primary_goal:         inputs.primary_goal,
+    sensitivity_anchor:   inputs.sensitivity_anchor,
+    leadership_posture:   inputs.leadership_posture,
+    reviewer_placeholder: "[Designated Reviewer]",
+    sections,
+    context_note:         deriveContextNote(inputs.sensitivity_anchor),
   };
 }
 
-function deriveGuardrailRules(
-  strictness: DecisionOutput["guardrail_strictness"],
-  sensitivity: DecisionInputs["sensitivity_anchor"]
-): string[] {
-  const rules: string[] = [];
+// ------------------------------
+// Zone lookup helper
+// ------------------------------
 
-  // Sensitivity-based rules (always present)
+/**
+ * Each item in the matrix has three explicit zone values, sourced directly
+ * from the locked CSV (Matrix Breakdown.csv):
+ *   base            — PUBLIC_CONTENT or INTERNAL_BUSINESS_INFO sensitivity, any non-CAUTIOUS posture
+ *   financialOrReg  — CLIENT_MATERIALS, FINANCIAL_OPERATIONAL_RECORDS, or REGULATED_CONFIDENTIAL
+ *   cautious        — CAUTIOUS leadership posture (applied on top of any sensitivity level)
+ *
+ * These are NOT calculated — they are the locked design decisions from the matrix.
+ * HUMAN_ONLY items are always HUMAN_ONLY regardless of inputs.
+ */
+function pickZone(
+  sensitivity: DecisionInputs["sensitivity_anchor"],
+  posture: DecisionInputs["leadership_posture"],
+  base: UsageZone,
+  financialOrReg: UsageZone,
+  cautious: UsageZone
+): UsageZone {
+  if (posture === "CAUTIOUS") return cautious;
   if (
     sensitivity === "CLIENT_MATERIALS" ||
     sensitivity === "FINANCIAL_OPERATIONAL_RECORDS" ||
     sensitivity === "REGULATED_CONFIDENTIAL"
-  ) {
-    rules.push("No external sharing of AI-generated content without human review.");
-    rules.push("All AI outputs touching client or regulated data must be logged.");
-  }
+  ) return financialOrReg;
+  return base;
+}
 
-  if (sensitivity === "REGULATED_CONFIDENTIAL") {
-    rules.push("AI must not process or generate content containing regulated identifiers (PII, PHI, financial account data).");
-    rules.push("Legal or compliance sign-off required before any new use case is added.");
-  }
+// ------------------------------
+// Goal-specific zone matrices
+// Columns: base | financial/regulated | cautious
+// Source: Matrix Breakdown.csv (locked)
+// ------------------------------
 
-  if (sensitivity === "FINANCIAL_OPERATIONAL_RECORDS") {
-    rules.push("AI-generated financial figures must be independently verified before use.");
-  }
+function zonesForClientCommunication(
+  sensitivity: DecisionInputs["sensitivity_anchor"],
+  posture: DecisionInputs["leadership_posture"]
+): UsageZoneSection[] {
+  const z = (b: UsageZone, f: UsageZone, c: UsageZone) => pickZone(sensitivity, posture, b, f, c);
+  return [
+    {
+      title: "Drafting and correspondence",
+      items: [
+        { label: "Drafting internal responses",              zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Summarizing calls and meetings",           zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Tone refinement",                          zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "External emails",                          zone: z("RESTRICTED", "RESTRICTED", "RESTRICTED") },
+        { label: "Status updates",                           zone: z("RESTRICTED", "RESTRICTED", "RESTRICTED") },
+        { label: "Proposal drafts",                          zone: z("RESTRICTED", "HUMAN_ONLY", "HUMAN_ONLY") },
+        { label: "Client-facing summaries",                  zone: z("RESTRICTED", "HUMAN_ONLY", "RESTRICTED") },
+      ],
+    },
+    {
+      title: "Commitments and agreements",
+      items: [
+        { label: "Scheduling and meeting invitations",       zone: "HUMAN_ONLY" },
+        { label: "Pricing commitments",                      zone: "HUMAN_ONLY" },
+        { label: "Scope changes",                            zone: "HUMAN_ONLY" },
+        { label: "Contract language",                        zone: "HUMAN_ONLY" },
+      ],
+    },
+  ];
+}
 
-  // Strictness-based rules
-  if (strictness === "MODERATE" || strictness === "HIGH" || strictness === "VERY_HIGH") {
-    rules.push("Human review required before any AI output is used in an external-facing context.");
-  }
+function zonesForSalesProposals(
+  sensitivity: DecisionInputs["sensitivity_anchor"],
+  posture: DecisionInputs["leadership_posture"]
+): UsageZoneSection[] {
+  const z = (b: UsageZone, f: UsageZone, c: UsageZone) => pickZone(sensitivity, posture, b, f, c);
+  return [
+    {
+      title: "Proposal preparation",
+      items: [
+        { label: "Structuring proposals",                    zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Formatting and layout",                    zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Summarizing past work",                    zone: z("SAFE",       "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Deliverable descriptions",                 zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Timeline drafts",                          zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Pricing explanations",                     zone: z("RESTRICTED", "HUMAN_ONLY", "HUMAN_ONLY") },
+        { label: "Differentiation claims",                   zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+      ],
+    },
+    {
+      title: "Commitments and decisions",
+      items: [
+        { label: "Scheduling follow-ups or next steps",      zone: "HUMAN_ONLY" },
+        { label: "Pricing decisions",                        zone: "HUMAN_ONLY" },
+        { label: "Custom scope creation",                    zone: "HUMAN_ONLY" },
+        { label: "Negotiation concessions",                  zone: "HUMAN_ONLY" },
+        { label: "Guarantees",                               zone: "HUMAN_ONLY" },
+      ],
+    },
+  ];
+}
 
-  if (strictness === "HIGH" || strictness === "VERY_HIGH") {
-    rules.push("Designated reviewers must be identified and confirmed before rollout proceeds.");
-    rules.push("AI outputs must not be sent to clients or customers without explicit approval.");
-  }
+function zonesForDataReporting(
+  sensitivity: DecisionInputs["sensitivity_anchor"],
+  posture: DecisionInputs["leadership_posture"]
+): UsageZoneSection[] {
+  const z = (b: UsageZone, f: UsageZone, c: UsageZone) => pickZone(sensitivity, posture, b, f, c);
+  return [
+    {
+      title: "Data work and analysis",
+      items: [
+        { label: "Writing queries (SQL, DAX, etc.)",         zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Explaining methodology",                   zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Structuring analysis logic",               zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "KPI interpretation",                       zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Performance narratives",                   zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Recommendations",                          zone: z("RESTRICTED", "HUMAN_ONLY", "HUMAN_ONLY") },
+      ],
+    },
+    {
+      title: "High-stakes outputs",
+      items: [
+        { label: "Uploading raw client data to any AI tool", zone: "HUMAN_ONLY" },
+        { label: "Publishing AI output as final analysis",   zone: "HUMAN_ONLY" },
+        { label: "Reporting to clients or stakeholders",     zone: "HUMAN_ONLY" },
+      ],
+    },
+  ];
+}
 
-  if (strictness === "VERY_HIGH") {
-    rules.push("All AI usage sessions must be logged with output samples retained for audit.");
-    rules.push("Periodic guardrail review required (minimum quarterly).");
-  }
+function zonesForMarketingContent(
+  sensitivity: DecisionInputs["sensitivity_anchor"],
+  posture: DecisionInputs["leadership_posture"]
+): UsageZoneSection[] {
+  const z = (b: UsageZone, f: UsageZone, c: UsageZone) => pickZone(sensitivity, posture, b, f, c);
+  return [
+    {
+      title: "Content creation",
+      items: [
+        { label: "Brainstorming and ideation",               zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "First drafts",                             zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Copy variations",                          zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Website copy",                             zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Public posts and social content",          zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Campaign messaging",                       zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+      ],
+    },
+    {
+      title: "Ownership and positioning",
+      items: [
+        { label: "Scheduling or publishing content directly", zone: "HUMAN_ONLY" },
+        { label: "Brand positioning",                         zone: "HUMAN_ONLY" },
+        { label: "Core value propositions",                   zone: "HUMAN_ONLY" },
+        { label: "Messaging that makes competitive claims",   zone: "HUMAN_ONLY" },
+      ],
+    },
+  ];
+}
 
-  return rules;
+function zonesForInternalDocumentation(
+  sensitivity: DecisionInputs["sensitivity_anchor"],
+  posture: DecisionInputs["leadership_posture"]
+): UsageZoneSection[] {
+  const z = (b: UsageZone, f: UsageZone, c: UsageZone) => pickZone(sensitivity, posture, b, f, c);
+  return [
+    {
+      title: "Drafting and formatting",
+      items: [
+        { label: "Drafting SOPs and process docs",                    zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Meeting summaries",                                  zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Reorganizing or reformatting existing docs",         zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Policy drafts for internal review",                  zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Role or responsibility definitions",                 zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "Compliance-adjacent documentation",                  zone: z("RESTRICTED", "HUMAN_ONLY", "HUMAN_ONLY") },
+      ],
+    },
+    {
+      title: "Official and authoritative content",
+      items: [
+        { label: "Publishing or distributing to staff as final",       zone: "HUMAN_ONLY" },
+        { label: "HR procedures",                                       zone: "HUMAN_ONLY" },
+        { label: "Any document with legal or regulatory bearing",       zone: "HUMAN_ONLY" },
+      ],
+    },
+  ];
+}
+
+function zonesForOperationsAdmin(
+  sensitivity: DecisionInputs["sensitivity_anchor"],
+  posture: DecisionInputs["leadership_posture"]
+): UsageZoneSection[] {
+  const z = (b: UsageZone, f: UsageZone, c: UsageZone) => pickZone(sensitivity, posture, b, f, c);
+  return [
+    {
+      title: "Routine operations",
+      items: [
+        { label: "Meeting summaries and action item lists",            zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Draft internal notes",                               zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Routine task organization",                          zone: z("SAFE",       "SAFE",       "SAFE")       },
+        { label: "Vendor communications",                              zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+        { label: "HR communications",                                  zone: z("RESTRICTED", "HUMAN_ONLY", "HUMAN_ONLY") },
+        { label: "Process documentation",                              zone: z("RESTRICTED", "RESTRICTED", "HUMAN_ONLY") },
+      ],
+    },
+    {
+      title: "Decisions and approvals",
+      items: [
+        { label: "Scheduling meetings or sending calendar invites",    zone: "HUMAN_ONLY" },
+        { label: "Personnel decisions",                                zone: "HUMAN_ONLY" },
+        { label: "Payroll or financial instructions",                  zone: "HUMAN_ONLY" },
+        { label: "Compliance procedures",                              zone: "HUMAN_ONLY" },
+      ],
+    },
+  ];
+}
+
+function deriveUsageZones(
+  goal: DecisionInputs["primary_goal"],
+  sensitivity: DecisionInputs["sensitivity_anchor"],
+  posture: DecisionInputs["leadership_posture"]
+): UsageZoneSection[] {
+  switch (goal) {
+    case "CLIENT_COMMUNICATION":    return zonesForClientCommunication(sensitivity, posture);
+    case "INTERNAL_DOCUMENTATION":  return zonesForInternalDocumentation(sensitivity, posture);
+    case "MARKETING_CONTENT":       return zonesForMarketingContent(sensitivity, posture);
+    case "SALES_PROPOSALS":         return zonesForSalesProposals(sensitivity, posture);
+    case "DATA_REPORTING":          return zonesForDataReporting(sensitivity, posture);
+    case "OPERATIONS_ADMIN":        return zonesForOperationsAdmin(sensitivity, posture);
+    default: {
+      const _never: never = goal;
+      return _never;
+    }
+  }
+}
+
+function deriveContextNote(sensitivity: DecisionInputs["sensitivity_anchor"]): string {
+  switch (sensitivity) {
+    case "PUBLIC_CONTENT":
+      return "This rollout involves publicly shareable content. Standard review practices apply.";
+    case "INTERNAL_BUSINESS_INFO":
+      return "This rollout involves internal business information. AI outputs must not be shared outside the organization without review.";
+    case "CLIENT_MATERIALS":
+      return "This rollout involves client data or materials. Nothing AI-assisted leaves the organization without [Designated Reviewer] sign-off.";
+    case "FINANCIAL_OPERATIONAL_RECORDS":
+      return "This rollout involves financial or operational records. All AI-generated figures must be independently verified before use. Log all AI-assisted outputs.";
+    case "REGULATED_CONFIDENTIAL":
+      return "This rollout involves regulated or confidential data. Do not input PII, PHI, or regulated identifiers into any AI tool. Compliance must be notified before any new use case is tested.";
+  }
 }
 
 // ------------------------------
