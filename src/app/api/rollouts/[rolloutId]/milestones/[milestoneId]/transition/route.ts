@@ -125,6 +125,26 @@ export async function POST(
     );
   }
 
+  // Short-circuit NOOPs — DB is already at the target state (e.g. a previous
+  // attempt succeeded but the client never saw the response). Return success
+  // immediately; calling the RPC with p_expected_from === p_to would fail.
+  if (decision.reason === "NOOP") {
+    return NextResponse.json(
+      {
+        ok:                         true,
+        rollout_id:                 rolloutId,
+        milestone_id:               milestoneId,
+        milestone_code:             milestoneCode,
+        from_status:                fromStatus,
+        to_status:                  toStatus,
+        unlocked_next_milestone_id: null,
+        artifacts_generated:        [],
+        noop:                       true,
+      },
+      { status: 200 }
+    );
+  }
+
   // 3) If ACTIVATING — compute which milestone unlocks next
   let nextMilestoneIdToUnlock: number | null = null;
 
