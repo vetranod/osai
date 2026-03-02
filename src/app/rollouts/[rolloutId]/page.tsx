@@ -40,11 +40,17 @@ type Artifact = {
 
 type Reclassification = {
   id: string;
+  event_type: "POSTURE" | "SENSITIVITY" | "GOAL";
   status: "PROPOSED" | "APPLIED" | "CANCELLED";
   proposed_at: string;
   changed_fields: string[];
   is_loosening: boolean;
   acknowledged_at: string | null;
+  acknowledged_by: string | null;
+  applied_at: string | null;
+  prior_snapshot: { inputs: Record<string, string>; outputs: Record<string, string> } | null;
+  proposed_inputs: Record<string, string> | null;
+  proposed_outputs: Record<string, string> | null;
 };
 
 // ---- Constants ----
@@ -169,6 +175,7 @@ const BADGE_COLORS: Record<string, string> = {
   PROPOSED: "warning",
   APPLIED: "success",
   CANCELLED: "subtle",
+  ACKNOWLEDGED: "info",
 };
 
 function Badge({ value, label }: { value: string; label?: string }) {
@@ -392,7 +399,6 @@ type ReclassFormState = {
   adoption_state: string;
   sensitivity_anchor: string;
   leadership_posture: string;
-  justification: string;
 };
 
 const FIELD_OPTIONS: Record<string, { value: string; label: string }[]> = {
@@ -425,97 +431,141 @@ const FIELD_OPTIONS: Record<string, { value: string; label: string }[]> = {
   ],
 };
 
+// Human-readable labels for output diff fields
+const OUTPUT_DIFF_LABELS: Record<string, string> = {
+  rollout_mode:         "Rollout Mode",
+  guardrail_strictness: "Guardrail Strictness",
+  review_depth:         "Review Depth",
+  policy_tone:          "Policy Tone",
+  maturity_state:       "Maturity State",
+};
+
 function ReclassificationPanel({
+  reclassifications,
+  rolloutMeta,
   rolloutId,
   onDone,
 }: {
+  reclassifications: Reclassification[];
+  rolloutMeta: RolloutMeta | null;
   rolloutId: string;
   onDone: () => void;
 }) {
-  const [reclass, setReclass] = useState<Reclassification[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<ReclassFormState>({
     primary_goal: "",
     adoption_state: "",
     sensitivity_anchor: "",
     leadership_posture: "",
-    justification: "",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  // Per-item action errors keyed by reclassification id
+  const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
 
-  const loadReclass = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/rollouts/${rolloutId}/reclassifications`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.ok && Array.isArray(data.reclassifications)) {
-          setReclass(data.reclassifications);
-        }
-      }
-    } catch {
-      /* silent */
-    }
-  }, [rolloutId]);
+  const hasAnyChange = !!(
+    form.primary_goal ||
+    form.adoption_state ||
+    form.sensitivity_anchor ||
+    form.leadership_posture
+  );
 
-  useEffect(() => {
-    void loadReclass();
-  }, [loadReclass]);
+  // Derive event_type from which fields were changed.
+  // Precedence: SENSITIVITY > POSTURE > GOAL
+  function deriveEventType(): "POSTURE" | "SENSITIVITY" | "GOAL" {
+    if (form.sensitivity_anchor) return "SENSITIVITY";
+    if (form.leadership_posture || form.adoption_state) return "POSTURE";
+    return "GOAL";
+  }
 
   async function handlePropose(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setFormError(null);
     setSubmitting(true);
     try {
-      const body: Record<string, string> = { justification: form.justification };
-      if (form.primary_goal) body.primary_goal = form.primary_goal;
-      if (form.adoption_state) body.adoption_state = form.adoption_state;
-      if (form.sensitivity_anchor) body.sensitivity_anchor = form.sensitivity_anchor;
-      if (form.leadership_posture) body.leadership_posture = form.leadership_posture;
+      const patch: Record<string, string> = {};
+      if (form.primary_goal)       patch.primary_goal       = form.primary_goal;
+      if (form.adoption_state)     patch.adoption_state     = form.adoption_state;
+      if (form.sensitivity_anchor) patch.sensitivity_anchor = form.sensitivity_anchor;
+      if (form.leadership_posture) patch.leadership_posture = form.leadership_posture;
 
       const res = await fetch(`/api/rollouts/${rolloutId}/reclassifications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ event_type: deriveEventType(), patch }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        setError(data.message ?? data.error ?? "Failed to propose reclassification.");
+        setFormError(data.message ?? data.error ?? "Failed to propose reclassification.");
         return;
       }
       setShowForm(false);
-      setForm({ primary_goal: "", adoption_state: "", sensitivity_anchor: "", leadership_posture: "", justification: "" });
-      await loadReclass();
+      setForm({ primary_goal: "", adoption_state: "", sensitivity_anchor: "", leadership_posture: "" });
       onDone();
     } catch {
-      setError("Network error.");
+      setFormError("Network error.");
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleAction(rid: string, action: "acknowledge" | "apply" | "cancel") {
+    // Clear previous error for this item
+    setActionErrors((prev) => ({ ...prev, [rid]: "" }));
     try {
-      await fetch(`/api/rollouts/${rolloutId}/reclassifications/${rid}/${action}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      await loadReclass();
+      const body: Record<string, string> =
+        action === "acknowledge"
+          ? {
+              acknowledged_by:
+                rolloutMeta?.approving_authority_name ??
+                rolloutMeta?.initiative_lead_name ??
+                "Leadership",
+            }
+          : {};
+
+      const res = await fetch(
+        `/api/rollouts/${rolloutId}/reclassifications/${rid}/${action}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) {
+        const msg = data.error ?? data.message ?? `${action} failed.`;
+        setActionErrors((prev) => ({ ...prev, [rid]: msg }));
+        return;
+      }
       onDone();
     } catch {
-      /* silent */
+      setActionErrors((prev) => ({ ...prev, [rid]: "Network error." }));
     }
   }
 
-  const proposed = reclass.filter((r) => r.status === "PROPOSED");
-  const history = reclass.filter((r) => r.status !== "PROPOSED");
+  // Build a list of output fields that differ between prior and proposed
+  function buildOutputDiff(r: Reclassification): { field: string; label: string; from: string; to: string }[] {
+    const prior = r.prior_snapshot?.outputs;
+    const proposed = r.proposed_outputs;
+    if (!prior || !proposed) return [];
+    return (Object.keys(OUTPUT_DIFF_LABELS) as (keyof typeof OUTPUT_DIFF_LABELS)[])
+      .filter((key) => prior[key] !== undefined && proposed[key] !== undefined && prior[key] !== proposed[key])
+      .map((key) => ({
+        field: key,
+        label: OUTPUT_DIFF_LABELS[key],
+        from: String(prior[key]).replace(/_/g, " "),
+        to:   String(proposed[key]).replace(/_/g, " "),
+      }));
+  }
+
+  const proposed  = reclassifications.filter((r) => r.status === "PROPOSED");
+  const history   = reclassifications.filter((r) => r.status !== "PROPOSED");
 
   return (
     <div className={styles.reclassPanel}>
       <div className={styles.reclassPanelHeader}>
         <h3 className={styles.sectionTitle}>Reclassifications</h3>
-        {!showForm && (
+        {!showForm && proposed.length === 0 && (
           <button className={styles.btnSmall} onClick={() => setShowForm(true)}>
             + Propose
           </button>
@@ -544,26 +594,19 @@ function ReclassificationPanel({
               </select>
             </div>
           ))}
-          <div className={styles.reclassField}>
-            <label className={styles.reclassLabel}>Justification *</label>
-            <textarea
-              className={styles.textarea}
-              rows={3}
-              required
-              value={form.justification}
-              onChange={(e) => setForm((f) => ({ ...f, justification: e.target.value }))}
-              placeholder="Explain why this reclassification is needed…"
-            />
-          </div>
-          {error && <div className={styles.errorBox}>{error}</div>}
+          {formError && <div className={styles.errorBox}>{formError}</div>}
           <div className={styles.reclassActions}>
-            <button type="submit" className={styles.btnPrimary} disabled={!form.justification || submitting}>
+            <button
+              type="submit"
+              className={styles.btnPrimary}
+              disabled={!hasAnyChange || submitting}
+            >
               {submitting ? "Proposing…" : "Submit Proposal"}
             </button>
             <button
               type="button"
               className={styles.btnSecondary}
-              onClick={() => { setShowForm(false); setError(null); }}
+              onClick={() => { setShowForm(false); setFormError(null); }}
             >
               Cancel
             </button>
@@ -574,48 +617,79 @@ function ReclassificationPanel({
       {proposed.length > 0 && (
         <div className={styles.reclassList}>
           <p className={styles.reclassGroupLabel}>Pending</p>
-          {proposed.map((r) => (
-            <div key={r.id} className={styles.reclassItem}>
-              <div className={styles.reclassItemHeader}>
-                <Badge value={r.status} />
-                {r.is_loosening && (
-                  <span className={styles.loosenBadge}>Loosening</span>
+          {proposed.map((r) => {
+            const diff = buildOutputDiff(r);
+            return (
+              <div key={r.id} className={styles.reclassItem}>
+                <div className={styles.reclassItemHeader}>
+                  <Badge value={r.status} />
+                  {r.is_loosening && (
+                    <span className={styles.loosenBadge}>Loosening</span>
+                  )}
+                  {r.acknowledged_at && (
+                    <Badge value="ACKNOWLEDGED" label="Acknowledged" />
+                  )}
+                  <span className={styles.reclassDate}>
+                    {new Date(r.proposed_at).toLocaleDateString()}
+                  </span>
+                </div>
+
+                {r.changed_fields.length > 0 && (
+                  <p className={styles.reclassFields}>
+                    Fields changed: {r.changed_fields.join(", ").replace(/_/g, " ")}
+                  </p>
                 )}
-                <span className={styles.reclassDate}>
-                  {new Date(r.proposed_at).toLocaleDateString()}
-                </span>
-              </div>
-              {r.changed_fields.length > 0 && (
-                <p className={styles.reclassFields}>
-                  Fields: {r.changed_fields.join(", ").replace(/_/g, " ")}
-                </p>
-              )}
-              <div className={styles.reclassItemActions}>
-                {!r.acknowledged_at && (
+
+                {/* Impact diff */}
+                {diff.length > 0 && (
+                  <div className={styles.reclassImpact}>
+                    <p className={styles.reclassImpactTitle}>Configuration changes</p>
+                    {diff.map((d) => (
+                      <div key={d.field} className={styles.reclassImpactRow}>
+                        <span className={styles.reclassImpactField}>{d.label}:</span>
+                        <span className={styles.reclassImpactArrow}> {d.from} → </span>
+                        <span className={styles.reclassImpactNew}>{d.to}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className={styles.reclassItemActions}>
+                  {!r.acknowledged_at && !r.is_loosening && (
+                    <button
+                      className={styles.btnSmall}
+                      onClick={() => void handleAction(r.id, "acknowledge")}
+                    >
+                      Acknowledge
+                    </button>
+                  )}
+                  {r.acknowledged_at && !r.is_loosening && (
+                    <button
+                      className={styles.btnSmallPrimary}
+                      onClick={() => void handleAction(r.id, "apply")}
+                    >
+                      Apply
+                    </button>
+                  )}
+                  {r.is_loosening && (
+                    <span className={styles.reclassLooseningWarning}>
+                      ⚠ Loosening — Archive &amp; Restart required
+                    </span>
+                  )}
                   <button
-                    className={styles.btnSmall}
-                    onClick={() => handleAction(r.id, "acknowledge")}
+                    className={styles.btnSmallDanger}
+                    onClick={() => void handleAction(r.id, "cancel")}
                   >
-                    Acknowledge
+                    Cancel
                   </button>
+                </div>
+
+                {actionErrors[r.id] && (
+                  <p className={styles.reclassActionError}>{actionErrors[r.id]}</p>
                 )}
-                {r.acknowledged_at && (
-                  <button
-                    className={styles.btnSmallPrimary}
-                    onClick={() => handleAction(r.id, "apply")}
-                  >
-                    Apply
-                  </button>
-                )}
-                <button
-                  className={styles.btnSmallDanger}
-                  onClick={() => handleAction(r.id, "cancel")}
-                >
-                  Cancel
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -640,7 +714,7 @@ function ReclassificationPanel({
         </div>
       )}
 
-      {reclass.length === 0 && !showForm && (
+      {reclassifications.length === 0 && !showForm && (
         <p className={styles.emptyNote}>No reclassifications yet.</p>
       )}
     </div>
@@ -677,6 +751,7 @@ export default function RolloutDashboard() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [rolloutMeta, setRolloutMeta] = useState<RolloutMeta | null>(null);
+  const [reclassifications, setReclassifications] = useState<Reclassification[]>([]);
   const [selectedArtifact, setSelectedArtifact] = useState<ArtifactType | null>(null);
   const [transitioning, setTransitioning] = useState<number | null>(null);
   const [transitionError, setTransitionError] = useState<string | null>(null);
@@ -686,10 +761,11 @@ export default function RolloutDashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      const [mRes, aRes, rRes] = await Promise.all([
+      const [mRes, aRes, rRes, rcRes] = await Promise.all([
         fetch(`/api/rollouts/${rolloutId}/milestones`),
         fetch(`/api/rollouts/${rolloutId}/artifacts`),
         fetch(`/api/rollouts/${rolloutId}`),
+        fetch(`/api/rollouts/${rolloutId}/reclassifications`),
       ]);
       if (mRes.status === 404 || aRes.status === 404) {
         setLoadError("not-found");
@@ -702,10 +778,17 @@ export default function RolloutDashboard() {
       const [mData, aData] = await Promise.all([mRes.json(), aRes.json()]);
       if (mData.ok) setMilestones(mData.milestones);
       if (aData.ok) setArtifacts(aData.artifacts);
-      // Rollout meta is best-effort (endpoint may not exist yet; graceful fallback)
+      // Rollout meta is best-effort (graceful fallback if absent)
       if (rRes.ok) {
         const rData = await rRes.json();
         if (rData.ok && rData.rollout) setRolloutMeta(rData.rollout as RolloutMeta);
+      }
+      // Reclassifications — best-effort
+      if (rcRes.ok) {
+        const rcData = await rcRes.json();
+        if (rcData.ok && Array.isArray(rcData.reclassifications)) {
+          setReclassifications(rcData.reclassifications as Reclassification[]);
+        }
       }
     } catch {
       setLoadError("Network error.");
@@ -951,6 +1034,16 @@ export default function RolloutDashboard() {
       <div className={styles.dashBody}>
         {/* Left column: milestones + reclassifications */}
         <div className={styles.leftCol}>
+          {/* Pending reclassification banner */}
+          {reclassifications.some((r) => r.status === "PROPOSED") && (
+            <div className={styles.reclassBanner}>
+              <span className={styles.reclassBannerIcon}>⚠</span>
+              <span>
+                A configuration change is pending review. Apply or cancel it before advancing milestones.
+              </span>
+            </div>
+          )}
+
           {/* Milestone tracker */}
           <div className={styles.card}>
             <div className={styles.milestoneTrack}>
@@ -1073,7 +1166,12 @@ export default function RolloutDashboard() {
           </div>
 
           {/* Reclassification */}
-          <ReclassificationPanel rolloutId={rolloutId} onDone={loadData} />
+          <ReclassificationPanel
+            reclassifications={reclassifications}
+            rolloutMeta={rolloutMeta}
+            rolloutId={rolloutId}
+            onDone={loadData}
+          />
         </div>
 
         {/* Right column: artifact viewer */}

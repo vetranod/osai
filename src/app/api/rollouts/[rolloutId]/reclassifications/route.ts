@@ -7,6 +7,46 @@ import { computeIsLoosening, computeChangedFields } from "@/governance/reclassif
 
 export const runtime = "nodejs";
 
+const GetParamsSchema = z.object({
+  rolloutId: z.string().uuid(),
+});
+
+export async function GET(
+  _request: Request,
+  ctx: { params: Promise<{ rolloutId: string }> }
+): Promise<Response> {
+  const paramsRaw = await ctx.params;
+  const paramsParsed = GetParamsSchema.safeParse(paramsRaw);
+  if (!paramsParsed.success) {
+    return Response.json(
+      { ok: false, message: "Invalid route params.", details: paramsParsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const { rolloutId } = paramsParsed.data;
+  const supabase = getServiceRoleSupabase();
+
+  const { data, error } = await supabase
+    .from("reclassification_events")
+    .select(
+      "id, event_type, status, proposed_at, changed_fields, is_loosening, " +
+      "acknowledged_at, acknowledged_by, applied_at, prior_snapshot, " +
+      "proposed_inputs, proposed_outputs"
+    )
+    .eq("rollout_id", rolloutId)
+    .order("proposed_at", { ascending: false });
+
+  if (error) {
+    return Response.json(
+      { ok: false, stage: "fetch_reclassifications", error: error.message },
+      { status: 500 }
+    );
+  }
+
+  return Response.json({ ok: true, reclassifications: data ?? [] });
+}
+
 type TraceStep = Readonly<{
   step: string;
   notes: string[];

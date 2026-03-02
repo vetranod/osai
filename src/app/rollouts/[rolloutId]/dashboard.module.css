@@ -744,6 +744,84 @@
   padding: 12px 0;
 }
 
+/* Pending-reclass banner shown above milestone track */
+.reclassBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--warning-light, #fffbeb);
+  border: 1px solid var(--warning, #f59e0b);
+  border-left: 4px solid var(--warning, #f59e0b);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--foreground);
+  line-height: 1.45;
+}
+
+.reclassBannerIcon {
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Impact diff block inside a proposal card */
+.reclassImpact {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.reclassImpactTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--foreground-subtle);
+  margin-bottom: 6px;
+}
+
+.reclassImpactRow {
+  font-size: 12px;
+  color: var(--foreground-muted);
+  line-height: 1.6;
+}
+
+.reclassImpactField {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.reclassImpactArrow {
+  color: var(--foreground-subtle);
+  margin: 0 4px;
+}
+
+.reclassImpactNew {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Loosening warning — replaces the Apply button */
+.reclassLooseningWarning {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Inline error below action buttons */
+.reclassActionError {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 6px;
+}
+
 /* ---- Buttons ---- */
 .btnPrimary {
   display: inline-flex;
