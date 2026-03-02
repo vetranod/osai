@@ -57,25 +57,21 @@ const MILESTONE_LABELS: Record<MilestoneCode, string> = {
 
 // What this milestone stage produces — shown below the title
 const MILESTONE_DESCRIPTIONS: Record<MilestoneCode, string> = {
-  M1: "This is your starting point. You'll confirm how AI can and can't be used at your firm, and what data it should never touch. Once you record this stage as complete, your org profile and usage rules are locked in.",
-  M2: "Before AI use expands, document who is responsible for reviewing AI outputs, how often, and what gets escalated. This creates a clear accountability record.",
-  M3: "Confirm the phased plan for how AI access will roll out across your team — what happens first, what happens next, and what signals that each phase is working.",
-  M4: "The final step. Review and adopt the formal governance policy for your firm — what's permitted, what isn't, and what happens if something goes wrong. This is your shareable, signable document.",
+  M1: "Your governance profile and usage guardrails have been generated. Review them with your team. When you are done, mark this stage as reviewed to move forward.",
+  M2: "Your review standard has been generated. It defines who is responsible for reviewing AI outputs, how often, and what triggers escalation. Review it with your team, then mark as reviewed.",
+  M3: "Your rollout plan has been generated. It defines the phases for introducing AI across your team, with entry and exit criteria for each phase. Review it, then mark as reviewed.",
+  M4: "Your governance policy has been generated. This is the formal policy document for your firm — what is permitted, what is not, and what happens if something goes wrong. Review it, then mark as active.",
 };
 
-// Status-level description shown beneath the milestone title (spec section C)
+// Status-level description shown beneath the milestone title
 const MILESTONE_STATUS_DESCRIPTIONS: Partial<Record<MilestoneStatus, { title: string; description: string }>> = {
-  AWAITING_CONFIRMATION: {
-    title: "Draft complete",
-    description: "Draft artifacts for this checkpoint have been generated and reviewed for completeness. This checkpoint is ready for internal review under the review model.",
-  },
   CONFIRMED: {
-    title: "Review complete",
-    description: "Review has been completed in accordance with the review model. Any required revisions have been incorporated.",
+    title: "Reviewed",
+    description: "Your team has reviewed the documents for this stage. Mark as active when you are ready to adopt this as your current governance position.",
   },
   ACTIVATED: {
     title: "Active",
-    description: "This checkpoint is the organization's current governance position. Future work should follow the controls and pacing defined here.",
+    description: "This is your current governance position. Future work should follow the controls and pacing defined here.",
   },
 };
 
@@ -86,9 +82,12 @@ const MILESTONE_ARTIFACTS: Record<MilestoneCode, ArtifactType[]> = {
   M4: ["POLICY"],
 };
 
+// UI-visible transitions only. AWAITING_CONFIRMATION is a server-side transient
+// state — the client skips it by firing two sequential API calls when the user
+// clicks "Mark as reviewed" from IN_PROGRESS.
 const STATUS_TRANSITIONS: Record<MilestoneStatus, MilestoneStatus | null> = {
   LOCKED: null,
-  IN_PROGRESS: "AWAITING_CONFIRMATION",
+  IN_PROGRESS: "CONFIRMED",   // client fires IN_PROGRESS→AWAITING then AWAITING→CONFIRMED
   AWAITING_CONFIRMATION: "CONFIRMED",
   CONFIRMED: "ACTIVATED",
   ACTIVATED: null,
@@ -99,47 +98,37 @@ const STATUS_TRANSITIONS: Record<MilestoneStatus, MilestoneStatus | null> = {
 const STATUS_LABELS: Record<MilestoneStatus, string> = {
   LOCKED: "Not started",
   IN_PROGRESS: "In progress",
-  AWAITING_CONFIRMATION: "Draft complete",
-  CONFIRMED: "Review complete",
+  AWAITING_CONFIRMATION: "In progress",
+  CONFIRMED: "Reviewed",
   ACTIVATED: "Active",
   PAUSED: "Paused",
   INVALIDATED: "Invalidated",
 };
 
-// Button labels per the language pack — "Record" as the verb throughout
+// One button per user-visible state
 const TRANSITION_BUTTON_LABEL: Partial<Record<MilestoneStatus, string>> = {
-  IN_PROGRESS: "Record Draft Complete",
-  AWAITING_CONFIRMATION: "Record Review Complete",
-  CONFIRMED: "Record Active",
+  IN_PROGRESS: "Mark as reviewed",
+  AWAITING_CONFIRMATION: "Mark as reviewed",
+  CONFIRMED: "Mark as active",
 };
 
 // Helper text shown below each button
 const TRANSITION_HELPER_TEXT: Partial<Record<MilestoneStatus, string>> = {
-  IN_PROGRESS: "Records that this checkpoint draft has been completed for internal review.",
-  AWAITING_CONFIRMATION: "Records that required review for this checkpoint has been completed.",
-  CONFIRMED: "Records that this checkpoint is now the active governance position.",
+  IN_PROGRESS: "Records that your team has reviewed the documents for this stage.",
+  AWAITING_CONFIRMATION: "Records that your team has reviewed the documents for this stage.",
+  CONFIRMED: "Records that this is now your active governance position.",
 };
 
-// Modal copy per transition
+// Modal only for the "Mark as active" step — the consequential one
 const TRANSITION_MODAL: Partial<Record<MilestoneStatus, {
   title: string;
   body: string;
   confirm: string;
 }>> = {
-  IN_PROGRESS: {
-    title: "Record Draft Complete",
-    body: "This marks the checkpoint as drafted. It does not notify anyone. It records that the next review step can occur.",
-    confirm: "Record",
-  },
-  AWAITING_CONFIRMATION: {
-    title: "Record Review Complete",
-    body: "This records that review has been completed under the review model. This does not create approvals or route requests.",
-    confirm: "Record",
-  },
   CONFIRMED: {
-    title: "Record Active",
-    body: "This records that the checkpoint is now active for the organization. This does not enforce controls. It documents the current governance stance.",
-    confirm: "Record",
+    title: "Mark as active",
+    body: "This records that this stage is now your active governance position. It does not enforce controls or notify anyone. It documents where your organization currently stands.",
+    confirm: "Mark as active",
   },
 };
 
@@ -674,6 +663,7 @@ type RolloutMeta = {
 
 type ConfirmModal = {
   milestoneId: number;
+  fromStatus: MilestoneStatus;
   toStatus: MilestoneStatus;
   title: string;
   body: string;
@@ -727,29 +717,45 @@ export default function RolloutDashboard() {
   function handleTransitionClick(milestoneId: number, fromStatus: MilestoneStatus, toStatus: MilestoneStatus) {
     const modal = TRANSITION_MODAL[fromStatus];
     if (modal) {
-      setConfirmModal({ milestoneId, toStatus, title: modal.title, body: modal.body, confirmLabel: modal.confirm });
+      setConfirmModal({ milestoneId, fromStatus, toStatus, title: modal.title, body: modal.body, confirmLabel: modal.confirm });
     } else {
-      void handleConfirmedTransition(milestoneId, toStatus);
+      void handleConfirmedTransition(milestoneId, fromStatus, toStatus);
     }
   }
 
-  async function handleConfirmedTransition(milestoneId: number, toStatus: MilestoneStatus) {
+  async function postTransition(milestoneId: number, toStatus: MilestoneStatus): Promise<boolean> {
+    const res = await fetch(
+      `/api/rollouts/${rolloutId}/milestones/${milestoneId}/transition`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to_status: toStatus }),
+      }
+    );
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setTransitionError(data.reason ?? data.error ?? "Transition failed.");
+      return false;
+    }
+    return true;
+  }
+
+  async function handleConfirmedTransition(milestoneId: number, fromStatus: MilestoneStatus, toStatus: MilestoneStatus) {
     setConfirmModal(null);
     setTransitionError(null);
     setTransitioning(milestoneId);
     try {
-      const res = await fetch(
-        `/api/rollouts/${rolloutId}/milestones/${milestoneId}/transition`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to_status: toStatus }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        setTransitionError(data.reason ?? data.error ?? "Transition failed.");
-        return;
+      // When moving from IN_PROGRESS to CONFIRMED, the guard enforces one step
+      // at a time — fire two sequential calls: IN_PROGRESS → AWAITING_CONFIRMATION,
+      // then AWAITING_CONFIRMATION → CONFIRMED (which triggers document generation).
+      if (fromStatus === "IN_PROGRESS" && toStatus === "CONFIRMED") {
+        const step1 = await postTransition(milestoneId, "AWAITING_CONFIRMATION");
+        if (!step1) return;
+        const step2 = await postTransition(milestoneId, "CONFIRMED");
+        if (!step2) return;
+      } else {
+        const ok = await postTransition(milestoneId, toStatus);
+        if (!ok) return;
       }
       await loadData();
     } catch {
@@ -826,7 +832,7 @@ export default function RolloutDashboard() {
             <div className={styles.modalActions}>
               <button
                 className={styles.btnPrimary}
-                onClick={() => void handleConfirmedTransition(confirmModal.milestoneId, confirmModal.toStatus)}
+                onClick={() => void handleConfirmedTransition(confirmModal.milestoneId, confirmModal.fromStatus, confirmModal.toStatus)}
               >
                 {confirmModal.confirmLabel}
               </button>

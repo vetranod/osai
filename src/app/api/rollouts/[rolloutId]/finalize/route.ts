@@ -123,18 +123,22 @@ export async function PATCH(
   }
 
   // Generate M1 documents (Governance Profile + Usage Guardrails) now that
-  // identity fields are saved. Fetch the M1 milestone state row to get its ID.
-  const { data: m1State } = await supabase
+  // identity fields are saved. Fetch all milestone state rows and find M1 by code.
+  // Note: PostgREST does not support .eq() filters on joined tables in this client
+  // version, so we fetch all rows and filter in application code.
+  const { data: milestoneRows } = await supabase
     .from("rollout_milestone_state")
     .select("milestone_id, milestones!inner(code)")
-    .eq("rollout_id", rolloutId)
-    .eq("milestones.code", "M1")
-    .maybeSingle();
+    .eq("rollout_id", rolloutId);
 
-  if (m1State?.milestone_id) {
-    // Non-fatal — if generation fails, the rollout is still valid.
+  const m1Row = (milestoneRows ?? []).find(
+    (r: any) => (r.milestones as { code: string } | null)?.code === "M1"
+  );
+
+  if (m1Row?.milestone_id) {
+    // Non-fatal — if generation fails the rollout is still valid.
     // The dashboard will show documents as soon as they exist.
-    await generateArtifactsForMilestone(rolloutId, m1State.milestone_id, "M1");
+    await generateArtifactsForMilestone(rolloutId, m1Row.milestone_id, "M1");
   }
 
   return Response.json({ ok: true, rollout: updated });
