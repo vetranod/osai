@@ -190,15 +190,56 @@ export async function POST(
     p_next_milestone_id: nextMilestoneIdToUnlock,
   });
 
+  // If the RPC returned an error, re-read the DB before giving up.
+  // The Postgres function may have committed the update but returned an
+  // unexpected shape that the Supabase client treats as an error. If the
+  // milestone is already at toStatus the transition effectively succeeded.
   if (rpcErr) {
-    return NextResponse.json(
-      { error: "Transition apply failed", details: rpcErr.message },
-      { status: 409 }
-    );
+    const { data: recheck } = await supabaseAdmin
+      .from("rollout_milestone_state")
+      .select("status")
+      .eq("rollout_id", rolloutId)
+      .eq("milestone_id", milestoneId)
+      .single();
+
+    if (recheck?.status !== toStatus) {
+      return NextResponse.json(
+        { error: "Transition apply failed", details: rpcErr.message },
+        { status: 409 }
+      );
+    }
+    // Transition did land — fall through and continue with artifact generation.
   }
 
   const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
-  const unlockedNextMilestoneId: number | null = rpcRow?.unlocked_milestone_id ?? null;
+
+  // When the RPC errored but the update still committed, derive the unlocked
+  // milestone by re-reading all states rather than relying on rpcRow.
+  let unlockedNextMilestoneId: number | null = rpcRow?.unlocked_milestone_id ?? null;
+
+  if (rpcErr && toStatus === MilestoneStatus.ACTIVATED && unlockedNextMilestoneId === null) {
+    // Find the next milestone in order that is now IN_PROGRESS.
+    const { data: allRowsRaw } = await supabaseAdmin
+      .from("rollout_milestone_state")
+      .select("milestone_id, status, milestones!inner(order_index)")
+      .eq("rollout_id", rolloutId);
+
+    const allRows = (allRowsRaw ?? []) as any[];
+
+    const currentOrderIndex: number | null =
+      allRows.find((r) => r.milestone_id === milestoneId)?.milestones?.order_index ?? null;
+
+    if (currentOrderIndex !== null) {
+      const nextRow = allRows
+        .filter((r) =>
+          r.status === MilestoneStatus.IN_PROGRESS &&
+          (r.milestones?.order_index ?? 0) > currentOrderIndex
+        )
+        .sort((a, b) => a.milestones.order_index - b.milestones.order_index)[0];
+
+      unlockedNextMilestoneId = nextRow?.milestone_id ?? null;
+    }
+  }
 
   // 5) Generate artifacts — two cases, both non-fatal:
   //    a) Transition landed on CONFIRMED → generate artifacts for this milestone.

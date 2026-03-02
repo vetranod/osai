@@ -23,7 +23,9 @@ const MILESTONE_ARTIFACT_MAP: Readonly<Record<string, ArtifactType[]>> = {
   M4: ["POLICY"],
 };
 
-const GENERATE_STATUSES = new Set(["CONFIRMED", "ACTIVATED"]);
+// Include IN_PROGRESS: a milestone may have been unlocked and its artifacts
+// never generated (e.g. if the RPC errored mid-flight during activation).
+const GENERATE_STATUSES = new Set(["IN_PROGRESS", "AWAITING_CONFIRMATION", "CONFIRMED", "ACTIVATED"]);
 
 const ParamsSchema = z.object({
   rolloutId: z.string().uuid(),

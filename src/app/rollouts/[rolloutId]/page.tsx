@@ -119,18 +119,12 @@ const TRANSITION_HELPER_TEXT: Partial<Record<MilestoneStatus, string>> = {
   CONFIRMED: "Records that this is now your active governance position.",
 };
 
-// Modal only for the "Mark as active" step — the consequential one
+// No modals — both buttons are single-click.
 const TRANSITION_MODAL: Partial<Record<MilestoneStatus, {
   title: string;
   body: string;
   confirm: string;
-}>> = {
-  CONFIRMED: {
-    title: "Mark as active",
-    body: "This records that this stage is now your active governance position. It does not enforce controls or notify anyone. It documents where your organization currently stands.",
-    confirm: "Mark as active",
-  },
-};
+}>> = {};
 
 const ARTIFACT_LABELS: Record<ArtifactType, string> = {
   PROFILE:      "Governance Profile",
