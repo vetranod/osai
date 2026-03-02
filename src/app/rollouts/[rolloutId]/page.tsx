@@ -769,6 +769,7 @@ export default function RolloutDashboard() {
         }
       }
       await loadData();
+      setTransitionError(null);
     } catch {
       setTransitionError("Network error.");
     } finally {

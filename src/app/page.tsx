@@ -105,27 +105,27 @@ export default function LandingPage() {
             <div className={styles.artifactDocumentBody}>
               <div className={styles.artifactSection}>
                 <div className={styles.artifactSectionLabel}>Section 1</div>
-                <div className={styles.artifactSectionTitle}>AI Rollout Profile</div>
+                <div className={styles.artifactSectionTitle}>Governance Profile</div>
               </div>
               <div className={styles.artifactSectionDivider} />
               <div className={styles.artifactSection}>
                 <div className={styles.artifactSectionLabel}>Section 2</div>
-                <div className={styles.artifactSectionTitle}>Guardrail Policy</div>
+                <div className={styles.artifactSectionTitle}>Usage Guardrails</div>
               </div>
               <div className={styles.artifactSectionDivider} />
               <div className={styles.artifactSection}>
                 <div className={styles.artifactSectionLabel}>Section 3</div>
-                <div className={styles.artifactSectionTitle}>Milestone Plan</div>
+                <div className={styles.artifactSectionTitle}>Review Standard</div>
               </div>
               <div className={styles.artifactSectionDivider} />
               <div className={styles.artifactSection}>
                 <div className={styles.artifactSectionLabel}>Section 4</div>
-                <div className={styles.artifactSectionTitle}>Risk Summary</div>
+                <div className={styles.artifactSectionTitle}>Adoption Plan</div>
               </div>
               <div className={styles.artifactSectionDivider} />
               <div className={styles.artifactSection}>
                 <div className={styles.artifactSectionLabel}>Section 5</div>
-                <div className={styles.artifactSectionTitle}>Operational Guidance</div>
+                <div className={styles.artifactSectionTitle}>AI Usage Policy</div>
               </div>
             </div>
           </div>
