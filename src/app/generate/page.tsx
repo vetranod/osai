@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 
@@ -576,7 +576,7 @@ function FinalizeStep({
 
 // ---- Root Generate Page ----
 
-export default function GeneratePage() {
+function GeneratePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefill = readPrefill(searchParams);
@@ -624,5 +624,13 @@ export default function GeneratePage() {
       initialIdentity={prefill.identity}
       onComplete={(id) => router.push(`/rollouts/${id}`)}
     />
+  );
+}
+
+export default function GeneratePage() {
+  return (
+    <Suspense fallback={null}>
+      <GeneratePageInner />
+    </Suspense>
   );
 }
