@@ -4,41 +4,12 @@
   margin: 0 auto;
 }
 
-/* ---- Form Card ---- */
-.formCard {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  overflow: hidden;
+/* ---- Hero ---- */
+.hero {
+  padding: 64px 0 56px;
 }
 
-.formHeader {
-  padding: 24px 36px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.title {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  color: var(--foreground);
-  margin-bottom: 4px;
-}
-
-.subtitle {
-  font-size: 14px;
-  color: var(--foreground-muted);
-  line-height: 1.5;
-}
-
-/* ---- Intro section (above form card) ---- */
-
-.introSection {
-  margin-bottom: 36px;
-}
-
-.introBadge {
+.heroBadge {
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
@@ -49,27 +20,58 @@
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.heroHeadline {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  line-height: 1.15;
+  color: var(--foreground);
   margin-bottom: 18px;
 }
 
-.introHeadline {
-  font-size: clamp(26px, 3.5vw, 34px);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
-  color: var(--foreground);
-  margin-bottom: 14px;
-}
-
-.introBody {
-  font-size: 16px;
+.heroBody {
+  font-size: 17px;
   color: var(--foreground-muted);
   line-height: 1.65;
-  max-width: 600px;
-  margin-bottom: 28px;
+  max-width: 580px;
+  margin-bottom: 32px;
 }
 
-/* "What you'll get" deliverables grid */
+.heroCta {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 24px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.heroCta:hover {
+  background: var(--accent-hover);
+}
+
+/* ---- Deliverables ---- */
+.deliverablesSection {
+  padding: 0 0 56px;
+}
+
+.deliverablesLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--foreground-subtle);
+  margin-bottom: 16px;
+}
+
 .deliverables {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -80,7 +82,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 14px 16px;
+  padding: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -113,505 +115,115 @@
   line-height: 1.4;
 }
 
-/* Step label inside form card */
-.formCardLabel {
+/* ---- How it works ---- */
+.howSection {
+  padding: 48px 0 56px;
+  border-top: 1px solid var(--border);
+}
+
+.howLabel {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
   color: var(--foreground-subtle);
-  margin-bottom: 4px;
+  margin-bottom: 24px;
 }
 
-/* ---- Form ---- */
-.form {
-  padding: 0 36px 36px;
+.howSteps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
 }
 
-.fieldset {
-  border: none;
-  padding: 0;
-  margin: 28px 0 0;
-}
-
-.legend {
+.howStep {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--foreground);
-  margin-bottom: 14px;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.legendNum {
+.howNum {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;
-}
-
-/* Radio hiding */
-.radioHidden {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-/* Grid cards (primary_goal, leadership) */
-.optionGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.optionGrid3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.optionCard {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.optionCard:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-raised);
-}
-
-.optionCardSelected {
-  border-color: var(--accent) !important;
-  background: var(--accent-light) !important;
-}
-
-/* List rows (adoption, sensitivity) */
-.optionList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.optionRow {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 12px 16px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.optionRow:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-raised);
-}
-
-.optionRowSelected {
-  border-color: var(--accent) !important;
-  background: var(--accent-light) !important;
-}
-
-.optionLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--foreground);
-  white-space: nowrap;
-}
-
-.optionDesc {
-  font-size: 12px;
-  color: var(--foreground-muted);
-  line-height: 1.4;
-}
-
-/* ---- Error ---- */
-.errorBox {
-  margin-top: 20px;
-  padding: 12px 16px;
-  background: var(--danger-light);
-  border: 1px solid var(--danger);
-  border-radius: var(--radius);
-  font-size: 13px;
-  color: var(--danger);
-}
-
-/* ---- Submit ---- */
-.formFooter {
-  margin-top: 28px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.hint {
-  font-size: 13px;
-  color: var(--foreground-subtle);
-}
-
-/* ---- Buttons ---- */
-.btnPrimary {
-  display: inline-flex;
-  align-items: center;
-  height: 40px;
-  padding: 0 20px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-
-.btnPrimary:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.btnPrimary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btnSecondary {
-  display: inline-flex;
-  align-items: center;
-  height: 40px;
-  padding: 0 20px;
-  background: var(--surface-raised);
-  color: var(--foreground);
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-  white-space: nowrap;
-}
-
-.btnSecondary:hover {
-  background: var(--surface);
-  border-color: var(--border-strong);
-}
-
-/* ---- Success Card ---- */
-.successCard {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  padding: 36px;
-}
-
-.successHeader {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 28px;
-}
-
-.successIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--success-light);
-  color: var(--success);
-  font-size: 20px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.successTitle {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--foreground);
   margin-bottom: 4px;
 }
 
-.successSub {
-  font-size: 14px;
-  color: var(--foreground-muted);
-}
-
-/* ---- Output Grid ---- */
-.outputGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
-}
-
-.outputItem {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.outputFull {
-  grid-column: 1 / -1;
-}
-
-.outputLabel {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--foreground-muted);
-}
-
-.outputValue {
-  font-size: 14px;
-  color: var(--foreground);
-  font-weight: 500;
-}
-
-/* ---- Badge ---- */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  width: fit-content;
-}
-
-.badge_success {
-  background: var(--success-light);
-  color: var(--success);
-}
-.badge_warning {
-  background: var(--warning-light);
-  color: var(--warning);
-}
-.badge_danger {
-  background: var(--danger-light);
-  color: var(--danger);
-}
-.badge_info {
-  background: var(--info-light);
-  color: var(--info);
-}
-.badge_accent {
-  background: var(--accent-light);
-  color: var(--accent);
-}
-
-/* ---- Success Actions ---- */
-.successActions {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-/* ---- Rollout ID ---- */
-.rolloutId {
-  font-size: 12px;
-  color: var(--foreground-subtle);
-}
-
-.rolloutId code {
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-/* ---- Fieldset hint ---- */
-.fieldsetHint {
-  font-size: 13px;
-  color: var(--foreground-muted);
-  line-height: 1.5;
-  margin-bottom: 14px;
-  margin-top: -6px;
-}
-
-/* ---- Context banner (finalize step) ---- */
-.contextBanner {
-  margin: 24px 0 4px;
-  padding: 14px 18px;
-  background: var(--accent-light);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
-}
-
-.contextBannerLabel {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--accent);
-  margin-bottom: 6px;
-}
-
-.contextBannerText {
-  font-size: 14px;
-  color: var(--foreground);
-  line-height: 1.6;
-}
-
-/* ---- Regulated gate block (spec H) ---- */
-.regulatedGate {
-  margin-top: 16px;
-  padding: 14px 18px;
-  background: var(--danger-light);
-  border: 1px solid var(--danger);
-  border-radius: var(--radius);
-}
-
-.regulatedGateTitle {
-  display: block;
+.howHeading {
   font-size: 14px;
   font-weight: 700;
-  color: var(--danger);
-  margin-bottom: 6px;
+  color: var(--foreground);
+  line-height: 1.3;
 }
 
-.regulatedGateBody {
+.howBody {
   font-size: 13px;
-  color: var(--foreground);
-  line-height: 1.5;
+  color: var(--foreground-muted);
+  line-height: 1.55;
   margin: 0;
 }
 
-/* ---- Name fields (finalize step) ---- */
-.nameGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.nameField {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.nameLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--foreground-muted);
-}
-
-.nameInput {
-  height: 38px;
-  padding: 0 12px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
+/* ---- Bottom CTA ---- */
+.bottomCta {
+  padding: 48px 40px;
   background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 64px;
+  text-align: center;
+}
+
+.bottomCtaHeadline {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
   color: var(--foreground);
+  margin-bottom: 8px;
+}
+
+.bottomCtaBody {
   font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.nameInput:focus {
-  border-color: var(--accent);
-}
-
-.nameInput:disabled {
-  background: var(--surface-raised);
   color: var(--foreground-muted);
-  cursor: not-allowed;
-}
-
-/* ---- Same-as-lead toggle ---- */
-.sameAsLeadToggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--foreground-muted);
-  cursor: pointer;
-  margin-bottom: 14px;
-}
-
-.sameAsLeadToggle input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
-/* ---- Solo mode note ---- */
-.soloNote {
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--foreground-muted);
-  line-height: 1.5;
-  padding: 10px 14px;
-  background: var(--success-light);
-  border-left: 3px solid var(--success);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 24px;
 }
 
 /* ---- Responsive ---- */
 @media (max-width: 640px) {
-  .formHeader,
-  .form {
-    padding-left: 20px;
-    padding-right: 20px;
+  .hero {
+    padding: 40px 0 36px;
   }
 
-  .optionGrid,
-  .optionGrid3,
-  .outputGrid {
-    grid-template-columns: 1fr 1fr;
+  .heroHeadline {
+    font-size: 26px;
   }
 
-  .formFooter {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .successCard {
-    padding: 24px 20px;
+  .heroBody {
+    font-size: 15px;
   }
 
   .deliverables {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .introHeadline {
-    font-size: 24px;
+  .howSteps {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 
-  .introBody {
-    font-size: 15px;
+  .bottomCta {
+    padding: 32px 24px;
   }
 }
 
 @media (max-width: 420px) {
-  .optionGrid,
-  .optionGrid3,
-  .outputGrid {
-    grid-template-columns: 1fr;
-  }
-
   .deliverables {
     grid-template-columns: 1fr;
   }

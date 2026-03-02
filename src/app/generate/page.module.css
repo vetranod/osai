@@ -1,0 +1,390 @@
+/* ---- Layout ---- */
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ---- Form Card ---- */
+.formCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.formHeader {
+  padding: 24px 36px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--foreground-muted);
+  line-height: 1.5;
+}
+
+/* Step label inside form card */
+.formCardLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--foreground-subtle);
+  margin-bottom: 4px;
+}
+
+/* ---- Form ---- */
+.form {
+  padding: 0 36px 36px;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 28px 0 0;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 14px;
+}
+
+.legendNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Radio hiding */
+.radioHidden {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Grid cards (primary_goal, leadership) */
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.optionGrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.optionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.optionCard:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.optionCardSelected {
+  border-color: var(--accent) !important;
+  background: var(--accent-light) !important;
+}
+
+/* List rows (adoption, sensitivity) */
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.optionRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.optionRow:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.optionRowSelected {
+  border-color: var(--accent) !important;
+  background: var(--accent-light) !important;
+}
+
+.optionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.optionDesc {
+  font-size: 12px;
+  color: var(--foreground-muted);
+  line-height: 1.4;
+}
+
+/* ---- Error ---- */
+.errorBox {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--danger);
+}
+
+/* ---- Submit ---- */
+.formFooter {
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--foreground-subtle);
+}
+
+/* ---- Buttons ---- */
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  background: var(--surface-raised);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btnSecondary:hover {
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+/* ---- Fieldset hint ---- */
+.fieldsetHint {
+  font-size: 13px;
+  color: var(--foreground-muted);
+  line-height: 1.5;
+  margin-bottom: 14px;
+  margin-top: -6px;
+}
+
+/* ---- Context banner (finalize step) ---- */
+.contextBanner {
+  margin: 24px 0 4px;
+  padding: 14px 18px;
+  background: var(--accent-light);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.contextBannerLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.contextBannerText {
+  font-size: 14px;
+  color: var(--foreground);
+  line-height: 1.6;
+}
+
+/* ---- Regulated gate block ---- */
+.regulatedGate {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+}
+
+.regulatedGateTitle {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 6px;
+}
+
+.regulatedGateBody {
+  font-size: 13px;
+  color: var(--foreground);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---- Name fields (finalize step) ---- */
+.nameGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.nameField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nameLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground-muted);
+}
+
+.nameInput {
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.nameInput:focus {
+  border-color: var(--accent);
+}
+
+.nameInput:disabled {
+  background: var(--surface-raised);
+  color: var(--foreground-muted);
+  cursor: not-allowed;
+}
+
+/* ---- Same-as-lead toggle ---- */
+.sameAsLeadToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+
+.sameAsLeadToggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ---- Solo mode note ---- */
+.soloNote {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--foreground-muted);
+  line-height: 1.5;
+  padding: 10px 14px;
+  background: var(--success-light);
+  border-left: 3px solid var(--success);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .formHeader,
+  .form {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .optionGrid,
+  .optionGrid3 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .formFooter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .optionGrid,
+  .optionGrid3 {
+    grid-template-columns: 1fr;
+  }
+}

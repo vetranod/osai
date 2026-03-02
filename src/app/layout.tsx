@@ -43,7 +43,7 @@ export default function RootLayout({
               <Link href="#" className={styles.navLink}>How it works</Link>
               <Link href="#" className={styles.navLink}>About</Link>
               <Link href="#" className={styles.navLink}>Contact</Link>
-              <Link href="/" className={styles.navCta}>Get started</Link>
+              <Link href="/generate" className={styles.navCta}>Get started</Link>
             </nav>
           </div>
         </header>
