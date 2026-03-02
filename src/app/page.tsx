@@ -376,7 +376,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className={styles.examplePacketFooter}>
-            This is a representative example. Actual packet contents are determined by your inputs.
+            Each row above represents a full document section, not a single line. The actual packet contains multiple artifacts with structured subsections, classified usage rules, phased rollout plans with entry and exit criteria, and policy language. What is shown here is a summary of section headings only.
           </div>
         </div>
       </section>
