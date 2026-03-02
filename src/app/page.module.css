@@ -1,14 +1,14 @@
 /* ---- Layout ---- */
 .wrap {
-  max-width: 720px;
+  max-width: 680px;
   margin: 0 auto;
 }
 
 /* ---- Hero ---- */
 .hero {
-  padding: 72px 0 64px;
+  padding: 80px 0 72px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 64px;
+  margin-bottom: 72px;
 }
 
 .heroHeadline {
@@ -21,7 +21,7 @@
 }
 
 .heroSubheadline {
-  font-size: clamp(16px, 2.5vw, 20px);
+  font-size: clamp(15px, 2vw, 18px);
   font-weight: 500;
   color: var(--foreground-muted);
   margin-bottom: 28px;
@@ -32,7 +32,7 @@
   font-size: 17px;
   color: var(--foreground-muted);
   line-height: 1.7;
-  max-width: 580px;
+  max-width: 520px;
   margin-bottom: 36px;
 }
 
@@ -57,116 +57,64 @@
 
 /* ---- Generic section ---- */
 .section {
-  margin-bottom: 64px;
+  margin-bottom: 72px;
 }
 
 .sectionHeading {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
   color: var(--accent);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-/* ---- Narrative block (How it usually goes) ---- */
-.narrative {
-  border-left: 3px solid var(--border);
-  padding-left: 24px;
-}
-
-.narrativeBlock {
+/* ---- Prose block ---- */
+.prose {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
-.narrativeHeading {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  color: var(--foreground);
-}
-
-.narrativeBody {
+.prose p {
   font-size: 16px;
   color: var(--foreground-muted);
   line-height: 1.75;
   margin: 0;
 }
 
-/* ---- Benefits list ---- */
-.benefitList {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+/* Blunt closing line — slightly different visual weight */
+.blunt {
+  font-size: 15px !important;
+  color: var(--foreground) !important;
+  font-weight: 600;
+  margin-top: 4px !important;
 }
 
-.benefitItem {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  font-size: 16px;
-  color: var(--foreground-muted);
-  line-height: 1.6;
-}
-
-.benefitCheck {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--success-light);
-  color: var(--success);
-  font-size: 12px;
-  font-weight: 700;
-  position: relative;
-  top: 1px;
-}
-
-/* ---- Timing section ---- */
-.timingGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  border-left: 3px solid var(--border);
-  padding-left: 24px;
-}
-
-.timingBody {
-  font-size: 16px;
-  color: var(--foreground-muted);
-  line-height: 1.75;
-  margin: 0;
+/* Credibility line — sits below prose, visually separated */
+.credibility {
+  margin-top: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground-subtle);
+  letter-spacing: 0.1px;
+  padding-left: 1px;
+  border-left: 2px solid var(--border-strong);
+  padding-left: 12px;
 }
 
 /* ---- Who it's for ---- */
 .forSection {
-  margin-bottom: 64px;
-  padding: 32px 36px;
+  margin-bottom: 96px;
+  padding: 28px 32px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
 }
 
-.forBody {
-  font-size: 16px;
-  color: var(--foreground-muted);
-  line-height: 1.75;
-  margin: 0 0 14px;
-}
-
-.forBody:last-child {
-  margin-bottom: 0;
-}
-
 /* ---- Bottom CTA ---- */
 .bottomCta {
-  padding: 56px 40px;
+  padding: 64px 40px;
   background: var(--accent);
   border-radius: var(--radius-lg);
   margin-bottom: 80px;
@@ -174,14 +122,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .bottomCtaKicker {
   font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.1px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.65);
   margin: 0;
 }
 
@@ -190,7 +137,7 @@
   font-weight: 800;
   letter-spacing: -0.4px;
   color: #fff;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
 }
 
 .bottomCta .heroCta {
@@ -206,25 +153,20 @@
 @media (max-width: 640px) {
   .hero {
     padding: 48px 0 40px;
-    margin-bottom: 48px;
+    margin-bottom: 52px;
   }
 
   .section {
-    margin-bottom: 48px;
+    margin-bottom: 52px;
   }
 
   .forSection {
-    padding: 24px 20px;
-    margin-bottom: 48px;
+    padding: 22px 18px;
+    margin-bottom: 64px;
   }
 
   .bottomCta {
-    padding: 40px 24px;
+    padding: 44px 24px;
     margin-bottom: 60px;
-  }
-
-  .narrative,
-  .timingGrid {
-    padding-left: 16px;
   }
 }

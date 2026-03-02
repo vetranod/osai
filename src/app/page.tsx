@@ -14,93 +14,99 @@ export default function LandingPage() {
           Structured rollout for small professional teams.
         </p>
         <p className={styles.heroBody}>
-          AI doesn&apos;t wait for a policy meeting. By the time you start thinking
-          about structure, someone has already built a workflow around a tool
-          you&apos;ve never reviewed. This gives you a way to get ahead of that —
-          or at least catch up cleanly.
+          AI does not wait for a policy meeting. By the time you start thinking
+          about structure, someone has already built a workflow using a tool you
+          never reviewed. This gives you a way to get ahead of that, or at least
+          catch up cleanly.
         </p>
         <Link href="/generate" className={styles.heroCta}>
-          Start Your Structured Rollout →
+          Start Your Structured Rollout
         </Link>
       </section>
 
-      {/* ---- Establish section ---- */}
+      {/* ---- How it usually goes ---- */}
       <section className={styles.section}>
-        <h2 className={styles.sectionHeading}>Establish Your AI Structure</h2>
-
-        <div className={styles.narrative}>
-          <div className={styles.narrativeBlock}>
-            <h3 className={styles.narrativeHeading}>How it usually goes</h3>
-            <p className={styles.narrativeBody}>
-              Nobody designs an AI strategy at the start. Someone finds a tool
-              that saves two hours. They mention it. It spreads because it works.
-              By the time leadership weighs in, it&apos;s already load-bearing.
-            </p>
-            <p className={styles.narrativeBody}>
-              Useful technology moves fast. Structure rarely keeps up. Not
-              because firms ignore it, but because there&apos;s no clear moment
-              to stop and define it.
-            </p>
-            <p className={styles.narrativeBody}>
-              DeploySure gives you that moment — and something concrete to show
-              for it.
-            </p>
-          </div>
+        <h2 className={styles.sectionHeading}>What usually happens</h2>
+        <div className={styles.prose}>
+          <p>Most firms do not sit down and design an AI strategy.</p>
+          <p>
+            Someone finds a tool that saves two hours. They mention it to a
+            colleague. It spreads because it works. By the time leadership weighs
+            in, it is already carrying real work.
+          </p>
+          <p>
+            Useful technology moves quickly. Structure rarely keeps pace. Not
+            because firms ignore it, but because there is no clear moment to stop
+            and define it.
+          </p>
+          <p>
+            DeploySure gives you that moment and something concrete to point to
+            when questions start coming up.
+          </p>
         </div>
       </section>
 
-      {/* ---- What you get ---- */}
+      {/* ---- What you walk away with ---- */}
       <section className={styles.section}>
-        <h2 className={styles.sectionHeading}>What you&apos;re walking away with</h2>
-        <ul className={styles.benefitList}>
-          {[
-            "A rollout posture matched to your actual risk tolerance, not a generic framework written for a hospital or a hedge fund.",
-            "Guardrails calibrated to your data.",
-            "Review expectations written down somewhere your team can actually find them.",
-            "Staged progression so adoption doesn't drift forward unchecked.",
-            "A governance packet that answers questions before they turn into debates.",
-            "No consultant retainer. No recycled policy template.",
-          ].map((item, i) => (
-            <li key={i} className={styles.benefitItem}>
-              <span className={styles.benefitCheck}>✓</span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
+        <h2 className={styles.sectionHeading}>What you walk away with</h2>
+        <div className={styles.prose}>
+          <p>
+            You will have a rollout posture that matches your actual risk
+            tolerance, not something written for a bank or a hospital.
+          </p>
+          <p>
+            You will have guardrails aligned to your data, not abstract
+            categories.
+          </p>
+          <p>
+            You will have review expectations written down somewhere your team
+            can actually find them.
+          </p>
+          <p>
+            You will have staged progression so adoption does not simply drift
+            forward unchecked.
+          </p>
+          <p>
+            You will have a governance packet that answers questions before they
+            turn into debates.
+          </p>
+          <p className={styles.blunt}>
+            No consultant retainer. No recycled policy template.
+          </p>
+        </div>
+        <p className={styles.credibility}>
+          Built as a deterministic system, not a policy generator.
+        </p>
       </section>
 
       {/* ---- Why timing matters ---- */}
       <section className={styles.section}>
-        <h2 className={styles.sectionHeading}>Why the timing matters</h2>
-        <div className={styles.timingGrid}>
-          <p className={styles.timingBody}>
+        <h2 className={styles.sectionHeading}>Why timing matters</h2>
+        <div className={styles.prose}>
+          <p>
             Once AI is woven into daily work, adding structure feels like taking
-            something away — even when it isn&apos;t.
+            something away, even when it is not.
           </p>
-          <p className={styles.timingBody}>
-            People don&apos;t resist governance because they&apos;re difficult.
-            They resist it because they don&apos;t want to lose something
-            that&apos;s already working.
+          <p>
+            It does not feel like governance. It feels like restrictions on
+            something that already works.
           </p>
-          <p className={styles.timingBody}>
-            It&apos;s easier to set expectations while habits are still forming.
-          </p>
+          <p>It is easier to set expectations while habits are still forming.</p>
         </div>
       </section>
 
       {/* ---- Who it's for ---- */}
       <section className={styles.forSection}>
         <h2 className={styles.sectionHeading}>Built for firms already in motion</h2>
-        <p className={styles.forBody}>
-          10 to 50 people. Some AI use already happening, even if it&apos;s
-          informal. Leadership that wants a defined position without turning this
-          into a compliance initiative.
-        </p>
-        <p className={styles.forBody}>
-          If you&apos;re somewhere between &ldquo;we should probably do
-          something&rdquo; and &ldquo;we don&apos;t want to overengineer
-          this,&rdquo; this fits.
-        </p>
+        <div className={styles.prose}>
+          <p>
+            This fits teams of 10 to 50 people with some AI use already
+            happening, even if it is informal. You want a defined position without
+            turning this into a compliance initiative. If you are somewhere between
+            "we should probably do something" and "we do not want to overengineer
+            this," this is where DeploySure fits.
+          </p>
+        </div>
       </section>
 
       {/* ---- Bottom CTA ---- */}
@@ -112,7 +118,7 @@ export default function LandingPage() {
           Start Your Structured Rollout
         </h2>
         <Link href="/generate" className={styles.heroCta}>
-          Build your framework →
+          Build your framework
         </Link>
       </section>
 
