@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import styles from "./dashboard.module.css";
 
 // ---- Types ----
@@ -690,8 +691,12 @@ export default function RolloutDashboard() {
         fetch(`/api/rollouts/${rolloutId}/artifacts`),
         fetch(`/api/rollouts/${rolloutId}`),
       ]);
+      if (mRes.status === 404 || aRes.status === 404) {
+        setLoadError("not-found");
+        return;
+      }
       if (!mRes.ok || !aRes.ok) {
-        setLoadError("Failed to load rollout data.");
+        setLoadError("Failed to load rollout data. Please try again.");
         return;
       }
       const [mData, aData] = await Promise.all([mRes.json(), aRes.json()]);
@@ -821,9 +826,28 @@ export default function RolloutDashboard() {
   }
 
   if (loadError) {
+    const isNotFound = loadError === "not-found";
     return (
       <div className={styles.errorWrap}>
-        <p className={styles.errorText}>{loadError}</p>
+        <div className={styles.errorCard}>
+          <div className={styles.errorCardIcon}>{isNotFound ? "404" : "!"}</div>
+          <h2 className={styles.errorCardTitle}>
+            {isNotFound ? "Rollout not found" : "Failed to load"}
+          </h2>
+          <p className={styles.errorCardMessage}>
+            {isNotFound
+              ? "This rollout does not exist or the link may be incorrect."
+              : loadError}
+          </p>
+          <div className={styles.errorCardActions}>
+            {!isNotFound && (
+              <button className={styles.errorCardBtn} onClick={() => { setLoadError(null); setLoading(true); void loadData(); }}>
+                Try again
+              </button>
+            )}
+            <Link href="/" className={styles.errorCardLink}>Go home</Link>
+          </div>
+        </div>
       </div>
     );
   }
