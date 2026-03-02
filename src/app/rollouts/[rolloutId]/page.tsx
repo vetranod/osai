@@ -292,7 +292,12 @@ function renderArtifactContent(artifact: Artifact) {
     case "ROLLOUT_PLAN": {
       type PhaseItem = { phase: number; name: string; entry_criteria: string; exit_criteria: string };
       type OverviewItem = { label: string; value: string; conditional?: boolean };
-      type Section = { id: string; title: string; items: (PhaseItem | OverviewItem)[] };
+      type Section = {
+        id: string;
+        title: string;
+        items?: OverviewItem[];
+        phases?: PhaseItem[];
+      };
       const sections = Array.isArray(json.sections) ? (json.sections as Section[]) : [];
 
       return (
@@ -308,7 +313,7 @@ function renderArtifactContent(artifact: Artifact) {
               <h4 className={styles.zoneSectionTitle}>{section.title}</h4>
               {section.id === "phase_structure" ? (
                 <div className={styles.phaseList}>
-                  {(section.items as PhaseItem[]).map((p) => (
+                  {(Array.isArray(section.phases) ? section.phases : []).map((p) => (
                     <div key={p.phase} className={styles.phaseItem}>
                       <div className={styles.phaseNum}>
                         {p.phase === 0 ? "S" : String(p.phase)}
@@ -327,7 +332,7 @@ function renderArtifactContent(artifact: Artifact) {
                 </div>
               ) : (
                 <ul className={styles.ruleList}>
-                  {(section.items as OverviewItem[]).map((item, i) => (
+                  {(Array.isArray(section.items) ? section.items : []).map((item, i) => (
                     <li key={i} className={styles.ruleItem}>
                       <span className={styles.ruleDot}>•</span>
                       <span>
