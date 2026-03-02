@@ -6,7 +6,7 @@ import styles from "./layout.module.css";
 
 // ---- Product identity — swap this one constant when the name is decided ----
 const PRODUCT_NAME = "DeploySure";
-const PRODUCT_DESCRIPTOR = "AI Governance Platform";
+const PRODUCT_DESCRIPTOR = "Deploy AI without losing control.";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

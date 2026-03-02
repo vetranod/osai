@@ -35,7 +35,7 @@
   --font-mono: var(--font-geist-mono, "Courier New", monospace);
 
   /* Layout */
-  --header-height: 64px;
+  --header-height: 72px;
 }
 
 @media (prefers-color-scheme: dark) {

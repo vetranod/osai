@@ -7,67 +7,110 @@ export default function LandingPage() {
 
       {/* ---- Hero ---- */}
       <section className={styles.hero}>
-        <span className={styles.heroBadge}>Governance Framework Generator</span>
-
         <h1 className={styles.heroHeadline}>
-          Your organization&apos;s AI governance,<br />
-          structured and ready to adopt.
+          Deploy AI without losing control.
         </h1>
-
-        <p className={styles.heroBody}>
-          Answer four questions about how your firm uses AI. DeploySure generates a
-          tailored governance framework — calibrated to your risk profile and
-          leadership posture — that your team can review, adopt, and act on.
+        <p className={styles.heroSubheadline}>
+          Structured rollout for small professional teams.
         </p>
-
+        <p className={styles.heroBody}>
+          AI doesn&apos;t wait for a policy meeting. By the time you start thinking
+          about structure, someone has already built a workflow around a tool
+          you&apos;ve never reviewed. This gives you a way to get ahead of that —
+          or at least catch up cleanly.
+        </p>
         <Link href="/generate" className={styles.heroCta}>
-          Build your framework →
+          Start Your Structured Rollout →
         </Link>
       </section>
 
-      {/* ---- Deliverables ---- */}
-      <section className={styles.deliverablesSection}>
-        <p className={styles.deliverablesLabel}>What you&apos;ll get</p>
-        <div className={styles.deliverables}>
-          {[
-            { label: "Usage Guardrails",  desc: "Clear rules on what AI can and cannot do at your firm." },
-            { label: "Review Standard",   desc: "Who reviews AI output, how often, and when to escalate." },
-            { label: "Adoption Plan",     desc: "A phased rollout plan with entry and exit criteria." },
-            { label: "AI Usage Policy",   desc: "A formal, shareable policy document for your organization." },
-          ].map(({ label, desc }) => (
-            <div key={label} className={styles.deliverableItem}>
-              <span className={styles.deliverableCheck}>✓</span>
-              <span className={styles.deliverableLabel}>{label}</span>
-              <span className={styles.deliverableDesc}>{desc}</span>
-            </div>
-          ))}
+      {/* ---- Establish section ---- */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionHeading}>Establish Your AI Structure</h2>
+
+        <div className={styles.narrative}>
+          <div className={styles.narrativeBlock}>
+            <h3 className={styles.narrativeHeading}>How it usually goes</h3>
+            <p className={styles.narrativeBody}>
+              Nobody designs an AI strategy at the start. Someone finds a tool
+              that saves two hours. They mention it. It spreads because it works.
+              By the time leadership weighs in, it&apos;s already load-bearing.
+            </p>
+            <p className={styles.narrativeBody}>
+              Useful technology moves fast. Structure rarely keeps up. Not
+              because firms ignore it, but because there&apos;s no clear moment
+              to stop and define it.
+            </p>
+            <p className={styles.narrativeBody}>
+              DeploySure gives you that moment — and something concrete to show
+              for it.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* ---- How it works ---- */}
-      <section className={styles.howSection}>
-        <p className={styles.howLabel}>How it works</p>
-        <div className={styles.howSteps}>
+      {/* ---- What you get ---- */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionHeading}>What you&apos;re walking away with</h2>
+        <ul className={styles.benefitList}>
           {[
-            { num: "1", heading: "Answer four questions", body: "Tell us where AI is being used, how widely, what data it touches, and how leadership wants to proceed." },
-            { num: "2", heading: "Framework is generated", body: "A deterministic decision engine calibrates your risk tier, rollout pace, and review depth — no AI guesswork." },
-            { num: "3", heading: "Review and adopt", body: "Your governance dashboard contains every document your team needs to activate a compliant, structured rollout." },
-          ].map(({ num, heading, body }) => (
-            <div key={num} className={styles.howStep}>
-              <span className={styles.howNum}>{num}</span>
-              <strong className={styles.howHeading}>{heading}</strong>
-              <p className={styles.howBody}>{body}</p>
-            </div>
+            "A rollout posture matched to your actual risk tolerance, not a generic framework written for a hospital or a hedge fund.",
+            "Guardrails calibrated to your data.",
+            "Review expectations written down somewhere your team can actually find them.",
+            "Staged progression so adoption doesn't drift forward unchecked.",
+            "A governance packet that answers questions before they turn into debates.",
+            "No consultant retainer. No recycled policy template.",
+          ].map((item, i) => (
+            <li key={i} className={styles.benefitItem}>
+              <span className={styles.benefitCheck}>✓</span>
+              <span>{item}</span>
+            </li>
           ))}
+        </ul>
+      </section>
+
+      {/* ---- Why timing matters ---- */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionHeading}>Why the timing matters</h2>
+        <div className={styles.timingGrid}>
+          <p className={styles.timingBody}>
+            Once AI is woven into daily work, adding structure feels like taking
+            something away — even when it isn&apos;t.
+          </p>
+          <p className={styles.timingBody}>
+            People don&apos;t resist governance because they&apos;re difficult.
+            They resist it because they don&apos;t want to lose something
+            that&apos;s already working.
+          </p>
+          <p className={styles.timingBody}>
+            It&apos;s easier to set expectations while habits are still forming.
+          </p>
         </div>
+      </section>
+
+      {/* ---- Who it's for ---- */}
+      <section className={styles.forSection}>
+        <h2 className={styles.sectionHeading}>Built for firms already in motion</h2>
+        <p className={styles.forBody}>
+          10 to 50 people. Some AI use already happening, even if it&apos;s
+          informal. Leadership that wants a defined position without turning this
+          into a compliance initiative.
+        </p>
+        <p className={styles.forBody}>
+          If you&apos;re somewhere between &ldquo;we should probably do
+          something&rdquo; and &ldquo;we don&apos;t want to overengineer
+          this,&rdquo; this fits.
+        </p>
       </section>
 
       {/* ---- Bottom CTA ---- */}
       <section className={styles.bottomCta}>
-        <h2 className={styles.bottomCtaHeadline}>Ready to govern your AI rollout?</h2>
-        <p className={styles.bottomCtaBody}>
-          Takes under five minutes. No account required.
+        <p className={styles.bottomCtaKicker}>
+          Define how AI operates in your firm before it defines itself.
         </p>
+        <h2 className={styles.bottomCtaHeadline}>
+          Start Your Structured Rollout
+        </h2>
         <Link href="/generate" className={styles.heroCta}>
           Build your framework →
         </Link>
