@@ -762,28 +762,34 @@ export default function RolloutDashboard() {
       // succeeded in a previous attempt, the retry is safe.
       if (fromStatus === "IN_PROGRESS" && toStatus === "CONFIRMED") {
         const step1 = await postTransition(milestoneId, "AWAITING_CONFIRMATION");
-        if (!step1) {
-          await loadData();
-          return;
-        }
-        const step2 = await postTransition(milestoneId, "CONFIRMED");
-        if (!step2) {
-          await loadData();
-          return;
+        if (step1) {
+          await postTransition(milestoneId, "CONFIRMED");
         }
       } else {
-        const ok = await postTransition(milestoneId, toStatus);
-        if (!ok) {
-          await loadData();
-          return;
-        }
+        await postTransition(milestoneId, toStatus);
       }
       await loadData();
-      setTransitionError(null);
     } catch {
       setTransitionError("Network error.");
     } finally {
       setTransitioning(null);
+    }
+
+    // After any transition attempt — success or failure — run the backfill endpoint.
+    // This ensures artifacts are generated for any milestone that is now IN_PROGRESS /
+    // CONFIRMED / ACTIVATED but whose documents were never created (e.g. because an
+    // earlier RPC commit succeeded while the HTTP response to the client was lost).
+    // The endpoint is idempotent: it skips artifact types that already exist.
+    try {
+      const bfRes = await fetch(`/api/rollouts/${rolloutId}/artifacts/regenerate`, { method: "POST" });
+      if (bfRes.ok) {
+        const bfData = await bfRes.json();
+        if (Array.isArray(bfData.generated) && bfData.generated.length > 0) {
+          await loadData();
+        }
+      }
+    } catch {
+      // Non-fatal — existing artifacts still render correctly.
     }
   }
 

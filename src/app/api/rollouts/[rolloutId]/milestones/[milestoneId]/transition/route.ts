@@ -108,8 +108,18 @@ export async function POST(
     return NextResponse.json({ error: "Milestone state row not found" }, { status: 404 });
   }
 
-  const fromStatus    = currentRow.status as RolloutMilestoneStateRow["status"];
-  const milestoneCode = (currentRow.milestones as unknown as { code: string; order_index: number } | null)?.code ?? null;
+  const fromStatus = currentRow.status as RolloutMilestoneStateRow["status"];
+
+  // milestones join can be an object (many-to-one FK) or an array depending on
+  // PostgREST version / client version. Handle both forms defensively.
+  const milestoneMeta = ((): { code: string; order_index: number } | null => {
+    const raw = (currentRow as any).milestones;
+    if (!raw) return null;
+    return Array.isArray(raw) ? (raw[0] ?? null) : raw;
+  })();
+
+  const milestoneCode       = milestoneMeta?.code       ?? null;
+  const currentOrderIndex   = milestoneMeta?.order_index ?? null;
 
   // 2) Guard the transition (pure deterministic rule)
   const decision = canTransitionStatus(fromStatus, toStatus, { intent });
@@ -166,11 +176,14 @@ export async function POST(
       );
     }
 
-    const normalized: MilestoneStateRow[] = (rows ?? []).map((r: any) => ({
-      milestone_id: r.milestone_id,
-      order_index:  r.milestones?.order_index,
-      status:       r.status,
-    }));
+    const normalized: MilestoneStateRow[] = (rows ?? []).map((r: any) => {
+      const ms = Array.isArray(r.milestones) ? (r.milestones[0] ?? null) : (r.milestones ?? null);
+      return {
+        milestone_id: r.milestone_id,
+        order_index:  ms?.order_index ?? 0,
+        status:       r.status,
+      };
+    });
 
     // Simulate post-update state so computeUnlockEffectOnActivation sees ACTIVATED
     const simulated = normalized.map((m) =>
@@ -195,14 +208,14 @@ export async function POST(
   // unexpected shape that the Supabase client treats as an error. If the
   // milestone is already at toStatus the transition effectively succeeded.
   if (rpcErr) {
-    const { data: recheck } = await supabaseAdmin
+    const { data: recheck, error: recheckErr } = await supabaseAdmin
       .from("rollout_milestone_state")
       .select("status")
       .eq("rollout_id", rolloutId)
       .eq("milestone_id", milestoneId)
       .single();
 
-    if (recheck?.status !== toStatus) {
+    if (recheckErr || recheck?.status !== toStatus) {
       return NextResponse.json(
         { error: "Transition apply failed", details: rpcErr.message },
         { status: 409 }
@@ -213,12 +226,16 @@ export async function POST(
 
   const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
 
-  // When the RPC errored but the update still committed, derive the unlocked
-  // milestone by re-reading all states rather than relying on rpcRow.
+  // Derive the unlocked next milestone ID from the RPC result when available.
   let unlockedNextMilestoneId: number | null = rpcRow?.unlocked_milestone_id ?? null;
 
-  if (rpcErr && toStatus === MilestoneStatus.ACTIVATED && unlockedNextMilestoneId === null) {
-    // Find the next milestone in order that is now IN_PROGRESS.
+  // When ACTIVATED but no unlock was recorded — either because:
+  //   a) rpcErr was set (rpcRow is null), or
+  //   b) the RPC succeeded but the next milestone was already IN_PROGRESS from
+  //      a prior attempt (the unlock UPDATE matched no LOCKED rows → v_unlocked=null)
+  // In both cases find the first IN_PROGRESS milestone after the current one so
+  // its artifacts can be generated below.
+  if (toStatus === MilestoneStatus.ACTIVATED && unlockedNextMilestoneId === null) {
     const { data: allRowsRaw } = await supabaseAdmin
       .from("rollout_milestone_state")
       .select("milestone_id, status, milestones!inner(order_index)")
@@ -226,16 +243,22 @@ export async function POST(
 
     const allRows = (allRowsRaw ?? []) as any[];
 
-    const currentOrderIndex: number | null =
-      allRows.find((r) => r.milestone_id === milestoneId)?.milestones?.order_index ?? null;
-
+    // Use currentOrderIndex derived from the initial milestone read (step 1).
     if (currentOrderIndex !== null) {
       const nextRow = allRows
-        .filter((r) =>
-          r.status === MilestoneStatus.IN_PROGRESS &&
-          (r.milestones?.order_index ?? 0) > currentOrderIndex
-        )
-        .sort((a, b) => a.milestones.order_index - b.milestones.order_index)[0];
+        .filter((r: any) => {
+          const ms = Array.isArray(r.milestones) ? (r.milestones[0] ?? null) : (r.milestones ?? null);
+          return (
+            r.status === MilestoneStatus.IN_PROGRESS &&
+            typeof ms?.order_index === "number" &&
+            ms.order_index > currentOrderIndex
+          );
+        })
+        .sort((a: any, b: any) => {
+          const aMs = Array.isArray(a.milestones) ? (a.milestones[0] ?? null) : (a.milestones ?? null);
+          const bMs = Array.isArray(b.milestones) ? (b.milestones[0] ?? null) : (b.milestones ?? null);
+          return (aMs?.order_index ?? 0) - (bMs?.order_index ?? 0);
+        })[0] as any;
 
       unlockedNextMilestoneId = nextRow?.milestone_id ?? null;
     }
