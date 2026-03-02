@@ -267,10 +267,6 @@ export function getRollbackAdjustmentTrigger(_mode: RolloutMode): Clause {
 // Surface: ROLLOUT_PLAN S4
 // ------------------------------
 
-const EXPANSION_CRITERIA_BASE: Clause = {
-  text: "Expansion may proceed when review compliance meets defined thresholds, error rates remain within acceptable limits, and no active escalation events remain unresolved. Where regulated information is involved, leadership approval is required prior to expansion regardless of posture. Where leadership posture is cautious, expansion requires formal review prior to authorization.",
-};
-
 export function getExpansionCriteria(
   _mode: RolloutMode,
   _tier: SensitivityTier,
@@ -278,5 +274,7 @@ export function getExpansionCriteria(
 ): Clause {
   // Single prewritten block covers all driver combinations per locked content.
   // Conditional language for REGULATED and CAUTIOUS is embedded in the clause text.
-  return EXPANSION_CRITERIA_BASE;
+  return {
+    text: "Expansion may proceed when review compliance meets defined thresholds, error rates remain within acceptable limits, and no active escalation events remain unresolved. Where regulated information is involved, leadership approval is required prior to expansion regardless of posture. Where leadership posture is cautious, expansion requires formal review prior to authorization.",
+  };
 }
