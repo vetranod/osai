@@ -1,4 +1,5 @@
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
+import { generateArtifactsForMilestone } from "@/governance/artifacts/generateArtifactsForMilestone";
 
 export const runtime = "nodejs";
 
@@ -119,6 +120,21 @@ export async function PATCH(
       { ok: false, message: "Failed to save identity fields.", error: updateError },
       { status: 500 }
     );
+  }
+
+  // Generate M1 documents (Governance Profile + Usage Guardrails) now that
+  // identity fields are saved. Fetch the M1 milestone state row to get its ID.
+  const { data: m1State } = await supabase
+    .from("rollout_milestone_state")
+    .select("milestone_id, milestones!inner(code)")
+    .eq("rollout_id", rolloutId)
+    .eq("milestones.code", "M1")
+    .maybeSingle();
+
+  if (m1State?.milestone_id) {
+    // Non-fatal — if generation fails, the rollout is still valid.
+    // The dashboard will show documents as soon as they exist.
+    await generateArtifactsForMilestone(rolloutId, m1State.milestone_id, "M1");
   }
 
   return Response.json({ ok: true, rollout: updated });
