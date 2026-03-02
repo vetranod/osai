@@ -254,12 +254,10 @@ export function getStabilizationControls(needsStabilization: boolean): Clause | 
 // Surface: ROLLOUT_PLAN S3
 // ------------------------------
 
-const ROLLBACK_ADJUSTMENT_TRIGGER: Clause = {
-  text: "If performance thresholds, compliance rates, or error limits are not met, rollout pacing may be reduced and prior controls reinstated. Leadership may require additional review or restrict scope until corrective measures are verified.",
-};
-
 export function getRollbackAdjustmentTrigger(_mode: RolloutMode): Clause {
-  return ROLLBACK_ADJUSTMENT_TRIGGER;
+  return {
+    text: "If performance thresholds, compliance rates, or error limits are not met, rollout pacing may be reduced and prior controls reinstated. Leadership may require additional review or restrict scope until corrective measures are verified.",
+  };
 }
 
 // ------------------------------
