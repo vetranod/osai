@@ -797,7 +797,14 @@ export default function RolloutDashboard() {
     ? artifacts.find((a) => a.artifact_type === selectedArtifact) ?? null
     : null;
 
-  const generatedArtifacts = artifacts.filter((a) => a.generated);
+  // Only count artifacts whose milestone has been legitimately reached.
+  const generatedArtifacts = artifacts.filter((a) => {
+    if (!a.generated) return false;
+    const ownerCode = (Object.entries(MILESTONE_ARTIFACTS) as [MilestoneCode, ArtifactType[]][])
+      .find(([, types]) => types.includes(a.artifact_type as ArtifactType))?.[0];
+    const ownerMilestone = ownerCode ? milestones.find((m) => m.code === ownerCode) : null;
+    return ownerMilestone ? ownerMilestone.status !== "LOCKED" : false;
+  });
 
   if (loading) {
     return (
@@ -978,22 +985,27 @@ export default function RolloutDashboard() {
                       <div className={styles.milestoneArtifacts}>
                         {MILESTONE_ARTIFACTS[m.code].map((at) => {
                           const art = artifacts.find((a) => a.artifact_type === at);
-                          const banner = art?.generated ? artifactBanner(at) : null;
+                          // Accessible when this milestone has been reached (not LOCKED).
+                          // The artifact row may exist from backfill but should stay locked
+                          // if the user hasn't legitimately reached this stage yet.
+                          const milestoneReached = m.status !== "LOCKED";
+                          const accessible = milestoneReached && !!art?.generated;
+                          const banner = accessible ? artifactBanner(at) : null;
                           return (
                             <div key={at} className={styles.artifactPillWrap}>
                               <button
                                 className={`${styles.artifactPill} ${
-                                  art?.generated ? styles.artifactPillReady : styles.artifactPillLocked
+                                  accessible ? styles.artifactPillReady : styles.artifactPillLocked
                                 } ${selectedArtifact === at ? styles.artifactPillActive : ""}`}
                                 onClick={() => {
-                                  if (art?.generated) {
+                                  if (accessible) {
                                     setSelectedArtifact(at === selectedArtifact ? null : at);
                                   }
                                 }}
-                                disabled={!art?.generated}
-                                title={art?.generated ? `View ${ARTIFACT_LABELS[at]}` : `Generated when you complete this stage`}
+                                disabled={!accessible}
+                                title={accessible ? `View ${ARTIFACT_LABELS[at]}` : `Available once the previous stage is complete`}
                               >
-                                {art?.generated ? "↗ " : "⊘ "}{ARTIFACT_LABELS[at]}
+                                {accessible ? "↗ " : "⊘ "}{ARTIFACT_LABELS[at]}
                               </button>
                               {banner && (
                                 <span className={styles.artifactBannerBadge} title={banner.text}>
@@ -1056,7 +1068,12 @@ export default function RolloutDashboard() {
                   {(["PROFILE", "GUARDRAILS", "REVIEW_MODEL", "ROLLOUT_PLAN", "POLICY"] as ArtifactType[]).map(
                     (at) => {
                       const art = artifacts.find((a) => a.artifact_type === at);
-                      if (!art?.generated) return null;
+                      // Find which milestone owns this artifact type
+                      const ownerCode = (Object.entries(MILESTONE_ARTIFACTS) as [MilestoneCode, ArtifactType[]][])
+                        .find(([, types]) => types.includes(at))?.[0];
+                      const ownerMilestone = ownerCode ? milestones.find((m) => m.code === ownerCode) : null;
+                      const milestoneReached = ownerMilestone ? ownerMilestone.status !== "LOCKED" : false;
+                      if (!art?.generated || !milestoneReached) return null;
                       return (
                         <button
                           key={at}
