@@ -33,6 +33,9 @@
 
   --font-sans: var(--font-geist-sans, Arial, Helvetica, sans-serif);
   --font-mono: var(--font-geist-mono, "Courier New", monospace);
+
+  /* Layout */
+  --header-height: 64px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -82,6 +85,13 @@ body {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+}
+
+/* ---- Heading scale ---- */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 a {

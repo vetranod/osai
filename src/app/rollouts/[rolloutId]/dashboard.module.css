@@ -12,20 +12,29 @@
 }
 
 .dashTitle {
-  font-size: 22px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: -0.3px;
-  color: var(--foreground);
-  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--foreground-subtle);
+  margin-bottom: 6px;
 }
 
 .dashId {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--foreground-subtle);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .dashId code {
   font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
 }
 
 .dashBody {
@@ -67,7 +76,7 @@
 
 .rightCol {
   position: sticky;
-  top: 80px;
+  top: calc(var(--header-height, 64px) + 24px);
 }
 
 /* ---- Milestone Track ---- */
@@ -1089,4 +1098,50 @@
 .modalActions {
   display: flex;
   gap: 10px;
+}
+
+/* ---- Dashboard header — polished (phase 1 UI pass) ---- */
+
+.dashFrameworkTitle {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--foreground);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.dashBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.dashRefId {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--foreground-subtle);
+  margin-top: 4px;
+}
+
+.dashRefId code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  color: var(--foreground-muted);
+}
+
+.dashRefLabel {
+  font-weight: 600;
+  color: var(--foreground-subtle);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }

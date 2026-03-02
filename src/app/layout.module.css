@@ -10,23 +10,44 @@
 .headerInner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
-  height: 56px;
+  padding: 0 32px;
+  height: var(--header-height, 64px);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+/* ---- Logo ---- */
 .logo {
   display: flex;
-  align-items: baseline;
-  gap: 2px;
+  flex-direction: column;
+  gap: 1px;
+  align-items: flex-start;
   text-decoration: none;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.3px;
 }
 
+.logoWordmark {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--foreground);
+  line-height: 1;
+}
+
+.logoWordmarkAccent {
+  color: var(--accent);
+}
+
+.logoDescriptor {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--foreground-subtle);
+  line-height: 1;
+}
+
+/* Legacy classes — kept so any lingering references don't break */
 .logoMark {
   color: var(--accent);
 }
@@ -35,10 +56,11 @@
   color: var(--foreground);
 }
 
+/* ---- Nav ---- */
 .nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 .navLink {
@@ -55,16 +77,113 @@
   color: var(--foreground);
 }
 
-.main {
-  min-height: calc(100vh - 56px);
-  padding: 32px 24px 64px;
+.navCta {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+  margin-left: 4px;
 }
 
-/* App footer — one line, not repeated per screen (spec K) */
+.navCta:hover {
+  background: var(--accent-hover);
+  color: #fff;
+}
+
+/* ---- Main ---- */
+.main {
+  min-height: calc(100vh - var(--header-height, 64px));
+  padding: 40px 24px 80px;
+}
+
+/* ---- Footer ---- */
 .footer {
-  text-align: center;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 32px 32px 28px;
+}
+
+.footerInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.footerCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.footerColCenter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.footerColRight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.footerLegal {
   font-size: 12px;
   color: var(--foreground-subtle);
-  padding: 16px 24px 20px;
-  border-top: 1px solid var(--border);
+  line-height: 1.5;
+}
+
+.footerDisclaimer {
+  font-size: 11px;
+  color: var(--foreground-subtle);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.footerLink {
+  font-size: 13px;
+  color: var(--foreground-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footerLink:hover {
+  color: var(--foreground);
+}
+
+@media (max-width: 680px) {
+  .footerInner {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .footerColCenter,
+  .footerColRight {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 600px) {
+  .headerInner {
+    padding: 0 16px;
+  }
+
+  .navLink {
+    display: none;
+  }
 }

@@ -841,14 +841,38 @@ export default function RolloutDashboard() {
         </div>
       )}
 
-      {/* Header — Governance Checkpoints (spec D) */}
+      {/* Header — AI Governance Framework (spec D) */}
       <div className={styles.dashHeader}>
         <div>
-          <h1 className={styles.dashTitle}>Governance Checkpoints</h1>
+          {/* Section label — spec D */}
+          <p className={styles.dashTitle}>Governance Checkpoints</p>
+
+          {/* Primary headline */}
+          <h1 className={styles.dashFrameworkTitle}>
+            {rolloutMeta?.initiative_lead_name
+              ? `AI Governance Framework for ${rolloutMeta.initiative_lead_name}`
+              : "AI Governance Framework"}
+          </h1>
+
+          {/* Mode + tier context badges — null-guarded */}
+          {rolloutMeta && (
+            <div className={styles.dashBadgeRow}>
+              <Badge value={rolloutMeta.rollout_mode} />
+              <Badge value={rolloutMeta.sensitivity_tier} />
+              {rolloutMeta.needs_stabilization && (
+                <Badge value="STABILIZATION" label="Stabilization required" />
+              )}
+            </div>
+          )}
+
+          {/* Spec D statement — kept verbatim */}
           <p className={styles.dashSubheader}>
             Each checkpoint records a documented governance position. Actions record completion; they do not route requests or enforce compliance.
           </p>
-          <p className={styles.dashId}>
+
+          {/* Reference ID — demoted, labeled */}
+          <p className={styles.dashRefId}>
+            <span className={styles.dashRefLabel}>Reference ID</span>
             <code>{rolloutId}</code>
           </p>
         </div>

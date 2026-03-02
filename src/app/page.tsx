@@ -115,11 +115,45 @@ function IntakeForm({ onComplete }: { onComplete: (rolloutId: string, output: En
 
   return (
     <div className={styles.wrap}>
+
+      {/* ---- Intro section — purely presentational, no state or logic ---- */}
+      <div className={styles.introSection}>
+        <span className={styles.introBadge}>Governance Framework Generator</span>
+
+        <h1 className={styles.introHeadline}>
+          Your organization&apos;s AI governance,<br />
+          structured and ready to adopt.
+        </h1>
+
+        <p className={styles.introBody}>
+          Answer four questions about how your firm uses AI. We&apos;ll generate a
+          tailored governance framework — calibrated to your risk profile and
+          leadership posture — that your team can review, adopt, and act on.
+        </p>
+
+        <div className={styles.deliverables}>
+          {[
+            { label: "Usage Guardrails",  desc: "Clear rules on what AI can and cannot do at your firm." },
+            { label: "Review Standard",   desc: "Who reviews AI output, how often, and when to escalate." },
+            { label: "Adoption Plan",     desc: "A phased rollout plan with entry and exit criteria." },
+            { label: "AI Usage Policy",   desc: "A formal, shareable policy document for your organization." },
+          ].map(({ label, desc }) => (
+            <div key={label} className={styles.deliverableItem}>
+              <span className={styles.deliverableCheck}>✓</span>
+              <span className={styles.deliverableLabel}>{label}</span>
+              <span className={styles.deliverableDesc}>{desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* ---- End intro section ---- */}
+
       <div className={styles.formCard}>
         <div className={styles.formHeader}>
-          <h1 className={styles.title}>Set up your AI governance framework</h1>
+          <p className={styles.formCardLabel}>Step 1 of 2</p>
+          <h2 className={styles.title}>Set up your framework</h2>
           <p className={styles.subtitle}>
-            Answer four questions about your firm. We&apos;ll generate a tailored governance framework — including usage rules, a review process, a rollout plan, and a formal policy — ready to adopt or share with your team.
+            Answer four questions about your firm. Your responses calibrate the framework — including risk tier, rollout pacing, and review depth.
           </p>
         </div>
 
