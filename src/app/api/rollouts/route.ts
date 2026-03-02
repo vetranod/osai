@@ -1,6 +1,7 @@
 import { validateDecisionInputs } from "@/decision-engine/options";
 import { evaluateDecision } from "@/decision-engine/engine";
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
+import { generateArtifactsForMilestone } from "@/governance/artifacts/generateArtifactsForMilestone";
 
 export const runtime = "nodejs";
 
@@ -116,6 +117,27 @@ function buildDecisionTraceSnapshot(args: {
   return snapshot;
 }
 
+// Identity fields that may be provided upfront (required for REGULATED tier)
+const IDENTITY_FIELDS = [
+  "initiative_lead_name",
+  "initiative_lead_title",
+  "approving_authority_name",
+  "approving_authority_title",
+] as const;
+
+type IdentityPayload = Partial<Record<typeof IDENTITY_FIELDS[number], string>>;
+
+function extractIdentityFields(raw: Record<string, unknown>): IdentityPayload {
+  const out: IdentityPayload = {};
+  for (const key of IDENTITY_FIELDS) {
+    const val = raw[key];
+    if (typeof val === "string" && val.trim().length > 0) {
+      out[key] = val.trim().replace(/\s+/g, " ").replace(/[\r\n]/g, "").slice(0, 120);
+    }
+  }
+  return out;
+}
+
 export async function POST(request: Request): Promise<Response> {
   let body: unknown;
   try {
@@ -131,6 +153,23 @@ export async function POST(request: Request): Promise<Response> {
 
   const inputs = validation.value;
   const result = evaluateDecision(inputs);
+
+  // For REGULATED tier, identity fields must be included in this request
+  // (the DB constraint chk_regulated_identity_required enforces this).
+  const identityFields = extractIdentityFields(body as Record<string, unknown>);
+  if (result.output.sensitivity_tier === "REGULATED") {
+    const missing = IDENTITY_FIELDS.filter((k) => !identityFields[k]);
+    if (missing.length > 0) {
+      return Response.json(
+        {
+          ok: false,
+          message: "Regulated-tier rollouts require ownership fields before they can be saved.",
+          fields_required: missing,
+        },
+        { status: 400 }
+      );
+    }
+  }
 
   const decision_trace = buildDecisionTraceSnapshot({
     inputs,
@@ -157,13 +196,19 @@ export async function POST(request: Request): Promise<Response> {
       needs_stabilization: result.output.needs_stabilization,
       sensitivity_tier: result.output.sensitivity_tier,
       decision_trace,
+      ...identityFields,
     })
     .select("*")
     .single();
 
   if (rolloutInsert.error) {
     return Response.json(
-      { ok: false, stage: "insert_rollout", error: rolloutInsert.error },
+      {
+        ok: false,
+        message: `Failed to save rollout: ${rolloutInsert.error.message}`,
+        stage: "insert_rollout",
+        error: rolloutInsert.error,
+      },
       { status: 500 }
     );
   }
@@ -178,7 +223,12 @@ export async function POST(request: Request): Promise<Response> {
 
   if (milestoneFetch.error) {
     return Response.json(
-      { ok: false, stage: "fetch_milestones", error: milestoneFetch.error },
+      {
+        ok: false,
+        message: `Failed to fetch milestone templates: ${milestoneFetch.error.message}`,
+        stage: "fetch_milestones",
+        error: milestoneFetch.error,
+      },
       { status: 500 }
     );
   }
@@ -201,13 +251,23 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         {
           ok: false,
+          message: `Rollout was created but milestone seeding failed: ${seedInsert.error.message}`,
           stage: "seed_rollout_milestone_state",
           error: seedInsert.error,
           rollout_created: rollout,
-          note: "Rollout was created but milestone seeding failed (non-transactional flow).",
         },
         { status: 500 }
       );
+    }
+  }
+
+  // If identity fields were provided (deferred REGULATED path), generate M1
+  // artifacts now — same as what finalize/route.ts does for non-deferred paths.
+  if (Object.keys(identityFields).length > 0) {
+    const m1Row = milestones[0]; // first milestone by order_index = M1
+    if (m1Row?.id) {
+      // Non-fatal — if generation fails the rollout is still valid
+      await generateArtifactsForMilestone(rollout.id, m1Row.id, "M1").catch(() => null);
     }
   }
 
