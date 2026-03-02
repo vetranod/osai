@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 
 // ---- Options ----
@@ -64,6 +64,11 @@ type FinalizeState = {
   approving_authority_title: string;
 };
 
+type PrefillData = {
+  inputs: FormState;
+  identity: FinalizeState;
+};
+
 // ---- Helpers ----
 
 function isSoloMode(f: FinalizeState): boolean {
@@ -76,19 +81,37 @@ function isSoloMode(f: FinalizeState): boolean {
   );
 }
 
+function readPrefill(searchParams: { get(name: string): string | null }): PrefillData {
+  return {
+    inputs: {
+      primary_goal: searchParams.get("primary_goal") ?? "",
+      adoption_state: searchParams.get("adoption_state") ?? "",
+      sensitivity_anchor: searchParams.get("sensitivity_anchor") ?? "",
+      leadership_posture: searchParams.get("leadership_posture") ?? "",
+    },
+    identity: {
+      initiative_lead_name: searchParams.get("initiative_lead_name") ?? "",
+      initiative_lead_title: searchParams.get("initiative_lead_title") ?? "",
+      approving_authority_name: searchParams.get("approving_authority_name") ?? "",
+      approving_authority_title: searchParams.get("approving_authority_title") ?? "",
+    },
+  };
+}
+
 // ---- Step 1: Intake Form ----
 
 type OnIntakeComplete =
   | { deferred: false; rolloutId: string; output: EngineOutput; inputs: FormState }
   | { deferred: true; output: EngineOutput; inputs: FormState };
 
-function IntakeForm({ onComplete }: { onComplete: (result: OnIntakeComplete) => void }) {
-  const [form, setForm] = useState<FormState>({
-    primary_goal: "",
-    adoption_state: "",
-    sensitivity_anchor: "",
-    leadership_posture: "",
-  });
+function IntakeForm({
+  onComplete,
+  initialForm,
+}: {
+  onComplete: (result: OnIntakeComplete) => void;
+  initialForm: FormState;
+}) {
+  const [form, setForm] = useState<FormState>(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -279,20 +302,17 @@ function FinalizeStep({
   intakeInputs,
   output,
   inputs,
+  initialIdentity,
   onComplete,
 }: {
   rolloutId: string | null;   // null = deferred (REGULATED): create rollout here
   intakeInputs?: FormState;   // original intake answers (needed when rolloutId is null)
   output: EngineOutput;
   inputs: FormState;
+  initialIdentity: FinalizeState;
   onComplete: (id: string) => void;
 }) {
-  const [form, setForm] = useState<FinalizeState>({
-    initiative_lead_name: "",
-    initiative_lead_title: "",
-    approving_authority_name: "",
-    approving_authority_title: "",
-  });
+  const [form, setForm] = useState<FinalizeState>(initialIdentity);
   const [sameAsLead, setSameAsLead] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -558,6 +578,8 @@ function FinalizeStep({
 
 export default function GeneratePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const prefill = readPrefill(searchParams);
 
   type Stage =
     | { step: "intake" }
@@ -569,6 +591,7 @@ export default function GeneratePage() {
   if (stage.step === "intake") {
     return (
       <IntakeForm
+        initialForm={prefill.inputs}
         onComplete={(result) => {
           if (result.deferred) {
             setStage({ step: "finalize_deferred", output: result.output, inputs: result.inputs });
@@ -587,6 +610,7 @@ export default function GeneratePage() {
         intakeInputs={stage.inputs}
         output={stage.output}
         inputs={stage.inputs}
+        initialIdentity={prefill.identity}
         onComplete={(id) => router.push(`/rollouts/${id}`)}
       />
     );
@@ -597,6 +621,7 @@ export default function GeneratePage() {
       rolloutId={stage.rolloutId}
       output={stage.output}
       inputs={stage.inputs}
+      initialIdentity={prefill.identity}
       onComplete={(id) => router.push(`/rollouts/${id}`)}
     />
   );

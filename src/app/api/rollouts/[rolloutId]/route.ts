@@ -13,10 +13,11 @@ export async function GET(
   const { data, error } = await supabase
     .from("rollouts")
     .select(
-      "id, rollout_mode, sensitivity_tier, needs_stabilization, " +
+      "id, primary_goal, adoption_state, sensitivity_anchor, leadership_posture, " +
+      "rollout_mode, sensitivity_tier, needs_stabilization, " +
       "initiative_lead_name, initiative_lead_title, " +
       "approving_authority_name, approving_authority_title, " +
-      "created_at"
+      "created_at, status, archived_at, archive_restart_used_at"
     )
     .eq("id", rolloutId)
     .single();

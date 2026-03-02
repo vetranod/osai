@@ -444,11 +444,13 @@ function ReclassificationPanel({
   reclassifications,
   rolloutMeta,
   rolloutId,
+  isArchived,
   onDone,
 }: {
   reclassifications: Reclassification[];
   rolloutMeta: RolloutMeta | null;
   rolloutId: string;
+  isArchived: boolean;
   onDone: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);
@@ -565,7 +567,7 @@ function ReclassificationPanel({
     <div className={styles.reclassPanel}>
       <div className={styles.reclassPanelHeader}>
         <h3 className={styles.sectionTitle}>Reclassifications</h3>
-        {!showForm && proposed.length === 0 && (
+        {!showForm && proposed.length === 0 && !isArchived && (
           <button className={styles.btnSmall} onClick={() => setShowForm(true)}>
             + Propose
           </button>
@@ -655,6 +657,12 @@ function ReclassificationPanel({
                 )}
 
                 <div className={styles.reclassItemActions}>
+                  {isArchived ? (
+                    <span className={styles.reclassLooseningWarning}>
+                      Archived rollout â€” reclassification disabled
+                    </span>
+                  ) : (
+                    <>
                   {!r.acknowledged_at && !r.is_loosening && (
                     <button
                       className={styles.btnSmall}
@@ -682,6 +690,8 @@ function ReclassificationPanel({
                   >
                     Cancel
                   </button>
+                    </>
+                  )}
                 </div>
 
                 {actionErrors[r.id] && (
@@ -717,6 +727,9 @@ function ReclassificationPanel({
       {reclassifications.length === 0 && !showForm && (
         <p className={styles.emptyNote}>No reclassifications yet.</p>
       )}
+      {isArchived && (
+        <p className={styles.emptyNote}>This rollout is archived. History remains visible, but new changes are disabled.</p>
+      )}
     </div>
   );
 }
@@ -725,6 +738,10 @@ function ReclassificationPanel({
 
 type RolloutMeta = {
   id: string;
+  primary_goal: string;
+  adoption_state: string;
+  sensitivity_anchor: string;
+  leadership_posture: string;
   rollout_mode: string;
   sensitivity_tier: string;
   needs_stabilization: boolean;
@@ -733,6 +750,9 @@ type RolloutMeta = {
   approving_authority_name:  string | null;
   approving_authority_title: string | null;
   created_at: string | null;
+  status: string | null;
+  archived_at: string | null;
+  archive_restart_used_at: string | null;
 };
 
 type ConfirmModal = {
@@ -758,6 +778,8 @@ export default function RolloutDashboard() {
   const [confirmModal, setConfirmModal] = useState<ConfirmModal | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -797,11 +819,48 @@ export default function RolloutDashboard() {
     }
   }, [rolloutId]);
 
+  const isArchived = rolloutMeta?.status === "ARCHIVED";
+  const m3Status = milestones.find((m) => m.code === "M3")?.status ?? null;
+  const canArchive =
+    !isArchived &&
+    !!rolloutMeta &&
+    !rolloutMeta.archive_restart_used_at &&
+    m3Status !== "ACTIVATED";
+
+  const restartHref = rolloutMeta
+    ? `/generate?primary_goal=${encodeURIComponent(rolloutMeta.primary_goal)}&adoption_state=${encodeURIComponent(rolloutMeta.adoption_state)}&sensitivity_anchor=${encodeURIComponent(rolloutMeta.sensitivity_anchor)}&leadership_posture=${encodeURIComponent(rolloutMeta.leadership_posture)}&initiative_lead_name=${encodeURIComponent(rolloutMeta.initiative_lead_name ?? "")}&initiative_lead_title=${encodeURIComponent(rolloutMeta.initiative_lead_title ?? "")}&approving_authority_name=${encodeURIComponent(rolloutMeta.approving_authority_name ?? "")}&approving_authority_title=${encodeURIComponent(rolloutMeta.approving_authority_title ?? "")}`
+    : "/generate";
+
+  async function handleArchive() {
+    if (!canArchive) return;
+    const confirmed = window.confirm(
+      "Archive this rollout and use your one included restart? This rollout will become read-only history."
+    );
+    if (!confirmed) return;
+
+    setArchiveError(null);
+    setArchiving(true);
+    try {
+      const res = await fetch(`/api/rollouts/${rolloutId}/archive`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) {
+        setArchiveError(data.error ?? data.message ?? "Archive failed.");
+        return;
+      }
+      await loadData();
+    } catch {
+      setArchiveError("Network error.");
+    } finally {
+      setArchiving(false);
+    }
+  }
+
   // On first mount, backfill any artifacts missing for completed milestones.
   // Covers rollouts that progressed before on-unlock generation was introduced.
   useEffect(() => {
     async function initLoad() {
       await loadData();
+      if (isArchived) return;
       // Fire-and-forget: if the regenerate endpoint finds nothing missing it's a no-op.
       try {
         const res = await fetch(`/api/rollouts/${rolloutId}/artifacts/regenerate`, { method: "POST" });
@@ -815,7 +874,7 @@ export default function RolloutDashboard() {
     }
     void initLoad();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rolloutId]);
+  }, [rolloutId, isArchived, loadData]);
 
   function handleTransitionClick(milestoneId: number, fromStatus: MilestoneStatus, toStatus: MilestoneStatus) {
     const modal = TRANSITION_MODAL[fromStatus];
@@ -1023,6 +1082,12 @@ export default function RolloutDashboard() {
             Each checkpoint records a documented governance position. Actions record completion; they do not route requests or enforce compliance.
           </p>
 
+          {isArchived && (
+            <p className={styles.dashSubheader}>
+              This rollout is archived. Documents remain available as historical records, but milestones and reclassifications are read-only.
+            </p>
+          )}
+
           {/* Reference ID — demoted, labeled */}
           <p className={styles.dashRefId}>
             <span className={styles.dashRefLabel}>Reference ID</span>
@@ -1034,8 +1099,44 @@ export default function RolloutDashboard() {
       <div className={styles.dashBody}>
         {/* Left column: milestones + reclassifications */}
         <div className={styles.leftCol}>
+          {rolloutMeta && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>Archive + Restart</h2>
+              <p className={styles.cardSubtitle}>
+                One included restart is available until your rollout plan is activated. Restart pre-fills your intake and identity details, but you must review and submit them again.
+              </p>
+              <div className={styles.transitionArea}>
+                {isArchived ? (
+                  <Link href={restartHref} className={styles.transitionBtn}>
+                    Restart from this rollout
+                  </Link>
+                ) : canArchive ? (
+                  <button
+                    className={styles.btnSmallDanger}
+                    onClick={() => void handleArchive()}
+                    disabled={archiving}
+                  >
+                    {archiving ? "Archiving..." : "Archive this rollout"}
+                  </button>
+                ) : (
+                  <p className={styles.transitionHelper}>
+                    {rolloutMeta.archive_restart_used_at
+                      ? "Archive + Restart has already been used for this rollout."
+                      : "Archive is available only before the rollout plan is activated."}
+                  </p>
+                )}
+                {!isArchived && (
+                  <p className={styles.transitionHelper}>
+                    After archiving, this rollout becomes read-only history and you can start a fresh prefilled intake.
+                  </p>
+                )}
+                {archiveError && <div className={styles.errorBox}>{archiveError}</div>}
+              </div>
+            </div>
+          )}
+
           {/* Pending reclassification banner */}
-          {reclassifications.some((r) => r.status === "PROPOSED") && (
+          {!isArchived && reclassifications.some((r) => r.status === "PROPOSED") && (
             <div className={styles.reclassBanner}>
               <span className={styles.reclassBannerIcon}>⚠</span>
               <span>
@@ -1140,7 +1241,7 @@ export default function RolloutDashboard() {
                       </div>
 
                       {/* Transition button + helper text (spec A) */}
-                      {btnLabel && (
+                      {btnLabel && !isArchived && (
                         <div className={styles.transitionArea}>
                           <button
                             className={styles.transitionBtn}
@@ -1170,6 +1271,7 @@ export default function RolloutDashboard() {
             reclassifications={reclassifications}
             rolloutMeta={rolloutMeta}
             rolloutId={rolloutId}
+            isArchived={!!isArchived}
             onDone={loadData}
           />
         </div>

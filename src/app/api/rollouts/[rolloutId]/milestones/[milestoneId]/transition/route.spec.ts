@@ -65,15 +65,17 @@ describe("POST /api/rollouts/:rolloutId/milestones/:milestoneId/transition", () 
   });
 
   it("applies a valid forward transition and calls the RPC with expected args", async () => {
-    // Arrange: current milestone status in DB
-    (supabaseMock.__queryBuilder.maybeSingle as any).mockResolvedValueOnce({
-      data: {
-        rollout_id: rolloutId,
-        milestone_id: 1,
-        status: "LOCKED",
-      } satisfies MilestoneStateRow,
-      error: null,
-    });
+    supabaseMock.__queuedResults.push(
+      { data: { status: "ACTIVE" }, error: null },
+      {
+        data: {
+          rollout_id: rolloutId,
+          milestone_id: 1,
+          status: "LOCKED",
+        } satisfies MilestoneStateRow,
+        error: null,
+      }
+    );
 
     // Arrange: RPC succeeds
     (supabaseMock.rpc as any).mockResolvedValueOnce({
@@ -113,8 +115,7 @@ describe("POST /api/rollouts/:rolloutId/milestones/:milestoneId/transition", () 
 
     expect(supabaseMock.from).toHaveBeenCalledWith("rollout_milestone_state");
     expect(supabaseMock.__queryBuilder.select).toHaveBeenCalled();
-    expect(supabaseMock.__queryBuilder.eq).toHaveBeenCalledTimes(2);
-    expect(supabaseMock.__queryBuilder.maybeSingle).toHaveBeenCalledTimes(1);
+    expect(supabaseMock.__queryBuilder.maybeSingle).toHaveBeenCalledTimes(2);
 
     expect(supabaseMock.rpc).toHaveBeenCalledTimes(1);
     expect(supabaseMock.rpc).toHaveBeenCalledWith("osai_apply_milestone_transition", {
@@ -127,14 +128,17 @@ describe("POST /api/rollouts/:rolloutId/milestones/:milestoneId/transition", () 
   });
 
   it("blocks an invalid skip transition (does not call RPC)", async () => {
-    (supabaseMock.__queryBuilder.maybeSingle as any).mockResolvedValueOnce({
-      data: {
-        rollout_id: rolloutId,
-        milestone_id: 1,
-        status: "LOCKED",
-      } satisfies MilestoneStateRow,
-      error: null,
-    });
+    supabaseMock.__queuedResults.push(
+      { data: { status: "ACTIVE" }, error: null },
+      {
+        data: {
+          rollout_id: rolloutId,
+          milestone_id: 1,
+          status: "LOCKED",
+        } satisfies MilestoneStateRow,
+        error: null,
+      }
+    );
 
     const mod = await import("./route");
     const { POST } = mod;
@@ -167,6 +171,10 @@ describe("POST /api/rollouts/:rolloutId/milestones/:milestoneId/transition", () 
 
   it("recovers activation when unlock is already satisfied and retrying without unlock succeeds", async () => {
     supabaseMock.__queuedResults.push(
+      {
+        data: { status: "ACTIVE" },
+        error: null,
+      },
       {
         data: {
           rollout_id: rolloutId,

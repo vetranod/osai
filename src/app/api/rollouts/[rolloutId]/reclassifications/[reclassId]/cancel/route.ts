@@ -25,6 +25,26 @@ export async function POST(
 
   const { rolloutId, reclassId } = parsed.data;
 
+  const { data: rollout, error: rolloutErr } = await supabaseAdmin
+    .from("rollouts")
+    .select("status")
+    .eq("id", rolloutId)
+    .single();
+
+  if (rolloutErr) {
+    return NextResponse.json(
+      { error: "Failed to fetch rollout", details: rolloutErr.message },
+      { status: 500 }
+    );
+  }
+
+  if (rollout?.status === "ARCHIVED") {
+    return NextResponse.json(
+      { error: "Archived rollouts are read-only" },
+      { status: 409 }
+    );
+  }
+
   const { error } = await supabaseAdmin.rpc(
     "osai_cancel_reclassification_proposal",
     {

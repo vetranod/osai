@@ -49,6 +49,26 @@ export async function POST(
 
   const supabase = getServiceRoleSupabase();
 
+  const rolloutState = await supabase
+    .from("rollouts")
+    .select("status")
+    .eq("id", rolloutId)
+    .single();
+
+  if (rolloutState.error) {
+    return Response.json(
+      { ok: false, error: "Failed to fetch rollout", details: rolloutState.error.message },
+      { status: 500 }
+    );
+  }
+
+  if (rolloutState.data?.status === "ARCHIVED") {
+    return Response.json(
+      { ok: false, error: "Archived rollouts are read-only" },
+      { status: 409 }
+    );
+  }
+
   // Fetch the event to verify it exists and is still PROPOSED
   const { data: event, error: fetchErr } = await supabase
     .from("reclassification_events")

@@ -77,12 +77,16 @@ export async function PATCH(
   // Fetch rollout to check tier
   const { data: rollout, error: fetchError } = await supabase
     .from("rollouts")
-    .select("id, sensitivity_tier")
+    .select("id, sensitivity_tier, status")
     .eq("id", rolloutId)
     .single();
 
   if (fetchError || !rollout) {
     return Response.json({ ok: false, message: "Rollout not found." }, { status: 404 });
+  }
+
+  if (rollout.status === "ARCHIVED") {
+    return Response.json({ ok: false, message: "Archived rollouts are read-only." }, { status: 409 });
   }
 
   // Regulated tier: all four fields required

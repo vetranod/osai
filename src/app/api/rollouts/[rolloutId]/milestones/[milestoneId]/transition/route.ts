@@ -124,6 +124,26 @@ export async function POST(
   const toStatus = bodyParsed.data.to_status;
   const intent   = bodyParsed.data.intent ?? "USER_ACTION";
 
+  const { data: rolloutMeta, error: rolloutMetaErr } = await supabaseAdmin
+    .from("rollouts")
+    .select("status")
+    .eq("id", rolloutId)
+    .maybeSingle();
+
+  if (rolloutMetaErr) {
+    return NextResponse.json(
+      { error: "Failed reading rollout state", details: rolloutMetaErr.message },
+      { status: 500 }
+    );
+  }
+
+  if (rolloutMeta?.status === "ARCHIVED") {
+    return NextResponse.json(
+      { error: "Archived rollouts are read-only" },
+      { status: 409 }
+    );
+  }
+
   // 1) Read current milestone state + milestone code
   const { data: currentRow, error: currentErr } = await supabaseAdmin
     .from("rollout_milestone_state")
