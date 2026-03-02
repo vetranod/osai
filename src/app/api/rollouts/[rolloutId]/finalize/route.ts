@@ -1,5 +1,6 @@
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
 import { generateArtifactsForMilestone } from "@/governance/artifacts/generateArtifactsForMilestone";
+import { normalizeJoinedMilestone } from "@/governance/milestones/normalizeMilestoneJoin";
 
 export const runtime = "nodejs";
 
@@ -132,7 +133,7 @@ export async function PATCH(
     .eq("rollout_id", rolloutId);
 
   const m1Row = (milestoneRows ?? []).find(
-    (r: any) => (r.milestones as { code: string } | null)?.code === "M1"
+    (r: any) => normalizeJoinedMilestone<{ code: string }>(r.milestones)?.code === "M1"
   );
 
   if (m1Row?.milestone_id) {

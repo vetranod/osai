@@ -13,6 +13,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/server/supabaseAdmin";
 import { generateArtifactsForMilestone } from "@/governance/artifacts/generateArtifactsForMilestone";
 import type { ArtifactType } from "@/governance/artifacts/generateArtifactsForMilestone";
+import { normalizeJoinedMilestone } from "@/governance/milestones/normalizeMilestoneJoin";
 
 export const runtime = "nodejs";
 
@@ -82,7 +83,7 @@ export async function POST(
     const status = row.status as string;
     if (!GENERATE_STATUSES.has(status)) continue;
 
-    const code = (row.milestones as unknown as { code: string } | null)?.code;
+    const code = normalizeJoinedMilestone<{ code: string }>(row.milestones)?.code;
     if (!code) continue;
 
     const expectedTypes = MILESTONE_ARTIFACT_MAP[code];
@@ -98,7 +99,12 @@ export async function POST(
     // for the milestone code, so we call it and let it check versions internally.
     // Any type that already exists will just get version+1, which is fine.
     // To be precise about skipping, we only call when at least one type is missing.
-    const result = await generateArtifactsForMilestone(rolloutId, row.milestone_id, code);
+    const result = await generateArtifactsForMilestone(
+      rolloutId,
+      row.milestone_id,
+      code,
+      missingTypes
+    );
     generated.push(...result.generated);
     errors.push(...result.errors);
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/server/supabaseAdmin";
+import { normalizeJoinedMilestone } from "@/governance/milestones/normalizeMilestoneJoin";
 
 export const runtime = "nodejs";
 
@@ -58,12 +59,15 @@ export async function GET(
   const rows = (data ?? []) as unknown as MilestoneRow[];
 
   const milestones = rows
-    .map((r) => ({
-      milestone_id: r.milestone_id,
-      code: r.milestones?.code ?? "",
-      order_index: r.milestones?.order_index ?? 0,
-      status: r.status,
-    }))
+    .map((r) => {
+      const milestone = normalizeJoinedMilestone<{ code: string; order_index: number }>(r.milestones);
+      return {
+        milestone_id: r.milestone_id,
+        code: milestone?.code ?? "",
+        order_index: milestone?.order_index ?? 0,
+        status: r.status,
+      };
+    })
     .sort((a, b) => a.order_index - b.order_index);
 
   return NextResponse.json(

@@ -61,9 +61,10 @@ type RolloutRow = {
 export async function generateArtifactsForMilestone(
   rolloutId: string,
   milestoneId: number,
-  milestoneCode: string
+  milestoneCode: string,
+  artifactTypesOverride?: ReadonlyArray<ArtifactType>
 ): Promise<{ generated: ArtifactType[]; errors: string[] }> {
-  const artifactTypes = MILESTONE_ARTIFACT_MAP[milestoneCode];
+  const artifactTypes = artifactTypesOverride ?? MILESTONE_ARTIFACT_MAP[milestoneCode];
   if (!artifactTypes || artifactTypes.length === 0) {
     return { generated: [], errors: [] };
   }
