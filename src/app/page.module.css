@@ -63,7 +63,7 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 .hero {
-  padding: 96px 0 80px;
+  padding: 64px 0 80px;
   border-bottom: 1px solid var(--border);
   max-width: 640px;
 }
