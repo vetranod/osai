@@ -710,9 +710,25 @@ export default function RolloutDashboard() {
     }
   }, [rolloutId]);
 
+  // On first mount, backfill any artifacts missing for completed milestones.
+  // Covers rollouts that progressed before on-unlock generation was introduced.
   useEffect(() => {
-    void loadData();
-  }, [loadData]);
+    async function initLoad() {
+      await loadData();
+      // Fire-and-forget: if the regenerate endpoint finds nothing missing it's a no-op.
+      try {
+        const res = await fetch(`/api/rollouts/${rolloutId}/artifacts/regenerate`, { method: "POST" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.generated?.length > 0) await loadData();
+        }
+      } catch {
+        // Non-fatal — existing artifacts still render correctly.
+      }
+    }
+    void initLoad();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rolloutId]);
 
   function handleTransitionClick(milestoneId: number, fromStatus: MilestoneStatus, toStatus: MilestoneStatus) {
     const modal = TRANSITION_MODAL[fromStatus];
