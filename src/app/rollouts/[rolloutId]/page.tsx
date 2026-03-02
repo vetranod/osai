@@ -748,14 +748,25 @@ export default function RolloutDashboard() {
       // When moving from IN_PROGRESS to CONFIRMED, the guard enforces one step
       // at a time — fire two sequential calls: IN_PROGRESS → AWAITING_CONFIRMATION,
       // then AWAITING_CONFIRMATION → CONFIRMED (which triggers document generation).
+      // The guard treats same-status transitions as NOOP (allowed), so if step1 already
+      // succeeded in a previous attempt, the retry is safe.
       if (fromStatus === "IN_PROGRESS" && toStatus === "CONFIRMED") {
         const step1 = await postTransition(milestoneId, "AWAITING_CONFIRMATION");
-        if (!step1) return;
+        if (!step1) {
+          await loadData();
+          return;
+        }
         const step2 = await postTransition(milestoneId, "CONFIRMED");
-        if (!step2) return;
+        if (!step2) {
+          await loadData();
+          return;
+        }
       } else {
         const ok = await postTransition(milestoneId, toStatus);
-        if (!ok) return;
+        if (!ok) {
+          await loadData();
+          return;
+        }
       }
       await loadData();
     } catch {
@@ -921,7 +932,7 @@ export default function RolloutDashboard() {
                       <div
                         className={`${styles.milestoneDot} ${styles[`dot_${m.status}`]}`}
                       >
-                        {m.status === "CONFIRMED" || m.status === "ACTIVATED" ? "✓" : m.code}
+                        {m.status === "CONFIRMED" || m.status === "ACTIVATED" ? "✓" : idx + 1}
                       </div>
                     </div>
 

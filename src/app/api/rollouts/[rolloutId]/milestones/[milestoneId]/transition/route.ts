@@ -178,8 +178,13 @@ export async function POST(
   }
 
   const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+  const unlockedNextMilestoneId: number | null = rpcRow?.unlocked_milestone_id ?? null;
 
-  // 5) If the transition landed on CONFIRMED — generate artifacts for this milestone
+  // 5) Generate artifacts — two cases, both non-fatal:
+  //    a) Transition landed on CONFIRMED → generate artifacts for this milestone.
+  //    b) Transition activated this milestone and unlocked the next one →
+  //       generate artifacts for the next milestone so they are ready to view
+  //       before the user has to mark that stage as reviewed.
   let artifacts_generated: ArtifactType[] = [];
   let artifact_errors: string[]           = [];
 
@@ -187,6 +192,25 @@ export async function POST(
     const result = await generateArtifactsForMilestone(rolloutId, milestoneId, milestoneCode);
     artifacts_generated = result.generated;
     artifact_errors     = result.errors;
+  }
+
+  if (toStatus === MilestoneStatus.ACTIVATED && unlockedNextMilestoneId !== null) {
+    // Fetch the code for the newly-unlocked milestone so we know which artifacts to generate.
+    const { data: nextMilestone } = await supabaseAdmin
+      .from("milestones")
+      .select("code")
+      .eq("id", unlockedNextMilestoneId)
+      .single();
+
+    if (nextMilestone?.code) {
+      const result = await generateArtifactsForMilestone(
+        rolloutId,
+        unlockedNextMilestoneId,
+        nextMilestone.code
+      );
+      artifacts_generated = [...artifacts_generated, ...result.generated];
+      artifact_errors     = [...artifact_errors, ...result.errors];
+    }
   }
 
   return NextResponse.json(
@@ -197,7 +221,7 @@ export async function POST(
       milestone_code:             milestoneCode,
       from_status:                fromStatus,
       to_status:                  toStatus,
-      unlocked_next_milestone_id: rpcRow?.unlocked_milestone_id ?? null,
+      unlocked_next_milestone_id: unlockedNextMilestoneId,
       artifacts_generated,
       ...(artifact_errors.length > 0 ? { artifact_errors } : {}),
     },

@@ -359,7 +359,7 @@ export default function LandingPage() {
             <div className={styles.exampleRow}>
               <div className={styles.exampleRowLabel}>Milestone Plan</div>
               <div className={styles.exampleRowValue}>
-                4 milestones. 60 day initial review gate. Leadership sign-off required at M2.
+                4 stages. 60 day initial review gate. Leadership sign-off required at stage 2.
               </div>
             </div>
             <div className={styles.exampleRow}>
