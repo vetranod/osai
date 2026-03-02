@@ -48,6 +48,45 @@ type RolloutMilestoneStateRow = {
   milestones: { order_index: number } | null;
 };
 
+async function retryActivationWithoutUnlock(
+  rolloutId: string,
+  milestoneId: number,
+  fromStatus: RolloutMilestoneStateRow["status"],
+  nextMilestoneIdToUnlock: number | null
+): Promise<boolean> {
+  if (nextMilestoneIdToUnlock === null) return false;
+
+  const { data: nextRow, error: nextRowErr } = await supabaseAdmin
+    .from("rollout_milestone_state")
+    .select("status")
+    .eq("rollout_id", rolloutId)
+    .eq("milestone_id", nextMilestoneIdToUnlock)
+    .single();
+
+  if (nextRowErr || !nextRow || nextRow.status === MilestoneStatus.LOCKED) {
+    return false;
+  }
+
+  const { error: retryErr } = await supabaseAdmin.rpc("osai_apply_milestone_transition", {
+    p_rollout_id: rolloutId,
+    p_milestone_id: milestoneId,
+    p_expected_from: fromStatus,
+    p_to: MilestoneStatus.ACTIVATED,
+    p_next_milestone_id: null,
+  });
+
+  if (!retryErr) return true;
+
+  const { data: recheck } = await supabaseAdmin
+    .from("rollout_milestone_state")
+    .select("status")
+    .eq("rollout_id", rolloutId)
+    .eq("milestone_id", milestoneId)
+    .single();
+
+  return recheck?.status === MilestoneStatus.ACTIVATED;
+}
+
 // ------------------------------
 // Route handler
 // ------------------------------
@@ -216,10 +255,21 @@ export async function POST(
       .single();
 
     if (recheckErr || recheck?.status !== toStatus) {
-      return NextResponse.json(
-        { error: "Transition apply failed", details: rpcErr.message },
-        { status: 409 }
-      );
+      const recoveredByRetry =
+        toStatus === MilestoneStatus.ACTIVATED &&
+        await retryActivationWithoutUnlock(
+          rolloutId,
+          milestoneId,
+          fromStatus,
+          nextMilestoneIdToUnlock
+        );
+
+      if (!recoveredByRetry) {
+        return NextResponse.json(
+          { error: "Transition apply failed", details: rpcErr.message },
+          { status: 409 }
+        );
+      }
     }
     // Transition did land — fall through and continue with artifact generation.
   }
