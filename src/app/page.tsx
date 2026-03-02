@@ -376,7 +376,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className={styles.examplePacketFooter}>
-            Each row above represents a full document section, not a single line. The actual packet contains multiple artifacts with structured subsections, classified usage rules, phased rollout plans with entry and exit criteria, and policy language. What is shown here is a summary of section headings only.
+            Each row above represents a full document, not a single line. The actual packet contains multiple structured documents with detailed subsections, classified usage rules, phased rollout plans with entry and exit criteria, and policy language. What is shown here is a summary of document titles only.
           </div>
         </div>
       </section>
