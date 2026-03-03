@@ -51,12 +51,12 @@ export async function GET(
   const { data, error } = await supabase
     .from("reclassification_events")
     .select(
-      "id, event_type, status, proposed_at, changed_fields, is_loosening, " +
+      "id, event_type, status, created_at, changed_fields, is_loosening, " +
       "acknowledged_at, acknowledged_by, applied_at, prior_snapshot, " +
       "proposed_inputs, proposed_outputs, computed_outputs, milestone_impacts, apply_allowed"
     )
     .eq("rollout_id", rolloutId)
-    .order("proposed_at", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) {
     return Response.json(
@@ -73,7 +73,7 @@ export async function GET(
     id: string;
     event_type: string;
     status: string;
-    proposed_at: string;
+    created_at: string;
     changed_fields: string[];
     is_loosening: boolean;
     acknowledged_at: string | null;

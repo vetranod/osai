@@ -42,7 +42,7 @@ type Reclassification = {
   id: string;
   event_type: "POSTURE" | "SENSITIVITY" | "GOAL";
   status: "PROPOSED" | "APPLIED" | "CANCELLED";
-  proposed_at: string;
+  created_at: string;
   changed_fields: string[];
   is_loosening: boolean;
   apply_allowed: boolean;
@@ -652,7 +652,7 @@ function ReclassificationPanel({
                     <Badge value="ACKNOWLEDGED" label="Acknowledged" />
                   )}
                   <span className={styles.reclassDate}>
-                    {new Date(r.proposed_at).toLocaleDateString()}
+                    {new Date(r.created_at).toLocaleDateString()}
                   </span>
                 </div>
 
@@ -756,7 +756,7 @@ function ReclassificationPanel({
               <div className={styles.reclassItemHeader}>
                 <Badge value={r.status} />
                 <span className={styles.reclassDate}>
-                  {new Date(r.proposed_at).toLocaleDateString()}
+                  {new Date(r.created_at).toLocaleDateString()}
                 </span>
               </div>
               {r.changed_fields.length > 0 && (
