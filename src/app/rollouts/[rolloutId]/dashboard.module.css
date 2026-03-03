@@ -11,6 +11,50 @@
   margin-bottom: 28px;
 }
 
+/* ---- Archive corner (top-right of header) ---- */
+.archiveCorner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+  margin-left: 24px;
+  padding-top: 2px;
+}
+
+.archiveTrigger {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 11px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.archiveTrigger:hover:not(:disabled) {
+  color: var(--foreground);
+  border-color: var(--foreground-subtle);
+  background: var(--surface-raised);
+}
+
+.archiveTrigger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.archiveHint {
+  font-size: 11px;
+  color: var(--foreground-subtle);
+  text-align: right;
+  max-width: 200px;
+  line-height: 1.4;
+}
+
 .dashTitle {
   font-size: 12px;
   font-weight: 700;

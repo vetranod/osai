@@ -1151,47 +1151,36 @@ export default function RolloutDashboard() {
             <code>{rolloutId}</code>
           </p>
         </div>
+
+        {/* Archive / Restart — top-right corner, low prominence */}
+        {rolloutMeta && (isArchived || canArchive) && (
+          <div className={styles.archiveCorner}>
+            {isArchived ? (
+              <Link href={restartHref} className={styles.archiveTrigger}>
+                Restart from this rollout
+              </Link>
+            ) : (
+              <button
+                className={styles.archiveTrigger}
+                onClick={() => void handleArchive()}
+                disabled={archiving}
+              >
+                {archiving ? "Archiving..." : "Archive this rollout"}
+              </button>
+            )}
+            <p className={styles.archiveHint}>
+              {isArchived
+                ? "Pre-fills your intake and identity details."
+                : "One restart included. Read-only after archive."}
+            </p>
+            {archiveError && <div className={styles.errorBox}>{archiveError}</div>}
+          </div>
+        )}
       </div>
 
       <div className={styles.dashBody}>
         {/* Left column: milestones + reclassifications */}
         <div className={styles.leftCol}>
-          {rolloutMeta && (
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>Archive + Restart</h2>
-              <p className={styles.cardSubtitle}>
-                One included restart is available until your rollout plan is activated. Restart pre-fills your intake and identity details, but you must review and submit them again.
-              </p>
-              <div className={styles.transitionArea}>
-                {isArchived ? (
-                  <Link href={restartHref} className={styles.transitionBtn}>
-                    Restart from this rollout
-                  </Link>
-                ) : canArchive ? (
-                  <button
-                    className={styles.btnSmallDanger}
-                    onClick={() => void handleArchive()}
-                    disabled={archiving}
-                  >
-                    {archiving ? "Archiving..." : "Archive this rollout"}
-                  </button>
-                ) : (
-                  <p className={styles.transitionHelper}>
-                    {rolloutMeta.archive_restart_used_at
-                      ? "Archive + Restart has already been used for this rollout."
-                      : "Archive is available only before the rollout plan is activated."}
-                  </p>
-                )}
-                {!isArchived && (
-                  <p className={styles.transitionHelper}>
-                    After archiving, this rollout becomes read-only history and you can start a fresh prefilled intake.
-                  </p>
-                )}
-                {archiveError && <div className={styles.errorBox}>{archiveError}</div>}
-              </div>
-            </div>
-          )}
-
           {/* Pending reclassification banner */}
           {!isArchived && reclassifications.some((r) => r.status === "PROPOSED") && (
             <div className={styles.reclassBanner}>
