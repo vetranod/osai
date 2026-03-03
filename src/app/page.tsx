@@ -9,24 +9,49 @@ export default function LandingPage() {
           1. HERO
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className={styles.hero}>
-        <h1 className={styles.heroHeadline}>
-          Deploy AI without losing control.
-        </h1>
-        <p className={styles.heroSubheadline}>
-          Introduce AI tools into real workflows with clear rollout structure,
-          guardrails, and governance.
-        </p>
-        <p className={styles.heroDefinition}>
-          A structured system for introducing AI tools into professional teams
-          with clear rollout governance and operational guardrails.
-        </p>
-        <div className={styles.heroActions}>
-          <Link href="/generate" className={styles.ctaPrimary}>
-            Start rollout design
-          </Link>
-          <Link href="#example-packet" className={styles.ctaSecondary}>
-            See example packet
-          </Link>
+        <div className={styles.heroCopy}>
+          <span className={styles.heroKicker}>DeploySure</span>
+          <h1 className={styles.heroHeadline}>
+            Deploy AI without losing control.
+          </h1>
+          <p className={styles.heroSubheadline}>
+            Governance-led rollout design for firms that want the speed of AI
+            without surrendering oversight, review discipline, or operational control.
+          </p>
+          <p className={styles.heroDefinition}>
+            Structured rollout posture, auditable guardrails, and implementation-ready
+            governance in a calm, executive-grade interface.
+          </p>
+          <div className={styles.heroActions}>
+            <Link href="/generate" className={styles.ctaPrimary}>
+              Start rollout design
+            </Link>
+            <Link href="#example-packet" className={styles.ctaSecondary}>
+              See example packet
+            </Link>
+          </div>
+        </div>
+        <div className={styles.heroBrandCard}>
+          <div className={styles.heroBrandGlow} />
+          <div className={styles.heroBrandInner}>
+            <div className={styles.heroBadge}>Governance identity</div>
+            <div className={styles.heroWordmark}>
+              Deploy<span>Sure</span>
+            </div>
+            <div className={styles.heroTagline}>Deploy AI without losing control</div>
+            <div className={styles.heroMark}>
+              <span className={styles.heroBarTop} />
+              <span className={styles.heroBarMid} />
+              <span className={styles.heroBarBottom} />
+              <span className={styles.heroCurve} />
+            </div>
+            <div className={styles.heroPalette}>
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
         </div>
       </section>
 

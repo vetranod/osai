@@ -2,51 +2,117 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(16px);
+  background:
+    linear-gradient(180deg, rgb(246 248 252 / 0.94), rgb(246 248 252 / 0.88)),
+    var(--surface);
+  border-bottom: 1px solid rgb(152 168 194 / 0.22);
+  box-shadow: 0 10px 30px rgb(11 31 68 / 0.06);
 }
 
 .headerInner {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   padding: 0 32px;
-  height: var(--header-height, 64px);
+  height: var(--header-height, 72px);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* ---- Logo ---- */
 .logo {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  align-items: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
   text-decoration: none;
 }
 
+.logoLockup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brandMark,
+.brandMarkCompact {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.brandMark {
+  width: 62px;
+  height: 46px;
+}
+
+.brandMarkCompact {
+  width: 54px;
+  height: 40px;
+}
+
+.brandBarTop,
+.brandBarMid,
+.brandBarBottom,
+.brandCurve {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+}
+
+.brandBarTop {
+  top: 0;
+  left: 22px;
+  width: 40px;
+  height: 9px;
+  background: linear-gradient(90deg, #29528e 0%, #3f7fc1 100%);
+}
+
+.brandBarMid {
+  top: 14px;
+  left: 10px;
+  width: 44px;
+  height: 9px;
+  background: linear-gradient(90deg, #13294d 0%, #224a82 100%);
+}
+
+.brandBarBottom {
+  top: 28px;
+  left: 0;
+  width: 54px;
+  height: 9px;
+  background: linear-gradient(90deg, #21477e 0%, #6ba5a0 100%);
+}
+
+.brandCurve {
+  right: 0;
+  bottom: 1px;
+  width: 32px;
+  height: 28px;
+  border-right: 7px solid #1d3f74;
+  border-bottom: 7px solid #1d3f74;
+  border-radius: 0 0 18px 0;
+}
+
 .logoWordmark {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  color: var(--foreground);
-  line-height: 1;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  color: #0f2145;
+  line-height: 0.94;
 }
 
 .logoWordmarkAccent {
-  color: var(--accent);
+  color: #3974b4;
 }
 
 .logoDescriptor {
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  color: var(--foreground-muted);
-  line-height: 1;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #3d5379;
+  line-height: 1.2;
 }
 
-/* Legacy classes — kept so any lingering references don't break */
 .logoMark {
   color: var(--accent);
 }
@@ -55,116 +121,149 @@
   color: var(--foreground);
 }
 
-/* ---- Nav ---- */
 .nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .navLink {
-  padding: 6px 14px;
-  border-radius: var(--radius);
+  padding: 8px 14px;
+  border-radius: 999px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--foreground-muted);
-  transition: background 0.15s, color 0.15s;
+  color: #3d5379;
+  transition: color 0.18s ease, background 0.18s ease;
 }
 
 .navLink:hover {
-  background: var(--surface-raised);
-  color: var(--foreground);
+  color: #0f2145;
+  background: rgb(34 74 130 / 0.08);
 }
 
 .navCta {
   display: inline-flex;
   align-items: center;
-  height: 34px;
-  padding: 0 16px;
-  background: var(--accent);
-  color: #fff;
+  justify-content: center;
+  min-width: 122px;
+  height: 38px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, #16335d 0%, #2f5fa1 100%);
+  color: #f8fbff;
   font-size: 13px;
   font-weight: 600;
-  border-radius: var(--radius);
+  border-radius: 999px;
   text-decoration: none;
-  transition: background 0.15s;
+  box-shadow: 0 12px 24px rgb(20 49 92 / 0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
   white-space: nowrap;
-  margin-left: 4px;
+  margin-left: 6px;
 }
 
 .navCta:hover {
-  background: var(--accent-hover);
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgb(20 49 92 / 0.22);
+  filter: saturate(1.08);
 }
 
-/* ---- Main ---- */
 .main {
-  min-height: calc(100vh - var(--header-height, 64px));
-  padding: 40px 24px 80px;
+  min-height: calc(100vh - var(--header-height, 72px));
+  padding: 44px 24px 88px;
 }
 
-/* ---- Footer ---- */
 .footer {
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  padding: 32px 32px 28px;
+  border-top: 1px solid rgb(152 168 194 / 0.2);
+  background:
+    radial-gradient(circle at top left, rgb(73 116 177 / 0.08), transparent 34%),
+    linear-gradient(180deg, #f4f7fb 0%, #eef2f7 100%);
+  padding: 36px 32px 30px;
 }
 
 .footerInner {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1.2fr 0.8fr 1fr;
   gap: 24px;
   align-items: start;
 }
 
-.footerCol {
+.footerCol,
+.footerColCenter,
+.footerColRight {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .footerColCenter {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   align-items: center;
 }
 
 .footerColRight {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   align-items: flex-end;
   text-align: right;
 }
 
+.footerBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footerBrandText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .footerLegal {
   font-size: 12px;
-  color: var(--foreground-subtle);
+  color: #526684;
   line-height: 1.5;
 }
 
 .footerDisclaimer {
   font-size: 11px;
-  color: var(--foreground-subtle);
+  color: #6d7f98;
   line-height: 1.5;
   margin-top: 2px;
+  max-width: 280px;
 }
 
 .footerLink {
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: #3d5379;
   text-decoration: none;
-  transition: color 0.15s;
+  transition: color 0.18s ease;
 }
 
 .footerLink:hover {
-  color: var(--foreground);
+  color: #16335d;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 780px) {
+  .headerInner {
+    padding: 0 18px;
+  }
+
+  .logoWordmark {
+    font-size: 22px;
+  }
+
+  .logoDescriptor {
+    font-size: 10px;
+  }
+
+  .navLink {
+    display: none;
+  }
+
+  .main {
+    padding-inline: 16px;
+  }
+
   .footerInner {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -174,15 +273,5 @@
   .footerColRight {
     align-items: flex-start;
     text-align: left;
-  }
-}
-
-@media (max-width: 600px) {
-  .headerInner {
-    padding: 0 16px;
-  }
-
-  .navLink {
-    display: none;
   }
 }

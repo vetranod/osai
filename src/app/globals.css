@@ -1,67 +1,69 @@
 :root {
-  --background: #f7f7f5;
-  --surface: #ffffff;
-  --surface-raised: #f2f2ef;
-  --border: #e4e4df;
-  --border-strong: #c8c8c0;
-  --foreground: #0f1419;
-  --foreground-muted: #5a6270;
-  --foreground-subtle: #9aa0aa;
+  --background: #eff3f8;
+  --surface: #fbfcfe;
+  --surface-raised: #f2f6fb;
+  --border: #d7dfeb;
+  --border-strong: #a8b8cf;
+  --foreground: #102345;
+  --foreground-muted: #526684;
+  --foreground-subtle: #7f8ea3;
 
-  /* Accent: deep navy — authoritative, calm, governance-grade */
-  --accent: #1e3a5f;
-  --accent-hover: #162e4d;
-  --accent-light: #edf1f7;
-  --accent-light-hover: #dce5f0;
+  --accent: #17355f;
+  --accent-hover: #10294a;
+  --accent-light: #e8eff8;
+  --accent-light-hover: #d8e5f3;
+  --accent-secondary: #3d73b1;
+  --accent-teal: #6ea79f;
 
-  --success: #1a7c4a;
-  --success-light: #e6f4ed;
-  --warning: #b45309;
-  --warning-light: #fef5e7;
-  --danger: #c0392b;
-  --danger-light: #fdecea;
-  --info: #1a5c7c;
-  --info-light: #e6f2f7;
+  --success: #1f7a54;
+  --success-light: #e8f4ef;
+  --warning: #b56b1f;
+  --warning-light: #fbf1e6;
+  --danger: #c24848;
+  --danger-light: #fbeaea;
+  --info: #255c91;
+  --info-light: #e8f1fa;
 
-  --radius-sm: 3px;
-  --radius: 6px;
-  --radius-lg: 10px;
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 22px;
 
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-sm: 0 10px 24px rgb(16 35 69 / 0.05);
+  --shadow: 0 18px 46px rgb(16 35 69 / 0.08);
+  --shadow-md: 0 24px 60px rgb(16 35 69 / 0.12);
 
-  --font-sans: var(--font-geist-sans, Arial, Helvetica, sans-serif);
+  --font-sans: var(--font-inter, Arial, Helvetica, sans-serif);
   --font-mono: var(--font-geist-mono, "Courier New", monospace);
 
-  /* Layout */
   --header-height: 72px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0d1117;
-    --surface: #161b22;
-    --surface-raised: #1e2530;
-    --border: #2a3240;
-    --border-strong: #3a4558;
-    --foreground: #e8ecf0;
-    --foreground-muted: #8a96a4;
-    --foreground-subtle: #5a6472;
+    --background: #0d1421;
+    --surface: #111b2b;
+    --surface-raised: #162336;
+    --border: #24344c;
+    --border-strong: #3d516f;
+    --foreground: #ecf3ff;
+    --foreground-muted: #a8b8cd;
+    --foreground-subtle: #7b8da9;
 
-    --accent: #4a7ab5;
-    --accent-hover: #5a8ac5;
-    --accent-light: #152030;
-    --accent-light-hover: #1e2e42;
+    --accent: #5b8fcc;
+    --accent-hover: #79a8df;
+    --accent-light: #162236;
+    --accent-light-hover: #1c2b43;
+    --accent-secondary: #7fb0e3;
+    --accent-teal: #88c0b6;
 
-    --success: #2ea06a;
-    --success-light: #0d2a1e;
-    --warning: #d4820a;
-    --warning-light: #2a1a04;
-    --danger: #e05252;
-    --danger-light: #2a0e0e;
-    --info: #3a8cb5;
-    --info-light: #0d2030;
+    --success: #3aa777;
+    --success-light: #10291f;
+    --warning: #d2933f;
+    --warning-light: #2d1f0c;
+    --danger: #ea6d6d;
+    --danger-light: #321515;
+    --info: #5a9fdd;
+    --info-light: #12243a;
   }
 }
 
@@ -73,7 +75,9 @@ body {
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background:
+    radial-gradient(circle at top, rgb(80 125 184 / 0.1), transparent 34%),
+    linear-gradient(180deg, #f7f9fc 0%, var(--background) 58%);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -87,11 +91,15 @@ body {
   margin: 0;
 }
 
-/* ---- Heading scale ---- */
-h1, h2, h3, h4, h5, h6 {
-  line-height: 1.25;
-  font-weight: 700;
-  letter-spacing: -0.3px;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.18;
+  font-weight: 600;
+  letter-spacing: -0.04em;
 }
 
 a {
@@ -118,5 +126,11 @@ pre {
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top, rgb(91 143 204 / 0.16), transparent 30%),
+      linear-gradient(180deg, #0c1320 0%, var(--background) 58%);
   }
 }
