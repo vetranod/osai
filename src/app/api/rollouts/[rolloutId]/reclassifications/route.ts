@@ -4,6 +4,15 @@ import { validateDecisionInputs } from "@/decision-engine/options";
 import { evaluateDecision } from "@/decision-engine/engine";
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
 import { computeIsLoosening, computeChangedFields } from "@/governance/reclassification/proposalAnalysis";
+import {
+  computeMilestoneImpacts,
+  milestoneDecisionTable,
+  normalizeMilestoneSummary as normalizeMilestoneSummaryBase,
+  requiresMilestoneAdjustment,
+  summarizeMilestoneImpact,
+  type MilestoneImpact,
+  type MilestoneStateSummary,
+} from "@/governance/reclassification/milestoneImpactPolicy";
 
 export const runtime = "nodejs";
 
@@ -27,12 +36,24 @@ export async function GET(
   const { rolloutId } = paramsParsed.data;
   const supabase = getServiceRoleSupabase();
 
+  const { data: milestoneRows, error: milestoneError } = await supabase
+    .from("rollout_milestone_state")
+    .select("status, milestones!inner(code, order_index)")
+    .eq("rollout_id", rolloutId);
+
+  if (milestoneError) {
+    return Response.json(
+      { ok: false, stage: "fetch_milestone_state", error: milestoneError.message },
+      { status: 500 }
+    );
+  }
+
   const { data, error } = await supabase
     .from("reclassification_events")
     .select(
       "id, event_type, status, proposed_at, changed_fields, is_loosening, " +
       "acknowledged_at, acknowledged_by, applied_at, prior_snapshot, " +
-      "proposed_inputs, proposed_outputs"
+      "proposed_inputs, proposed_outputs, computed_outputs, milestone_impacts, apply_allowed"
     )
     .eq("rollout_id", rolloutId)
     .order("proposed_at", { ascending: false });
@@ -44,7 +65,54 @@ export async function GET(
     );
   }
 
-  return Response.json({ ok: true, reclassifications: data ?? [] });
+  const currentMilestones = normalizeMilestoneSummary(
+    (milestoneRows ?? []) as Array<{ status: string; milestones: { code: string; order_index: number } | { code: string; order_index: number }[] | null }>
+  );
+
+  type ReclassificationEventRow = {
+    id: string;
+    event_type: string;
+    status: string;
+    proposed_at: string;
+    changed_fields: string[];
+    is_loosening: boolean;
+    acknowledged_at: string | null;
+    acknowledged_by: string | null;
+    applied_at: string | null;
+    prior_snapshot: Record<string, unknown> | null;
+    proposed_inputs: Record<string, unknown> | null;
+    proposed_outputs: Record<string, unknown> | null;
+    computed_outputs: Record<string, unknown> | null;
+    milestone_impacts: unknown;
+    apply_allowed: boolean | null;
+  };
+
+  return Response.json({
+    ok: true,
+    reclassifications: ((data ?? []) as unknown as ReclassificationEventRow[]).map((row) => {
+      const storedImpacts = normalizeStoredMilestoneImpacts(row.milestone_impacts);
+      const milestone_impacts = storedImpacts ?? computeMilestoneImpacts({
+        changedInputFields: Array.isArray(row.changed_fields) ? row.changed_fields : [],
+        priorOutputs: extractOutputs(row.prior_snapshot) ?? {},
+        proposedOutputs: extractOutputs({ outputs: row.proposed_outputs ?? row.computed_outputs }) ?? {},
+        currentMilestones,
+      });
+
+      return {
+        ...row,
+        apply_allowed: typeof row.apply_allowed === "boolean" ? row.apply_allowed : !row.is_loosening,
+        milestone_impacts,
+        requires_milestone_adjustment: requiresMilestoneAdjustment(milestone_impacts),
+        milestone_impact_summary: row.is_loosening
+          ? [
+              "Apply is blocked in V1 because this proposal loosens controls.",
+              "Archive + Restart is required instead of changing milestone state mid-cycle.",
+            ]
+          : milestone_impacts.map(summarizeMilestoneImpact),
+        policy_table: milestoneDecisionTable(),
+      };
+    }),
+  });
 }
 
 type TraceStep = Readonly<{
@@ -79,6 +147,62 @@ function parseStringNote(step: TraceStep | undefined, key: string): string | nul
   const line = step.notes.find((n) => n.startsWith(prefix));
   if (!line) return null;
   return line.slice(prefix.length).trim();
+}
+
+function normalizeMilestoneSummary(
+  rows: Array<{ status: string; milestones: { code: string; order_index: number } | { code: string; order_index: number }[] | null }>
+): MilestoneStateSummary[] {
+  return normalizeMilestoneSummaryBase(
+    rows.map((row) => {
+      const raw = row.milestones;
+      const milestone = Array.isArray(raw) ? (raw[0] ?? null) : raw;
+      return {
+        code: milestone?.code,
+        order_index: milestone?.order_index,
+        status: row.status,
+      };
+    })
+  );
+}
+
+function extractOutputs(
+  source: unknown
+): Record<string, unknown> | null {
+  if (!source || typeof source !== "object") return null;
+  const maybeOutputs = "outputs" in source && source.outputs && typeof source.outputs === "object"
+    ? source.outputs
+    : source;
+
+  if (!maybeOutputs || typeof maybeOutputs !== "object") return null;
+
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(maybeOutputs)) {
+    if (typeof value === "string" || typeof value === "boolean" || typeof value === "number") {
+      out[key] = value;
+    }
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+function normalizeStoredMilestoneImpacts(raw: unknown): MilestoneImpact[] | null {
+  if (!Array.isArray(raw)) return null;
+  const impacts = raw.filter((entry) => entry && typeof entry === "object").map((entry) => {
+    const item = entry as Record<string, unknown>;
+    return {
+      milestone_code: String(item.milestone_code ?? ""),
+      current_status: String(item.current_status ?? ""),
+      recommended_action: String(item.recommended_action ?? ""),
+      reason: String(item.reason ?? ""),
+      changed_fields: Array.isArray(item.changed_fields) ? item.changed_fields.map(String) : [],
+    };
+  }).filter((entry) =>
+    entry.milestone_code &&
+    entry.current_status &&
+    entry.recommended_action &&
+    entry.reason
+  ) as MilestoneImpact[];
+
+  return impacts.length > 0 ? impacts : null;
 }
 
 function buildDecisionTraceSnapshot(args: {
@@ -314,6 +438,32 @@ export async function POST(
     inputs
   );
 
+  const milestoneState = await supabase
+    .from("rollout_milestone_state")
+    .select("status, milestones!inner(code, order_index)")
+    .eq("rollout_id", rolloutId);
+
+  if (milestoneState.error) {
+    return Response.json(
+      { ok: false, stage: "fetch_milestone_state", error: milestoneState.error.message },
+      { status: 500 }
+    );
+  }
+
+  const currentMilestones = normalizeMilestoneSummary(
+    (milestoneState.data ?? []) as Array<{ status: string; milestones: { code: string; order_index: number } | { code: string; order_index: number }[] | null }>
+  );
+  const apply_allowed = !is_loosening;
+  const milestone_impacts = is_loosening
+    ? []
+    : computeMilestoneImpacts({
+        changedInputFields: changed_fields,
+        priorOutputs: extractOutputs(prior_snapshot) ?? {},
+        proposedOutputs: extractOutputs({ outputs: result.output }) ?? {},
+        currentMilestones,
+      });
+  const requires_milestone_adjustment = requiresMilestoneAdjustment(milestone_impacts);
+
   const rpc = await supabase.rpc("osai_create_reclassification_proposal", {
     p_rollout_id:      rolloutId,
     p_event_type:      event_type,
@@ -335,6 +485,26 @@ export async function POST(
 
   const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
 
+  const { data: updatedProposal, error: updateProposalError } = await supabase
+    .from("reclassification_events")
+    .update({
+      apply_allowed,
+      computed_outputs: result.output,
+      milestone_impacts,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", row?.reclassification_id ?? "")
+    .eq("rollout_id", rolloutId)
+    .select("id")
+    .maybeSingle();
+
+  if (updateProposalError || !updatedProposal) {
+    return Response.json(
+      { ok: false, stage: "update_reclassification_metadata", error: updateProposalError?.message ?? "Proposal metadata update failed" },
+      { status: 500 }
+    );
+  }
+
   return Response.json(
     {
       ok: true,
@@ -343,9 +513,19 @@ export async function POST(
       event_type,
       changed_fields,
       is_loosening,
+      apply_allowed,
+      milestone_impacts,
+      requires_milestone_adjustment,
+      milestone_impact_summary: is_loosening
+        ? [
+            "Apply is blocked in V1 because this proposal loosens controls.",
+            "Archive + Restart is required instead of changing milestone state mid-cycle.",
+          ]
+        : milestone_impacts.map(summarizeMilestoneImpact),
       proposed_inputs: inputs,
       proposed_outputs: result.output,
       proposed_trace,
+      policy_table: milestoneDecisionTable(),
     },
     { status: 201 }
   );

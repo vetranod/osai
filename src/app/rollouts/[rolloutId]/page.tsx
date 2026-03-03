@@ -45,6 +45,16 @@ type Reclassification = {
   proposed_at: string;
   changed_fields: string[];
   is_loosening: boolean;
+  apply_allowed: boolean;
+  requires_milestone_adjustment?: boolean;
+  milestone_impact_summary?: string[];
+  milestone_impacts: Array<{
+    milestone_code: "M1" | "M2" | "M3" | "M4";
+    current_status: MilestoneStatus;
+    recommended_action: "NONE" | "PAUSED" | "INVALIDATED";
+    reason: string;
+    changed_fields: string[];
+  }>;
   acknowledged_at: string | null;
   acknowledged_by: string | null;
   applied_at: string | null;
@@ -621,6 +631,16 @@ function ReclassificationPanel({
           <p className={styles.reclassGroupLabel}>Pending</p>
           {proposed.map((r) => {
             const diff = buildOutputDiff(r);
+            const impactSummary =
+              r.milestone_impact_summary && r.milestone_impact_summary.length > 0
+                ? r.milestone_impact_summary
+                : r.milestone_impacts.map((impact) => {
+                    if (impact.recommended_action === "NONE") {
+                      return `${impact.milestone_code}: no immediate state change; updated configuration will be used when this stage is reached.`;
+                    }
+
+                    return `${impact.milestone_code}: ${impact.current_status.replace(/_/g, " ").toLowerCase()} -> ${impact.recommended_action.toLowerCase()}. ${impact.reason}`;
+                  });
             return (
               <div key={r.id} className={styles.reclassItem}>
                 <div className={styles.reclassItemHeader}>
@@ -651,6 +671,31 @@ function ReclassificationPanel({
                         <span className={styles.reclassImpactField}>{d.label}:</span>
                         <span className={styles.reclassImpactArrow}> {d.from} → </span>
                         <span className={styles.reclassImpactNew}>{d.to}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className={styles.reclassImpact}>
+                  <p className={styles.reclassImpactTitle}>Apply eligibility</p>
+                  <div className={styles.reclassImpactRow}>
+                    <span className={styles.reclassImpactField}>Status:</span>
+                    <span className={styles.reclassImpactNew}>
+                      {r.apply_allowed
+                        ? r.requires_milestone_adjustment
+                          ? "Apply allowed after acknowledgement; milestone adjustments will be applied transactionally"
+                          : "Apply allowed after acknowledgement"
+                        : "Apply blocked in V1"}
+                    </span>
+                  </div>
+                </div>
+
+                {r.milestone_impacts.length > 0 && (
+                  <div className={styles.reclassImpact}>
+                    <p className={styles.reclassImpactTitle}>Milestone impacts</p>
+                    {impactSummary.map((impact, idx) => (
+                      <div key={`${r.id}-impact-${idx}`} className={styles.reclassImpactRow}>
+                        <span className={styles.reclassImpactNew}>{impact}</span>
                       </div>
                     ))}
                   </div>
