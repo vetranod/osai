@@ -968,6 +968,25 @@
   opacity: 0.8;
 }
 
+.btnSmallWarn {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  background: var(--warning-light);
+  color: var(--warning);
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnSmallWarn:hover {
+  opacity: 0.8;
+}
+
 /* ---- Badge ---- */
 .badge {
   display: inline-flex;

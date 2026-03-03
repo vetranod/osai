@@ -755,7 +755,7 @@ function ReclassificationPanel({
                         </Link>
                       ) : canArchive ? (
                         <button
-                          className={styles.btnSmall}
+                          className={styles.btnSmallDanger}
                           onClick={() => void onArchive()}
                           disabled={archiving}
                         >
@@ -765,7 +765,7 @@ function ReclassificationPanel({
                     </>
                   )}
                   <button
-                    className={styles.btnSmallDanger}
+                    className={styles.btnSmallWarn}
                     onClick={() => void handleAction(r.id, "cancel")}
                   >
                     Cancel
