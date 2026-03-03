@@ -104,6 +104,34 @@ type OnIntakeComplete =
   | { deferred: false; rolloutId: string; output: EngineOutput; inputs: FormState }
   | { deferred: true; output: EngineOutput; inputs: FormState };
 
+// Step metadata for the 4-question wizard
+const WIZARD_STEPS: Array<{
+  field: keyof FormState;
+  question: string;
+  subtitle: string;
+}> = [
+  {
+    field: "primary_goal",
+    question: "Where will AI be used most in your firm?",
+    subtitle: "Select the primary area where AI tools will be put to work.",
+  },
+  {
+    field: "adoption_state",
+    question: "How much is AI already being used at your firm?",
+    subtitle: "This helps calibrate how much governance structure your team needs right now.",
+  },
+  {
+    field: "sensitivity_anchor",
+    question: "What kind of information will AI be working with?",
+    subtitle: "This determines the sensitivity tier and risk controls for your framework.",
+  },
+  {
+    field: "leadership_posture",
+    question: "How does leadership want to approach this rollout?",
+    subtitle: "This sets the pacing and depth of your rollout plan.",
+  },
+];
+
 function IntakeForm({
   onComplete,
   initialForm,
@@ -112,10 +140,13 @@ function IntakeForm({
   initialForm: FormState;
 }) {
   const [form, setForm] = useState<FormState>(initialForm);
+  const [wizardStep, setWizardStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const allFilled = Object.values(form).every(Boolean);
+  const currentField = WIZARD_STEPS[wizardStep].field;
+  const currentStepFilled = Boolean(form[currentField]);
+  const isLastStep = wizardStep === WIZARD_STEPS.length - 1;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -158,137 +189,156 @@ function IntakeForm({
     }
   }
 
+  const step = WIZARD_STEPS[wizardStep];
+
   return (
     <div className={styles.wrap}>
       <div className={styles.formCard}>
         <div className={styles.formHeader}>
-          <p className={styles.formCardLabel}>Step 1 of 2</p>
-          <h2 className={styles.title}>Set up your framework</h2>
-          <p className={styles.subtitle}>
-            Answer four questions about your firm. Your responses calibrate the framework — including risk tier, rollout pacing, and review depth.
-          </p>
+          <p className={styles.formCardLabel}>Question {wizardStep + 1} of {WIZARD_STEPS.length}</p>
+          <h2 className={styles.title}>{step.question}</h2>
+          <p className={styles.subtitle}>{step.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
 
-          <fieldset className={styles.fieldset}>
-            <legend className={styles.legend}>
-              <span className={styles.legendNum}>1</span>
-              Where will AI be used most in your firm?
-            </legend>
-            <div className={styles.optionGrid}>
-              {PRIMARY_GOAL_OPTIONS.map((opt) => (
-                <label
-                  key={opt.value}
-                  className={`${styles.optionCard} ${form.primary_goal === opt.value ? styles.optionCardSelected : ""}`}
-                >
-                  <input
-                    type="radio"
-                    name="primary_goal"
-                    value={opt.value}
-                    checked={form.primary_goal === opt.value}
-                    onChange={(e) => setForm((f) => ({ ...f, primary_goal: e.target.value }))}
-                    className={styles.radioHidden}
-                  />
-                  <span className={styles.optionLabel}>{opt.label}</span>
-                  <span className={styles.optionDesc}>{opt.desc}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          {wizardStep === 0 && (
+            <fieldset className={styles.fieldset}>
+              <div className={styles.optionGrid}>
+                {PRIMARY_GOAL_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`${styles.optionCard} ${form.primary_goal === opt.value ? styles.optionCardSelected : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="primary_goal"
+                      value={opt.value}
+                      checked={form.primary_goal === opt.value}
+                      onChange={(e) => setForm((f) => ({ ...f, primary_goal: e.target.value }))}
+                      className={styles.radioHidden}
+                    />
+                    <span className={styles.optionLabel}>{opt.label}</span>
+                    <span className={styles.optionDesc}>{opt.desc}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
-          <fieldset className={styles.fieldset}>
-            <legend className={styles.legend}>
-              <span className={styles.legendNum}>2</span>
-              How much is AI already being used at your firm?
-            </legend>
-            <div className={styles.optionList}>
-              {ADOPTION_STATE_OPTIONS.map((opt) => (
-                <label
-                  key={opt.value}
-                  className={`${styles.optionRow} ${form.adoption_state === opt.value ? styles.optionRowSelected : ""}`}
-                >
-                  <input
-                    type="radio"
-                    name="adoption_state"
-                    value={opt.value}
-                    checked={form.adoption_state === opt.value}
-                    onChange={(e) => setForm((f) => ({ ...f, adoption_state: e.target.value }))}
-                    className={styles.radioHidden}
-                  />
-                  <span className={styles.optionLabel}>{opt.label}</span>
-                  <span className={styles.optionDesc}>{opt.desc}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          {wizardStep === 1 && (
+            <fieldset className={styles.fieldset}>
+              <div className={styles.optionList}>
+                {ADOPTION_STATE_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`${styles.optionRow} ${form.adoption_state === opt.value ? styles.optionRowSelected : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="adoption_state"
+                      value={opt.value}
+                      checked={form.adoption_state === opt.value}
+                      onChange={(e) => setForm((f) => ({ ...f, adoption_state: e.target.value }))}
+                      className={styles.radioHidden}
+                    />
+                    <span className={styles.optionLabel}>{opt.label}</span>
+                    <span className={styles.optionDesc}>{opt.desc}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
-          <fieldset className={styles.fieldset}>
-            <legend className={styles.legend}>
-              <span className={styles.legendNum}>3</span>
-              What kind of information will AI be working with?
-            </legend>
-            <div className={styles.optionList}>
-              {SENSITIVITY_OPTIONS.map((opt) => (
-                <label
-                  key={opt.value}
-                  className={`${styles.optionRow} ${form.sensitivity_anchor === opt.value ? styles.optionRowSelected : ""}`}
-                >
-                  <input
-                    type="radio"
-                    name="sensitivity_anchor"
-                    value={opt.value}
-                    checked={form.sensitivity_anchor === opt.value}
-                    onChange={(e) => setForm((f) => ({ ...f, sensitivity_anchor: e.target.value }))}
-                    className={styles.radioHidden}
-                  />
-                  <span className={styles.optionLabel}>{opt.label}</span>
-                  <span className={styles.optionDesc}>{opt.desc}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          {wizardStep === 2 && (
+            <fieldset className={styles.fieldset}>
+              <div className={styles.optionList}>
+                {SENSITIVITY_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`${styles.optionRow} ${form.sensitivity_anchor === opt.value ? styles.optionRowSelected : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="sensitivity_anchor"
+                      value={opt.value}
+                      checked={form.sensitivity_anchor === opt.value}
+                      onChange={(e) => setForm((f) => ({ ...f, sensitivity_anchor: e.target.value }))}
+                      className={styles.radioHidden}
+                    />
+                    <span className={styles.optionLabel}>{opt.label}</span>
+                    <span className={styles.optionDesc}>{opt.desc}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
-          <fieldset className={styles.fieldset}>
-            <legend className={styles.legend}>
-              <span className={styles.legendNum}>4</span>
-              How does leadership want to approach this rollout?
-            </legend>
-            <div className={styles.optionGrid3}>
-              {LEADERSHIP_OPTIONS.map((opt) => (
-                <label
-                  key={opt.value}
-                  className={`${styles.optionCard} ${form.leadership_posture === opt.value ? styles.optionCardSelected : ""}`}
-                >
-                  <input
-                    type="radio"
-                    name="leadership_posture"
-                    value={opt.value}
-                    checked={form.leadership_posture === opt.value}
-                    onChange={(e) => setForm((f) => ({ ...f, leadership_posture: e.target.value }))}
-                    className={styles.radioHidden}
-                  />
-                  <span className={styles.optionLabel}>{opt.label}</span>
-                  <span className={styles.optionDesc}>{opt.desc}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          {wizardStep === 3 && (
+            <fieldset className={styles.fieldset}>
+              <div className={styles.optionGrid3}>
+                {LEADERSHIP_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`${styles.optionCard} ${form.leadership_posture === opt.value ? styles.optionCardSelected : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="leadership_posture"
+                      value={opt.value}
+                      checked={form.leadership_posture === opt.value}
+                      onChange={(e) => setForm((f) => ({ ...f, leadership_posture: e.target.value }))}
+                      className={styles.radioHidden}
+                    />
+                    <span className={styles.optionLabel}>{opt.label}</span>
+                    <span className={styles.optionDesc}>{opt.desc}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
           {error && <div className={styles.errorBox}>{error}</div>}
 
-          <div className={styles.formFooter}>
-            <button
-              type="submit"
-              className={styles.btnPrimary}
-              disabled={!allFilled || loading}
-            >
-              {loading ? "Building your framework…" : "Continue →"}
-            </button>
-            <p className={styles.hint}>
-              {allFilled ? "One more step after this." : "Answer all four questions to continue."}
-            </p>
+          <div className={styles.wizardFooter}>
+            {wizardStep > 0 ? (
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={() => setWizardStep((s) => s - 1)}
+                disabled={loading}
+              >
+                ← Back
+              </button>
+            ) : (
+              <span />
+            )}
+            {isLastStep ? (
+              <button
+                type="submit"
+                className={styles.btnPrimary}
+                disabled={!currentStepFilled || loading}
+              >
+                {loading ? "Building your framework…" : "Continue →"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                disabled={!currentStepFilled}
+                onClick={() => setWizardStep((s) => s + 1)}
+              >
+                Next →
+              </button>
+            )}
           </div>
+
+          {isLastStep && (
+            <p className={styles.hint} style={{ marginTop: 10 }}>
+              One more step after this.
+            </p>
+          )}
+
         </form>
       </div>
     </div>

@@ -181,6 +181,14 @@
   gap: 16px;
 }
 
+/* Wizard step nav — Back left, Next/Continue right */
+.wizardFooter {
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .hint {
   font-size: 13px;
   color: var(--foreground-subtle);
