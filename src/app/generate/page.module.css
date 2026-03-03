@@ -4,6 +4,16 @@
   margin: 0 auto;
 }
 
+/* Wizard 2-col layout: questions left, preview right */
+.wizardWrap {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  align-items: start;
+}
+
 /* ---- Form Card ---- */
 .formCard {
   background: var(--surface);
@@ -14,7 +24,7 @@
 }
 
 .formHeader {
-  padding: 24px 36px 20px;
+  padding: 24px 36px 16px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -50,7 +60,7 @@
 .fieldset {
   border: none;
   padding: 0;
-  margin: 28px 0 0;
+  margin: 36px 0 0;
 }
 
 .legend {
@@ -99,6 +109,7 @@
 }
 
 .optionCard {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -107,7 +118,7 @@
   border-radius: var(--radius);
   background: var(--surface);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
 }
 
 .optionCard:hover {
@@ -118,6 +129,18 @@
 .optionCardSelected {
   border-color: var(--accent) !important;
   background: var(--accent-light) !important;
+  transform: translateY(-1px);
+}
+
+.optionCardSelected::after {
+  content: "✓";
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
 }
 
 /* List rows (adoption, sensitivity) */
@@ -128,6 +151,7 @@
 }
 
 .optionRow {
+  position: relative;
   display: flex;
   align-items: baseline;
   gap: 12px;
@@ -136,7 +160,7 @@
   border-radius: var(--radius);
   background: var(--surface);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
 }
 
 .optionRow:hover {
@@ -147,6 +171,20 @@
 .optionRowSelected {
   border-color: var(--accent) !important;
   background: var(--accent-light) !important;
+  transform: translateY(-1px);
+  padding-right: 32px;
+}
+
+.optionRowSelected::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
 }
 
 .optionLabel {
@@ -371,7 +409,121 @@
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
+/* ---- Wizard step header ---- */
+.stepEyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--foreground-subtle);
+  margin-bottom: 8px;
+}
+
+.progressBarWrap {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.stepCategory {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+
+/* ---- Framework Preview panel (wizard sidebar) ---- */
+.previewPanelWrap {
+  position: sticky;
+  top: 24px;
+}
+
+.previewPanel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.previewPanelHeader {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.previewPanelLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--foreground-subtle);
+  margin-bottom: 5px;
+}
+
+.previewPanelNote {
+  font-size: 11px;
+  color: var(--foreground-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.previewFields {
+  padding: 4px 0;
+}
+
+.previewField {
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.previewField:last-child {
+  border-bottom: none;
+}
+
+.previewFieldLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--foreground-subtle);
+  margin-bottom: 2px;
+}
+
+.previewFieldValue {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.previewFieldEmpty {
+  display: block;
+  font-size: 14px;
+  color: var(--foreground-subtle);
+}
+
 /* ---- Responsive ---- */
+@media (max-width: 860px) {
+  .wizardWrap {
+    grid-template-columns: 1fr;
+  }
+
+  .previewPanelWrap {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .formHeader,
   .form {

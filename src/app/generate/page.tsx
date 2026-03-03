@@ -107,30 +107,142 @@ type OnIntakeComplete =
 // Step metadata for the 4-question wizard
 const WIZARD_STEPS: Array<{
   field: keyof FormState;
+  category: string;
   question: string;
-  subtitle: string;
 }> = [
   {
     field: "primary_goal",
+    category: "Primary Use Case",
     question: "Where will AI be used most in your firm?",
-    subtitle: "Select the primary area where AI tools will be put to work.",
   },
   {
     field: "adoption_state",
-    question: "How much is AI already being used at your firm?",
-    subtitle: "This helps calibrate how much governance structure your team needs right now.",
+    category: "Current AI Usage",
+    question: "How widely are AI tools already being used today?",
   },
   {
     field: "sensitivity_anchor",
+    category: "Data Sensitivity",
     question: "What kind of information will AI be working with?",
-    subtitle: "This determines the sensitivity tier and risk controls for your framework.",
   },
   {
     field: "leadership_posture",
+    category: "Rollout Approach",
     question: "How does leadership want to approach this rollout?",
-    subtitle: "This sets the pacing and depth of your rollout plan.",
   },
 ];
+
+// ---- Framework Preview helpers (inline engine logic, no server imports) ----
+
+function previewRiskTier(anchor: string): string {
+  switch (anchor) {
+    case "PUBLIC_CONTENT":
+    case "INTERNAL_BUSINESS_INFO": return "Low";
+    case "CLIENT_MATERIALS": return "Client";
+    case "FINANCIAL_OPERATIONAL_RECORDS": return "High";
+    case "REGULATED_CONFIDENTIAL": return "Regulated";
+    default: return "—";
+  }
+}
+
+function previewGuardrailLevel(anchor: string, goal: string): string {
+  const floor = (anchor === "PUBLIC_CONTENT" || anchor === "INTERNAL_BUSINESS_INFO") ? 2 : 3;
+  const mods: Record<string, number> = {
+    MARKETING_CONTENT: 0, INTERNAL_DOCUMENTATION: 1, OPERATIONS_ADMIN: 1,
+    CLIENT_COMMUNICATION: 2, SALES_PROPOSALS: 2, DATA_REPORTING: 3,
+  };
+  const score = Math.min(4, floor + (mods[goal] ?? 0));
+  const labels: Record<number, string> = { 1: "Low", 2: "Moderate", 3: "High", 4: "Very High" };
+  return labels[score] ?? "—";
+}
+
+function previewRolloutSpeed(adoption: string, anchor: string, posture: string): string {
+  const highSensitivity = anchor === "FINANCIAL_OPERATIONAL_RECORDS" || anchor === "REGULATED_CONFIDENTIAL";
+  const highAdoption = adoption === "ENCOURAGED_UNSTRUCTURED" || adoption === "WIDELY_USED_UNSTANDARDIZED";
+  if (highSensitivity && highAdoption && posture === "MOVE_QUICKLY") return "Split Deployment";
+  const bases: Record<string, number> = {
+    NONE: 1, FEW_EXPERIMENTING: 2, MULTIPLE_REGULAR: 3,
+    ENCOURAGED_UNSTRUCTURED: 4, WIDELY_USED_UNSTANDARDIZED: 5,
+  };
+  const deltas: Record<string, number> = { CAUTIOUS: -1, BALANCED: 0, MOVE_QUICKLY: 1 };
+  const ceilings: Record<string, number> = {
+    PUBLIC_CONTENT: 5, INTERNAL_BUSINESS_INFO: 4, CLIENT_MATERIALS: 3,
+    FINANCIAL_OPERATIONAL_RECORDS: 2, REGULATED_CONFIDENTIAL: 2,
+  };
+  const level = Math.max(1, Math.min((bases[adoption] ?? 3) + (deltas[posture] ?? 0), ceilings[anchor] ?? 5));
+  if (level <= 2) return "Controlled";
+  if (level === 3) return "Phased";
+  return "Accelerated";
+}
+
+function previewReviewStandard(anchor: string, goal: string, posture: string): string {
+  const floor = (anchor === "PUBLIC_CONTENT" || anchor === "INTERNAL_BUSINESS_INFO") ? 2 : 3;
+  const reviewMods: Record<string, number> = {
+    MARKETING_CONTENT: 0, INTERNAL_DOCUMENTATION: 1, OPERATIONS_ADMIN: 1,
+    CLIENT_COMMUNICATION: 1, SALES_PROPOSALS: 1, DATA_REPORTING: 2,
+  };
+  const leaderMods: Record<string, number> = { MOVE_QUICKLY: -1, BALANCED: 0, CAUTIOUS: 1 };
+  const afterLeader = Math.max(floor, floor + (leaderMods[posture] ?? 0));
+  const score = Math.min(4, afterLeader + (reviewMods[goal] ?? 0));
+  const labels: Record<number, string> = { 1: "Light", 2: "Standard", 3: "Structured", 4: "Formal" };
+  return labels[score] ?? "—";
+}
+
+function PreviewField({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className={styles.previewField}>
+      <span className={styles.previewFieldLabel}>{label}</span>
+      {value !== null ? (
+        <span className={styles.previewFieldValue}>{value}</span>
+      ) : (
+        <span className={styles.previewFieldEmpty}>—</span>
+      )}
+    </div>
+  );
+}
+
+function FrameworkPreview({ form }: { form: FormState }) {
+  const hasGoal       = Boolean(form.primary_goal);
+  const hasAdoption   = Boolean(form.adoption_state);
+  const hasSensitivity = Boolean(form.sensitivity_anchor);
+  const hasLeadership = Boolean(form.leadership_posture);
+
+  const riskTierReady     = hasSensitivity;
+  const rolloutSpeedReady = hasAdoption && hasSensitivity && hasLeadership;
+  const guardrailReady    = hasGoal && hasSensitivity;
+  const reviewReady       = hasGoal && hasSensitivity && hasLeadership;
+
+  return (
+    <div className={styles.previewPanel}>
+      <div className={styles.previewPanelHeader}>
+        <span className={styles.previewPanelLabel}>Framework Preview</span>
+        <p className={styles.previewPanelNote}>
+          Estimates based on current selections. Full documents generated after completion.
+        </p>
+      </div>
+      <div className={styles.previewFields}>
+        <PreviewField
+          label="Risk Tier"
+          value={riskTierReady ? previewRiskTier(form.sensitivity_anchor) : null}
+        />
+        <PreviewField
+          label="Rollout Speed"
+          value={rolloutSpeedReady ? previewRolloutSpeed(form.adoption_state, form.sensitivity_anchor, form.leadership_posture) : null}
+        />
+        <PreviewField
+          label="Guardrail Level"
+          value={guardrailReady ? previewGuardrailLevel(form.sensitivity_anchor, form.primary_goal) : null}
+        />
+        <PreviewField
+          label="Review Standard"
+          value={reviewReady ? previewReviewStandard(form.sensitivity_anchor, form.primary_goal, form.leadership_posture) : null}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ---- Step 1: Intake Form ----
 
 function IntakeForm({
   onComplete,
@@ -192,12 +304,18 @@ function IntakeForm({
   const step = WIZARD_STEPS[wizardStep];
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wizardWrap}>
       <div className={styles.formCard}>
         <div className={styles.formHeader}>
-          <p className={styles.formCardLabel}>Question {wizardStep + 1} of {WIZARD_STEPS.length}</p>
-          <h2 className={styles.title}>{step.question}</h2>
-          <p className={styles.subtitle}>{step.subtitle}</p>
+          <p className={styles.stepEyebrow}>Step {wizardStep + 1} of {WIZARD_STEPS.length}</p>
+          <div className={styles.progressBarWrap}>
+            <div
+              className={styles.progressBar}
+              style={{ width: `${Math.round((wizardStep + 1) / WIZARD_STEPS.length * 100)}%` }}
+            />
+          </div>
+          <h2 className={styles.stepCategory}>{step.category}</h2>
+          <p className={styles.subtitle}>{step.question}</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -340,6 +458,9 @@ function IntakeForm({
           )}
 
         </form>
+      </div>
+      <div className={styles.previewPanelWrap}>
+        <FrameworkPreview form={form} />
       </div>
     </div>
   );
