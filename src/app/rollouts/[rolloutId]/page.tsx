@@ -467,12 +467,20 @@ function ReclassificationPanel({
   rolloutMeta,
   rolloutId,
   isArchived,
+  canArchive,
+  archiving,
+  onArchive,
+  restartHref,
   onDone,
 }: {
   reclassifications: Reclassification[];
   rolloutMeta: RolloutMeta | null;
   rolloutId: string;
   isArchived: boolean;
+  canArchive: boolean;
+  archiving: boolean;
+  onArchive: () => void;
+  restartHref: string;
   onDone: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);
@@ -737,9 +745,24 @@ function ReclassificationPanel({
                     </button>
                   )}
                   {r.is_loosening && (
-                    <span className={styles.reclassLooseningWarning}>
-                      ⚠ Loosening — Archive &amp; Restart required
-                    </span>
+                    <>
+                      <span className={styles.reclassLooseningWarning}>
+                        ⚠ Loosening — Archive &amp; Restart required
+                      </span>
+                      {isArchived ? (
+                        <Link href={restartHref} className={styles.btnSmallPrimary}>
+                          Restart from this rollout
+                        </Link>
+                      ) : canArchive ? (
+                        <button
+                          className={styles.btnSmall}
+                          onClick={() => void onArchive()}
+                          disabled={archiving}
+                        >
+                          {archiving ? "Archiving..." : "Archive & Restart"}
+                        </button>
+                      ) : null}
+                    </>
                   )}
                   <button
                     className={styles.btnSmallDanger}
@@ -1318,6 +1341,10 @@ export default function RolloutDashboard() {
             rolloutMeta={rolloutMeta}
             rolloutId={rolloutId}
             isArchived={!!isArchived}
+            canArchive={canArchive}
+            archiving={archiving}
+            onArchive={handleArchive}
+            restartHref={restartHref}
             onDone={loadData}
           />
         </div>
