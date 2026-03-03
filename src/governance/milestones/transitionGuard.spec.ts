@@ -63,8 +63,20 @@ describe("canTransitionStatus (pure guard)", () => {
     });
   });
 
-  it("blocks exiting PAUSED/INVALIDATED via user actions (must be governance or archive+restart)", () => {
+  it("allows PAUSED/INVALIDATED -> IN_PROGRESS under normal user action (resume/restart)", () => {
     expect(canTransitionStatus(MilestoneStatus.PAUSED, MilestoneStatus.IN_PROGRESS, userCtx)).toMatchObject({
+      allowed: true,
+      reason: "OK",
+    });
+
+    expect(canTransitionStatus(MilestoneStatus.INVALIDATED, MilestoneStatus.IN_PROGRESS, userCtx)).toMatchObject({
+      allowed: true,
+      reason: "OK",
+    });
+  });
+
+  it("blocks exiting PAUSED/INVALIDATED to any status other than IN_PROGRESS via user action", () => {
+    expect(canTransitionStatus(MilestoneStatus.PAUSED, MilestoneStatus.CONFIRMED, userCtx)).toMatchObject({
       allowed: false,
       reason: "GOVERNANCE_ONLY_SOURCE",
     });

@@ -59,10 +59,17 @@ export function canTransitionStatus(
     return { allowed: true, reason: "OK" };
   }
 
-  // Governance-only source statuses: you can't “resume” from PAUSED/INVALIDATED
-  // via normal user actions (must be a governance event or archive+restart).
-  if ((from === MilestoneStatus.PAUSED || from === MilestoneStatus.INVALIDATED) && !isGovernance) {
-    return { allowed: false, reason: "GOVERNANCE_ONLY_SOURCE" };
+  // PAUSED/INVALIDATED -> IN_PROGRESS is allowed under normal user intent.
+  // This is the resume (PAUSED) or restart (INVALIDATED) action that a team
+  // takes after a reclassification has already been applied. All other exits from
+  // these states still require a governance intent.
+  if (from === MilestoneStatus.PAUSED || from === MilestoneStatus.INVALIDATED) {
+    if (to === MilestoneStatus.IN_PROGRESS) {
+      return { allowed: true, reason: "OK" };
+    }
+    if (!isGovernance) {
+      return { allowed: false, reason: "GOVERNANCE_ONLY_SOURCE" };
+    }
   }
 
   // Normal-flow transitions.

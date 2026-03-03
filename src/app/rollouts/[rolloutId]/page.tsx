@@ -90,6 +90,14 @@ const MILESTONE_STATUS_DESCRIPTIONS: Partial<Record<MilestoneStatus, { title: st
     title: "Active",
     description: "This is your current governance position. Future work should follow the controls and pacing defined here.",
   },
+  PAUSED: {
+    title: "Paused — governance change applied",
+    description: "A reclassification has updated your governance posture. Review the updated configuration above, then resume this milestone when your team is ready to proceed under the new terms.",
+  },
+  INVALIDATED: {
+    title: "Invalidated — must be redone",
+    description: "The updated configuration means this milestone's prior review is no longer valid. Restart this milestone to complete it again under the new governance posture.",
+  },
 };
 
 const MILESTONE_ARTIFACTS: Record<MilestoneCode, ArtifactType[]> = {
@@ -108,8 +116,8 @@ const STATUS_TRANSITIONS: Record<MilestoneStatus, MilestoneStatus | null> = {
   AWAITING_CONFIRMATION: "CONFIRMED",
   CONFIRMED: "ACTIVATED",
   ACTIVATED: null,
-  PAUSED: null,
-  INVALIDATED: null,
+  PAUSED: "IN_PROGRESS",
+  INVALIDATED: "IN_PROGRESS",
 };
 
 const STATUS_LABELS: Record<MilestoneStatus, string> = {
@@ -127,6 +135,8 @@ const TRANSITION_BUTTON_LABEL: Partial<Record<MilestoneStatus, string>> = {
   IN_PROGRESS: "Mark as reviewed",
   AWAITING_CONFIRMATION: "Mark as reviewed",
   CONFIRMED: "Mark as active",
+  PAUSED: "Resume milestone",
+  INVALIDATED: "Restart milestone",
 };
 
 // Helper text shown below each button
@@ -134,6 +144,8 @@ const TRANSITION_HELPER_TEXT: Partial<Record<MilestoneStatus, string>> = {
   IN_PROGRESS: "Records that your team has reviewed the documents for this stage.",
   AWAITING_CONFIRMATION: "Records that your team has reviewed the documents for this stage.",
   CONFIRMED: "Records that this is now your active governance position.",
+  PAUSED: "Resumes progress under the updated governance posture.",
+  INVALIDATED: "Restarts this milestone so it can be re-reviewed under the updated configuration.",
 };
 
 // No modals — both buttons are single-click.
