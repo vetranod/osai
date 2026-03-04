@@ -823,13 +823,13 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background: var(--warning-light, #fffbeb);
-  border: 1px solid var(--warning, #f59e0b);
-  border-left: 4px solid var(--warning, #f59e0b);
+  background: linear-gradient(180deg, rgb(87 52 9 / 0.9), rgb(67 40 6 / 0.94));
+  border: 1px solid rgb(238 170 64 / 0.72);
+  border-left: 4px solid #f3aa45;
   border-radius: var(--radius);
   padding: 12px 14px;
   font-size: 13px;
-  color: var(--surface-title);
+  color: rgb(255 236 206 / 0.96);
   line-height: 1.45;
 }
 
