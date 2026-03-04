@@ -254,14 +254,14 @@
 
 .diagramBlockLabel {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--foreground);
+  font-weight: 700;
+  color: #0f2145;
   margin-bottom: 10px;
 }
 
 .diagramBlockSub {
   font-size: 13px;
-  color: #314a72;
+  color: #243a60;
   line-height: 1.65;
 }
 
@@ -276,7 +276,7 @@
   position: relative;
   padding-left: 12px;
   font-size: 13px;
-  color: #314a72;
+  color: #243a60;
 }
 
 .diagramList li::before {
@@ -400,8 +400,8 @@
   border: 1px solid var(--border);
   border-radius: 18px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--foreground);
+  font-weight: 600;
+  color: #0f2145;
 }
 
 .forNote {
