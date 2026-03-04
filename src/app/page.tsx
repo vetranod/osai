@@ -159,7 +159,7 @@ export default function LandingPage() {
 
       <section className={styles.section}>
         <p className={styles.sectionLabel}>Audience</p>
-        <h2 className={styles.sectionHeading}>Designed for professional organizations</h2>
+        <h2 className={styles.sectionHeading}>Designed for small teams</h2>
         <p className={styles.forIntro}>
           The system is intended for organizations that want the productivity
           benefits of AI while maintaining operational control.
@@ -174,7 +174,8 @@ export default function LandingPage() {
         </div>
         <p className={styles.forNote}>
           These firms often adopt AI organically without a formal rollout plan.
-          Most organizations using the system have between 10 and 100 employees.
+          DeploySure is best suited to teams with fewer than 25 employees and
+          other small businesses that need rollout planning and governance structure.
         </p>
       </section>
 

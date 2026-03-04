@@ -42,7 +42,7 @@
 
 .subtitle {
   font-size: 14px;
-  color: var(--foreground-muted);
+  color: #314a72;
   line-height: 1.65;
 }
 
@@ -52,7 +52,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: var(--foreground-subtle);
+  color: #4a6489;
   margin-bottom: 4px;
 }
 
@@ -204,15 +204,15 @@
 .optionLabel {
   font-size: 14px;
   font-weight: 600;
-  color: var(--foreground);
+  color: #132b4e;
   white-space: nowrap;
   letter-spacing: -0.02em;
 }
 
 .optionDesc {
   font-size: 12px;
-  color: var(--foreground-muted);
-  line-height: 1.4;
+  color: #3f587d;
+  line-height: 1.5;
 }
 
 /* ---- Error ---- */
@@ -244,7 +244,7 @@
 
 .hint {
   font-size: 13px;
-  color: var(--foreground-subtle);
+  color: #4d6587;
 }
 
 /* ---- Buttons ---- */
@@ -306,7 +306,7 @@
 /* ---- Fieldset hint ---- */
 .fieldsetHint {
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: #3b547a;
   line-height: 1.5;
   margin-bottom: 14px;
   margin-top: -6px;
@@ -334,7 +334,7 @@
 
 .contextBannerText {
   font-size: 14px;
-  color: var(--foreground);
+  color: #1d3559;
   line-height: 1.6;
 }
 
@@ -357,7 +357,7 @@
 
 .regulatedGateBody {
   font-size: 13px;
-  color: var(--foreground);
+  color: #4d1f1f;
   line-height: 1.5;
   margin: 0;
 }
@@ -378,7 +378,7 @@
 .nameLabel {
   font-size: 12px;
   font-weight: 600;
-  color: var(--foreground-muted);
+  color: #4a6489;
 }
 
 .nameInput {
@@ -412,7 +412,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: #3b547a;
   cursor: pointer;
   margin-bottom: 14px;
 }
@@ -428,7 +428,7 @@
 .soloNote {
   margin-top: 12px;
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: #284f3d;
   line-height: 1.5;
   padding: 10px 14px;
   background: var(--success-light);
@@ -442,7 +442,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #446289;
+  color: #3e5b83;
   margin-bottom: 10px;
 }
 
@@ -500,7 +500,7 @@
 
 .previewPanelNote {
   font-size: 11px;
-  color: rgb(226 236 248 / 0.76);
+  color: rgb(236 243 252 / 0.9);
   line-height: 1.55;
   margin: 0;
 }
@@ -524,7 +524,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgb(210 226 247 / 0.62);
+  color: rgb(223 235 250 / 0.82);
   margin-bottom: 4px;
 }
 
@@ -538,7 +538,7 @@
 .previewFieldEmpty {
   display: block;
   font-size: 14px;
-  color: rgb(210 226 247 / 0.48);
+  color: rgb(223 235 250 / 0.72);
 }
 
 /* ---- Responsive ---- */

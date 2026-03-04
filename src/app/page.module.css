@@ -162,7 +162,7 @@
 }
 
 .packetCard {
-  min-height: 460px;
+  min-height: 0;
 }
 
 .packetCardCompact {
@@ -209,7 +209,7 @@
   display: grid;
   grid-template-columns: 160px 1fr;
   gap: 18px;
-  padding: 18px 22px;
+  padding: 16px 22px;
   border-bottom: 1px solid var(--border);
   align-items: start;
 }
@@ -221,15 +221,15 @@
 .packetRowLabel {
   font-size: 11px;
   font-weight: 700;
-  color: var(--foreground-subtle);
+  color: #4a6489;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .packetRowValue {
   font-size: 14px;
-  color: var(--foreground-muted);
-  line-height: 1.65;
+  color: #243a60;
+  line-height: 1.55;
 }
 
 .diagram {
@@ -261,7 +261,7 @@
 
 .diagramBlockSub {
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: #314a72;
   line-height: 1.65;
 }
 
@@ -276,7 +276,7 @@
   position: relative;
   padding-left: 12px;
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: #314a72;
 }
 
 .diagramList li::before {
@@ -327,7 +327,7 @@
 
 .frameworkText {
   font-size: 16px;
-  color: var(--foreground-muted);
+  color: #314a72;
   line-height: 1.75;
 }
 
@@ -341,7 +341,7 @@
 .frameworkIncludesTitle {
   font-size: 14px;
   font-weight: 600;
-  color: var(--foreground);
+  color: #16335d;
   margin-bottom: 12px;
 }
 
@@ -356,7 +356,7 @@
   position: relative;
   padding-left: 18px;
   font-size: 14px;
-  color: var(--foreground-muted);
+  color: #243a60;
   line-height: 1.6;
 }
 
@@ -373,7 +373,7 @@
 
 .frameworkCredibility {
   font-size: 13px;
-  color: var(--foreground-subtle);
+  color: #445d82;
   line-height: 1.7;
   padding-left: 14px;
   border-left: 2px solid rgb(61 115 177 / 0.3);
@@ -407,7 +407,7 @@
 .forNote {
   max-width: 720px;
   font-size: 14px;
-  color: var(--foreground-subtle);
+  color: #445d82;
   line-height: 1.7;
   padding-left: 14px;
   border-left: 2px solid rgb(61 115 177 / 0.26);
