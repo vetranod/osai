@@ -55,8 +55,7 @@ export default function RootLayout({
               </span>
             </Link>
             <nav className={styles.nav}>
-              <Link href="#" className={styles.navLink}>How it works</Link>
-              <Link href="#" className={styles.navLink}>About</Link>
+              <Link href="/how-it-works" className={styles.navLink}>How it works</Link>
               <Link href="#" className={styles.navLink}>Contact</Link>
               <Link href="/generate" className={styles.navCta}>Get started</Link>
             </nav>
@@ -77,8 +76,7 @@ export default function RootLayout({
               </div>
             </div>
             <div className={styles.footerColCenter}>
-              <Link href="#" className={styles.footerLink}>How it works</Link>
-              <Link href="#" className={styles.footerLink}>About</Link>
+              <Link href="/how-it-works" className={styles.footerLink}>How it works</Link>
               <Link href="#" className={styles.footerLink}>Contact</Link>
             </div>
             <div className={styles.footerColRight}>

@@ -1,72 +1,48 @@
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   LANDING PAGE — page.module.css
-   Max-width is wider than app pages (900px) to
-   allow diagram and artifact preview to breathe.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
 .wrap {
   max-width: 1120px;
   margin: 0 auto;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   SHARED UTILITIES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-/* Section container — consistent vertical rhythm */
 .section {
   padding: 80px 0;
   border-bottom: 1px solid var(--border);
 }
 
-.section:last-of-type {
-  border-bottom: none;
-}
-
-/* Section eyebrow label */
 .sectionLabel {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 0.14em;
   color: var(--accent);
   margin-bottom: 12px;
 }
 
-/* Section heading */
 .sectionHeading {
-  font-size: clamp(20px, 3vw, 26px);
-  font-weight: 800;
-  letter-spacing: -0.4px;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.05em;
   color: var(--foreground);
-  margin-bottom: 36px;
-  line-height: 1.2;
+  margin-bottom: 30px;
+  line-height: 1.08;
 }
 
-/* Prose block */
 .prose {
+  max-width: 760px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 600px;
+  gap: 18px;
 }
 
 .prose p {
   font-size: 16px;
   color: var(--foreground-muted);
-  line-height: 1.75;
-  margin: 0;
+  line-height: 1.8;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   1. HERO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
 .hero {
-  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 420px);
-  gap: 48px;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  gap: 44px;
   align-items: center;
   padding: 68px 0 88px;
   border-bottom: 1px solid var(--border);
@@ -91,29 +67,28 @@
 }
 
 .heroHeadline {
-  font-size: clamp(42px, 6vw, 70px);
+  font-size: clamp(42px, 6vw, 72px);
   font-weight: 600;
   letter-spacing: -0.065em;
-  line-height: 0.96;
+  line-height: 0.95;
   color: var(--foreground);
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .heroSubheadline {
-  font-size: clamp(16px, 2.2vw, 20px);
-  font-weight: 400;
+  font-size: clamp(18px, 2.2vw, 22px);
   color: var(--foreground-muted);
-  line-height: 1.65;
-  margin-bottom: 22px;
-  max-width: 600px;
+  line-height: 1.6;
+  margin-bottom: 18px;
+  max-width: 620px;
 }
 
 .heroDefinition {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--foreground-subtle);
   line-height: 1.7;
   max-width: 540px;
-  margin-bottom: 40px;
+  margin-bottom: 36px;
   padding-left: 16px;
   border-left: 2px solid rgb(61 115 177 / 0.3);
 }
@@ -125,158 +100,22 @@
   flex-wrap: wrap;
 }
 
-.heroBrandCard {
+.heroVisual {
   position: relative;
-  min-height: 420px;
-  border-radius: 30px;
-  background: linear-gradient(135deg, #13284b 0%, #24457a 58%, #2f5fa1 100%);
-  box-shadow: 0 28px 80px rgb(14 35 67 / 0.2);
-  overflow: hidden;
 }
-
-.heroBrandGlow {
-  position: absolute;
-  inset: auto auto -70px -90px;
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgb(110 167 159 / 0.42), transparent 68%);
-}
-
-.heroBrandInner {
-  position: relative;
-  height: 100%;
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.heroBadge {
-  align-self: flex-start;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.1);
-  color: rgb(238 245 255 / 0.86);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.heroWordmark {
-  font-size: clamp(42px, 5vw, 60px);
-  font-weight: 600;
-  letter-spacing: -0.065em;
-  color: #f7fbff;
-  line-height: 0.94;
-}
-
-.heroWordmark span {
-  color: #8bc1ff;
-}
-
-.heroTagline {
-  color: rgb(227 237 250 / 0.84);
-  font-size: 16px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-}
-
-.heroMark {
-  position: relative;
-  width: 176px;
-  height: 132px;
-}
-
-.heroBarTop,
-.heroBarMid,
-.heroBarBottom,
-.heroCurve {
-  position: absolute;
-  display: block;
-  border-radius: 999px;
-}
-
-.heroBarTop {
-  top: 0;
-  left: 62px;
-  width: 112px;
-  height: 18px;
-  background: linear-gradient(90deg, #477dc3 0%, #82b9f3 100%);
-}
-
-.heroBarMid {
-  top: 36px;
-  left: 28px;
-  width: 122px;
-  height: 18px;
-  background: linear-gradient(90deg, #eef6ff 0%, #a8d7dc 100%);
-}
-
-.heroBarBottom {
-  top: 72px;
-  left: 0;
-  width: 146px;
-  height: 18px;
-  background: linear-gradient(90deg, #3f78be 0%, #8cc0b8 100%);
-}
-
-.heroCurve {
-  right: 6px;
-  bottom: 20px;
-  width: 88px;
-  height: 72px;
-  border-right: 16px solid #eef6ff;
-  border-bottom: 16px solid #eef6ff;
-  border-radius: 0 0 42px 0;
-}
-
-.heroPalette {
-  display: flex;
-  gap: 10px;
-}
-
-.heroPalette span {
-  width: 34px;
-  height: 34px;
-  border-radius: 14px;
-  border: 1px solid rgb(255 255 255 / 0.16);
-}
-
-.heroPalette span:nth-child(1) {
-  background: #0f2145;
-}
-
-.heroPalette span:nth-child(2) {
-  background: #2f5fa1;
-}
-
-.heroPalette span:nth-child(3) {
-  background: #6ea79f;
-}
-
-.heroPalette span:nth-child(4) {
-  background: #edf3fa;
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   SHARED CTA BUTTONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 .ctaPrimary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 176px;
-  height: 48px;
+  min-width: 196px;
+  height: 50px;
   padding: 0 28px;
   background: linear-gradient(135deg, #16335d 0%, #2f5fa1 100%);
   color: #f8fbff;
   font-size: 14px;
   font-weight: 600;
   border-radius: 999px;
-  text-decoration: none;
   letter-spacing: -0.02em;
   box-shadow: 0 16px 32px rgb(17 41 77 / 0.18);
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
@@ -293,17 +132,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 164px;
-  height: 48px;
+  min-width: 160px;
+  height: 50px;
   padding: 0 22px;
   background: rgb(255 255 255 / 0.72);
   color: #36527c;
   font-size: 14px;
   font-weight: 500;
   border-radius: 999px;
-  text-decoration: none;
   border: 1px solid rgb(61 115 177 / 0.2);
-  letter-spacing: -0.02em;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.55);
   transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
   white-space: nowrap;
@@ -315,350 +152,134 @@
   background: #fff;
 }
 
-/* Inverted variants for navy CTA block */
-.ctaPrimaryInverted {
-  display: inline-flex;
-  align-items: center;
-  height: 46px;
-  padding: 0 26px;
-  background: #fff;
-  color: var(--accent);
+.packetCard,
+.packetCardCompact {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgb(16 35 69 / 0.16);
+}
+
+.packetCard {
+  min-height: 460px;
+}
+
+.packetCardCompact {
+  transform: rotate(2deg);
+}
+
+.packetHeader {
+  padding: 18px 22px;
+  background: linear-gradient(135deg, #142a4d 0%, #1e4174 100%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.packetTitle {
   font-size: 14px;
   font-weight: 600;
-  border-radius: var(--radius);
-  text-decoration: none;
-  letter-spacing: -0.1px;
-  transition: background 0.15s;
-  white-space: nowrap;
+  color: #f5f9ff;
+  margin-bottom: 4px;
 }
 
-.ctaPrimaryInverted:hover {
-  background: rgba(255, 255, 255, 0.88);
+.packetMeta {
+  font-size: 11px;
+  color: rgb(214 227 245 / 0.72);
+  letter-spacing: 0.04em;
 }
 
-.ctaSecondaryInverted {
-  display: inline-flex;
-  align-items: center;
-  height: 46px;
-  padding: 0 20px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: var(--radius);
-  text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  letter-spacing: -0.1px;
-  transition: border-color 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-
-.ctaSecondaryInverted:hover {
-  border-color: rgba(255, 255, 255, 0.7);
-  color: #fff;
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   2. CREDIBILITY STRIP
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-.credibilityStrip {
-  display: flex;
-  align-items: center;
-  padding: 22px 0;
-  border-bottom: 1px solid var(--border);
-  gap: 0;
-  flex-wrap: wrap;
-}
-
-.credibilityItem {
-  flex: 1;
-  min-width: 160px;
-  padding: 8px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.credibilityLabel {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--foreground-subtle);
-  letter-spacing: 0.1px;
-  text-align: center;
-}
-
-.credibilityDivider {
-  width: 1px;
-  height: 20px;
-  background: var(--border);
+.packetBadge {
   flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.12);
+  color: #eef6ff;
+  font-size: 11px;
+  font-weight: 600;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   3. SYSTEM DIAGRAM
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.packetBody {
+  padding: 10px 0;
+}
+
+.packetRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 18px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  align-items: start;
+}
+
+.packetRow:last-child {
+  border-bottom: none;
+}
+
+.packetRowLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--foreground-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.packetRowValue {
+  font-size: 14px;
+  color: var(--foreground-muted);
+  line-height: 1.65;
+}
 
 .diagram {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr) 48px minmax(0, 1fr);
   gap: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 4px;
+  align-items: center;
 }
 
 .diagramBlock {
-  flex: 1;
-  min-width: 160px;
-  max-width: 240px;
-  padding: 24px 20px;
-  background: var(--surface);
+  padding: 26px 22px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 251 255 / 0.98));
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
 .diagramBlockAccent {
-  background: var(--accent-light);
-  border-color: transparent;
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  background: linear-gradient(180deg, rgb(232 239 248 / 0.92), rgb(244 248 253 / 0.98));
+  border-color: rgb(61 115 177 / 0.26);
 }
 
 .diagramBlockLabel {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--foreground);
   margin-bottom: 10px;
 }
 
-.diagramBlockAccent .diagramBlockLabel {
-  color: var(--accent);
-}
-
 .diagramBlockSub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--foreground-muted);
-  line-height: 1.5;
+  line-height: 1.65;
 }
 
 .diagramList {
   list-style: none;
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .diagramList li {
-  font-size: 12px;
-  color: var(--foreground-muted);
-  padding-left: 10px;
   position: relative;
+  padding-left: 12px;
+  font-size: 13px;
+  color: var(--foreground-muted);
 }
 
 .diagramList li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 7px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--border-strong);
-}
-
-.diagramArrow {
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  flex-shrink: 0;
-}
-
-.diagramArrowLine {
-  width: 28px;
-  height: 1px;
-  background: var(--border-strong);
-}
-
-.diagramArrowHead {
-  width: 0;
-  height: 0;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  border-left: 6px solid var(--border-strong);
-  margin-left: -1px;
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   4. ARTIFACT PREVIEW
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-.artifactPreview {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  align-items: start;
-}
-
-/* Document mock */
-.artifactDocument {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
-
-.artifactDocumentHeader {
-  padding: 16px 20px;
-  background: var(--accent);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.artifactDocumentTitle {
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.1px;
-}
-
-.artifactDocumentMeta {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
-  letter-spacing: 0.2px;
-}
-
-.artifactDocumentBody {
-  padding: 8px 0;
-}
-
-.artifactSection {
-  padding: 14px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.artifactSectionLabel {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--foreground-subtle);
-}
-
-.artifactSectionTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.artifactSectionDivider {
-  height: 1px;
-  background: var(--border);
-  margin: 0 20px;
-}
-
-/* Description text alongside document */
-.artifactDescription {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-top: 8px;
-}
-
-.artifactDescriptionText {
-  font-size: 16px;
-  color: var(--foreground-muted);
-  line-height: 1.75;
-  margin: 0;
-}
-
-.artifactDescriptionCredibility {
-  font-size: 13px;
-  color: var(--foreground-subtle);
-  line-height: 1.6;
-  padding-left: 12px;
-  border-left: 2px solid var(--border-strong);
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   7. HOW THE SYSTEM WORKS — STEPS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-.steps {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.step {
-  display: flex;
-  align-items: flex-start;
-  gap: 28px;
-  padding: 28px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.step:last-child {
-  border-bottom: none;
-}
-
-.stepNumber {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent);
-  letter-spacing: 0.5px;
-  min-width: 28px;
-  padding-top: 3px;
-  flex-shrink: 0;
-}
-
-.stepContent {
-  flex: 1;
-}
-
-.stepTitle {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--foreground);
-  margin-bottom: 8px;
-  letter-spacing: -0.2px;
-}
-
-.stepText {
-  font-size: 15px;
-  color: var(--foreground-muted);
-  line-height: 1.65;
-  margin-bottom: 12px;
-}
-
-.stepText:last-child {
-  margin-bottom: 0;
-}
-
-.stepList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stepList li {
-  font-size: 14px;
-  color: var(--foreground-muted);
-  padding-left: 14px;
-  position: relative;
-}
-
-.stepList li::before {
   content: "";
   position: absolute;
   left: 0;
@@ -669,208 +290,135 @@
   background: var(--border-strong);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   8. GOVERNANCE PACKET CARDS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.diagramArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-.cards {
+.diagramArrowLine {
+  width: 32px;
+  height: 2px;
+  background: rgb(61 115 177 / 0.3);
+}
+
+.diagramArrowHead {
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid rgb(61 115 177 / 0.42);
+  margin-left: -1px;
+}
+
+.frameworkSection {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 38px;
+  align-items: start;
 }
 
-.card {
-  padding: 22px 20px;
-  background: var(--surface);
+.frameworkContent {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 10px;
+}
+
+.frameworkText {
+  font-size: 16px;
+  color: var(--foreground-muted);
+  line-height: 1.75;
+}
+
+.frameworkIncludes {
+  padding: 22px 24px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.86), rgb(247 250 254 / 0.94));
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 22px;
 }
 
-.cardTitle {
+.frameworkIncludesTitle {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--foreground);
-  margin-bottom: 8px;
-  letter-spacing: -0.1px;
+  margin-bottom: 12px;
 }
 
-.cardText {
-  font-size: 13px;
+.frameworkList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.frameworkList li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
   color: var(--foreground-muted);
   line-height: 1.6;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   9. WHO THIS IS FOR
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.frameworkList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2f5fa1 0%, #6ea79f 100%);
+}
 
-.forSection {
-  padding: 80px 0;
-  border-bottom: 1px solid var(--border);
+.frameworkCredibility {
+  font-size: 13px;
+  color: var(--foreground-subtle);
+  line-height: 1.7;
+  padding-left: 14px;
+  border-left: 2px solid rgb(61 115 177 / 0.3);
 }
 
 .forIntro {
   font-size: 16px;
   color: var(--foreground-muted);
   line-height: 1.75;
-  max-width: 560px;
-  margin-bottom: 32px;
+  max-width: 620px;
+  margin-bottom: 28px;
 }
 
 .forGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .forItem {
-  padding: 14px 16px;
-  background: var(--surface);
+  padding: 16px 18px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 251 255 / 0.98));
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 18px;
   font-size: 14px;
   font-weight: 500;
   color: var(--foreground);
 }
 
 .forNote {
-  font-size: 13px;
-  color: var(--foreground-subtle);
-  padding-left: 12px;
-  border-left: 2px solid var(--border-strong);
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   10. SYSTEM DESIGN PRINCIPLES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-.principles {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.principle {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.principle:last-child {
-  border-bottom: none;
-}
-
-.principleMarker {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex-shrink: 0;
-}
-
-.principleText {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   11. EXAMPLE GOVERNANCE PACKET
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-.examplePacket {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
-
-.examplePacketHeader {
-  padding: 20px 24px;
-  background: var(--surface-raised);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.examplePacketTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--foreground);
-  margin-bottom: 4px;
-}
-
-.examplePacketOrg {
-  font-size: 12px;
-  color: var(--foreground-subtle);
-}
-
-.examplePacketBadge {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
-  background: var(--accent-light);
-  padding: 4px 10px;
-  border-radius: var(--radius);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.examplePacketBody {
-  padding: 8px 0;
-}
-
-.exampleRow {
-  display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 24px;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
-  align-items: baseline;
-}
-
-.exampleRow:last-child {
-  border-bottom: none;
-}
-
-.exampleRowLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--foreground-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.exampleRowValue {
+  max-width: 720px;
   font-size: 14px;
-  color: var(--foreground-muted);
-  line-height: 1.55;
-}
-
-.examplePacketFooter {
-  padding: 14px 24px;
-  background: var(--surface-raised);
-  border-top: 1px solid var(--border);
-  font-size: 12px;
   color: var(--foreground-subtle);
-  font-style: italic;
+  line-height: 1.7;
+  padding-left: 14px;
+  border-left: 2px solid rgb(61 115 177 / 0.26);
 }
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   12. BOTTOM CTA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 .bottomCta {
-  padding: 80px 60px;
-  background: var(--accent);
-  border-radius: var(--radius-lg);
   margin: 80px 0;
+  padding: 80px 56px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #13284b 0%, #24457a 58%, #2f5fa1 100%);
+  box-shadow: 0 28px 80px rgb(14 35 67 / 0.2);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -880,124 +428,108 @@
 
 .bottomCtaKicker {
   font-size: 13px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.55);
-  margin: 0;
-  letter-spacing: 0.1px;
+  color: rgb(227 237 250 / 0.7);
 }
 
 .bottomCtaHeadline {
-  font-size: clamp(24px, 3.5vw, 32px);
-  font-weight: 800;
-  letter-spacing: -0.5px;
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.05em;
   color: #fff;
-  margin: 0;
+  line-height: 1.08;
 }
 
 .bottomCtaBody {
+  max-width: 520px;
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.6;
-  max-width: 440px;
-  margin: 0 0 8px;
+  color: rgb(227 237 250 / 0.8);
+  line-height: 1.7;
+  margin-bottom: 8px;
 }
 
 .bottomCtaActions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   flex-wrap: wrap;
-  justify-content: center;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   RESPONSIVE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.ctaPrimaryInverted {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  height: 48px;
+  padding: 0 24px;
+  background: #fff;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 999px;
+  transition: background 0.18s ease;
+  white-space: nowrap;
+}
 
-@media (max-width: 720px) {
-  .hero {
+.ctaPrimaryInverted:hover {
+  background: rgb(255 255 255 / 0.9);
+}
+
+.ctaSecondaryInverted {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  height: 48px;
+  padding: 0 22px;
+  background: transparent;
+  color: rgb(242 247 255 / 0.84);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  transition: border-color 0.18s ease, color 0.18s ease;
+  white-space: nowrap;
+}
+
+.ctaSecondaryInverted:hover {
+  border-color: rgb(255 255 255 / 0.64);
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .frameworkSection {
     grid-template-columns: 1fr;
-    gap: 28px;
-    padding: 56px 0 72px;
   }
 
-  .heroBrandCard {
-    min-height: 320px;
-  }
-
-  .heroWordmark {
-    font-size: 46px;
-  }
-
-  .heroMark {
-    width: 150px;
-    height: 114px;
-  }
-
-  .heroBarTop {
-    left: 52px;
-    width: 96px;
-    height: 15px;
-  }
-
-  .heroBarMid {
-    top: 32px;
-    left: 24px;
-    width: 104px;
-    height: 15px;
-  }
-
-  .heroBarBottom {
-    top: 64px;
-    width: 126px;
-    height: 15px;
-  }
-
-  .heroCurve {
-    width: 76px;
-    height: 60px;
-    border-right-width: 13px;
-    border-bottom-width: 13px;
-  }
-
-  .artifactPreview {
+  .diagram {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 14px;
   }
 
-  .cards {
-    grid-template-columns: repeat(2, 1fr);
+  .diagramArrow {
+    transform: rotate(90deg);
+    padding: 4px 0;
   }
 
   .forGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  .diagram {
-    gap: 0;
+@media (max-width: 720px) {
+  .hero {
+    padding: 56px 0 72px;
+    gap: 28px;
   }
 
-  .diagramBlock {
-    min-width: 140px;
+  .heroVisual {
+    max-width: 520px;
   }
 
-  .exampleRow {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-
-  .credibilityStrip {
-    flex-wrap: wrap;
-  }
-
-  .credibilityDivider {
-    display: none;
-  }
-
-  .credibilityItem {
-    flex: 1 1 50%;
-    justify-content: flex-start;
-    padding: 6px 0;
+  .packetCardCompact {
+    transform: none;
   }
 
   .bottomCta {
@@ -1007,71 +539,41 @@
 }
 
 @media (max-width: 480px) {
+  .section {
+    padding: 56px 0;
+  }
+
   .hero {
-    padding: 60px 0 56px;
+    padding: 56px 0;
   }
 
   .heroHeadline {
     font-size: 40px;
   }
 
-  .heroActions {
+  .heroActions,
+  .bottomCtaActions {
     flex-direction: column;
     align-items: stretch;
   }
 
   .ctaPrimary,
-  .ctaSecondary {
+  .ctaSecondary,
+  .ctaPrimaryInverted,
+  .ctaSecondaryInverted {
     width: 100%;
   }
 
-  .heroBrandInner {
-    padding: 22px;
-  }
-
-  .heroWordmark {
-    font-size: 40px;
-  }
-
-  .section {
-    padding: 56px 0;
-  }
-
-  .forSection {
-    padding: 56px 0;
-  }
-
-  .cards {
+  .packetRow {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .forGrid {
     grid-template-columns: 1fr;
   }
 
-  .diagram {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .diagramArrow {
-    transform: rotate(90deg);
-    justify-content: center;
-    padding: 4px 0;
-  }
-
-  .diagramBlock {
-    max-width: 100%;
-    min-width: 0;
-  }
-
   .bottomCta {
     padding: 44px 20px;
-    margin: 44px 0;
-  }
-
-  .examplePacketHeader {
-    flex-direction: column;
-    gap: 10px;
   }
 }
