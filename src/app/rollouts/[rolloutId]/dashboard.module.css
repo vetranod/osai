@@ -1210,12 +1210,12 @@
 /* ---- Milestone status description (spec C) ---- */
 .milestoneStatusDesc {
   font-size: 12px;
-  color: var(--surface-body);
+  color: var(--surface-body-strong);
   line-height: 1.5;
   margin-bottom: 10px;
   padding: 8px 12px;
-  background: var(--surface-raised);
-  border-left: 3px solid var(--border-strong);
+  background: linear-gradient(180deg, rgb(236 242 250 / 0.94), rgb(247 250 254 / 0.98));
+  border-left: 3px solid rgb(115 145 188 / 0.7);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
