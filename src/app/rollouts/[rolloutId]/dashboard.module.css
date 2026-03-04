@@ -111,7 +111,7 @@
 
 .cardSubtitle {
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   margin-bottom: 20px;
   line-height: 1.5;
 }
@@ -180,7 +180,7 @@
   flex-shrink: 0;
   border: 2px solid rgb(168 184 207 / 0.42);
   background: linear-gradient(180deg, #f7fafe 0%, #edf3fa 100%);
-  color: var(--foreground-muted);
+  color: var(--surface-label);
   z-index: 1;
   box-shadow: 0 10px 18px rgb(16 35 69 / 0.08);
 }
@@ -188,7 +188,7 @@
 .dot_LOCKED {
   background: var(--surface-raised);
   border-color: var(--border);
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
 }
 
 .dot_IN_PROGRESS {
@@ -249,25 +249,25 @@
 }
 
 .milestoneLocked .milestoneName {
-  color: var(--foreground-muted);
+  color: var(--surface-body);
 }
 
 /* Milestone description */
 .milestoneDesc {
   font-size: 12px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.5;
   margin-bottom: 10px;
 }
 
 .milestoneLocked .milestoneDesc {
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
 }
 
 /* Submit context note */
 .milestoneSubmitNote {
   font-size: 12px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.5;
   margin-bottom: 10px;
   padding: 8px 12px;
@@ -307,7 +307,7 @@
 
 .artifactPillLocked {
   background: rgb(241 245 250 / 0.9);
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   cursor: default;
 }
 
@@ -421,7 +421,7 @@
 .artifactDescription {
   padding: 12px 18px;
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.5;
   border-bottom: 1px solid var(--border);
   background: rgb(247 250 254 / 0.94);
@@ -456,7 +456,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--foreground-muted);
+  color: var(--surface-label);
 }
 
 .fieldValue {
@@ -522,7 +522,7 @@
 
 .phaseDesc {
   font-size: 12px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.4;
 }
 
@@ -541,7 +541,7 @@
 /* Context note */
 .contextNote {
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.5;
   padding: 10px 14px;
   background: var(--surface-raised);
@@ -564,7 +564,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: var(--foreground-muted);
+  color: var(--surface-label);
   margin-bottom: 8px;
 }
 
@@ -632,20 +632,20 @@
 .artifactEmptyTitle {
   font-size: 14px;
   font-weight: 600;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   margin-bottom: 6px;
 }
 
 .artifactEmptyHint {
   font-size: 13px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
 }
 
 .artifactSelectHint {
   padding: 24px;
   text-align: center;
   font-size: 13px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
 }
 
 /* ---- Reclassification Panel ---- */
@@ -682,7 +682,7 @@
 
 .reclassFormNote {
   font-size: 12px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   margin-bottom: 14px;
 }
 
@@ -694,7 +694,7 @@
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: var(--foreground-muted);
+  color: var(--surface-label);
   text-transform: capitalize;
   margin-bottom: 5px;
 }
@@ -755,7 +755,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   margin-bottom: 4px;
 }
 
@@ -789,13 +789,13 @@
 
 .reclassDate {
   font-size: 11px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   margin-left: auto;
 }
 
 .reclassFields {
   font-size: 12px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   margin-bottom: 8px;
 }
 
@@ -806,7 +806,7 @@
 
 .emptyNote {
   font-size: 13px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   text-align: center;
   padding: 12px 0;
 }
@@ -846,13 +846,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   margin-bottom: 6px;
 }
 
 .reclassImpactRow {
   font-size: 12px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.6;
 }
 
@@ -862,7 +862,7 @@
 }
 
 .reclassImpactArrow {
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   margin: 0 4px;
 }
 
@@ -1061,7 +1061,7 @@
 }
 .badge_subtle {
   background: var(--surface-raised);
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   border-color: rgb(168 184 207 / 0.16);
 }
 
@@ -1189,7 +1189,7 @@
 /* ---- Dashboard subheader (spec D) ---- */
 .dashSubheader {
   font-size: 13px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.5;
   margin-top: 4px;
   margin-bottom: 4px;
@@ -1199,7 +1199,7 @@
 /* ---- Milestone status description (spec C) ---- */
 .milestoneStatusDesc {
   font-size: 12px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.5;
   margin-bottom: 10px;
   padding: 8px 12px;
@@ -1223,7 +1223,7 @@
 
 .transitionHelper {
   font-size: 12px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   line-height: 1.4;
   margin: 0;
 }
@@ -1265,7 +1265,7 @@
 
 .artifactMetaLabel {
   font-weight: 600;
-  color: var(--foreground-muted);
+  color: var(--surface-label);
   min-width: 100px;
   flex-shrink: 0;
 }
@@ -1300,7 +1300,7 @@
 /* ---- Artifact footer line (spec F) ---- */
 .artifactFooter {
   font-size: 12px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   line-height: 1.5;
   padding: 12px 18px;
   border-top: 1px solid var(--border);
@@ -1339,7 +1339,7 @@
 
 .modalBody {
   font-size: 14px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   line-height: 1.6;
   margin-bottom: 24px;
 }
@@ -1384,12 +1384,12 @@
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 2px 8px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
 }
 
 .dashRefLabel {
   font-weight: 600;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
