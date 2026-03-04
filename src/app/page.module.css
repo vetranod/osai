@@ -166,7 +166,7 @@
 }
 
 .packetCardCompact {
-  transform: rotate(2deg);
+  transform: none;
 }
 
 .packetHeader {
