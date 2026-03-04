@@ -42,7 +42,7 @@
 
 .subtitle {
   font-size: 14px;
-  color: #314a72;
+  color: #243a60;
   line-height: 1.65;
 }
 
@@ -52,7 +52,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: #4a6489;
+  color: #36527c;
   margin-bottom: 4px;
 }
 
@@ -211,7 +211,7 @@
 
 .optionDesc {
   font-size: 12px;
-  color: #3f587d;
+  color: #2f476d;
   line-height: 1.5;
 }
 
@@ -223,7 +223,7 @@
   border: 1px solid var(--danger);
   border-radius: var(--radius);
   font-size: 13px;
-  color: var(--danger);
+  color: #7e2020;
 }
 
 /* ---- Submit ---- */
@@ -244,7 +244,7 @@
 
 .hint {
   font-size: 13px;
-  color: #4d6587;
+  color: #36527c;
 }
 
 /* ---- Buttons ---- */
@@ -306,7 +306,7 @@
 /* ---- Fieldset hint ---- */
 .fieldsetHint {
   font-size: 13px;
-  color: #3b547a;
+  color: #2f476d;
   line-height: 1.5;
   margin-bottom: 14px;
   margin-top: -6px;
@@ -328,7 +328,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--accent);
+  color: #16335d;
   margin-bottom: 6px;
 }
 
@@ -342,8 +342,8 @@
 .regulatedGate {
   margin-top: 16px;
   padding: 14px 18px;
-  background: var(--danger-light);
-  border: 1px solid var(--danger);
+  background: #fdeeee;
+  border: 1px solid #cf5c5c;
   border-radius: var(--radius);
 }
 
@@ -351,14 +351,14 @@
   display: block;
   font-size: 14px;
   font-weight: 700;
-  color: var(--danger);
+  color: #8b1f1f;
   margin-bottom: 6px;
 }
 
 .regulatedGateBody {
   font-size: 13px;
-  color: #4d1f1f;
-  line-height: 1.5;
+  color: #5b1d1d;
+  line-height: 1.6;
   margin: 0;
 }
 
@@ -378,7 +378,7 @@
 .nameLabel {
   font-size: 12px;
   font-weight: 600;
-  color: #4a6489;
+  color: #36527c;
 }
 
 .nameInput {
@@ -402,7 +402,7 @@
 
 .nameInput:disabled {
   background: var(--surface-raised);
-  color: var(--foreground-muted);
+  color: #445d82;
   cursor: not-allowed;
 }
 
@@ -412,7 +412,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #3b547a;
+  color: #2f476d;
   cursor: pointer;
   margin-bottom: 14px;
 }
@@ -428,8 +428,8 @@
 .soloNote {
   margin-top: 12px;
   font-size: 13px;
-  color: #284f3d;
-  line-height: 1.5;
+  color: #1f4633;
+  line-height: 1.6;
   padding: 10px 14px;
   background: var(--success-light);
   border-left: 3px solid var(--success);
@@ -442,7 +442,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #3e5b83;
+  color: #36527c;
   margin-bottom: 10px;
 }
 
