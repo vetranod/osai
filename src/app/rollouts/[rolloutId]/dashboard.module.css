@@ -859,22 +859,22 @@
 
 .reclassImpactRow {
   font-size: 12px;
-  color: var(--surface-body);
+  color: rgb(205 225 247 / 0.94);
   line-height: 1.6;
 }
 
 .reclassImpactField {
   font-weight: 600;
-  color: var(--surface-title);
+  color: rgb(137 184 237 / 0.95);
 }
 
 .reclassImpactArrow {
-  color: var(--surface-label);
+  color: rgb(162 197 239 / 0.86);
   margin: 0 4px;
 }
 
 .reclassImpactNew {
-  color: var(--accent);
+  color: #8ec7ff;
   font-weight: 600;
 }
 
