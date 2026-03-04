@@ -22,6 +22,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+  color: var(--surface-body-strong);
   overflow: hidden;
 }
 
@@ -36,7 +37,7 @@
   font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  color: var(--foreground);
+  color: var(--surface-title);
   margin-bottom: 4px;
 }
 
@@ -73,7 +74,7 @@
   gap: 10px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--surface-title);
   margin-bottom: 14px;
 }
 
@@ -274,7 +275,10 @@
 }
 
 .btnPrimary:disabled {
-  opacity: 0.45;
+  opacity: 1;
+  background: #c1cfdf;
+  color: #30496f;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -286,7 +290,7 @@
   height: 42px;
   padding: 0 20px;
   background: rgb(255 255 255 / 0.8);
-  color: #36527c;
+  color: var(--surface-label);
   font-size: 14px;
   font-weight: 600;
   border: 1px solid rgb(61 115 177 / 0.2);
@@ -387,7 +391,7 @@
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   background: rgb(255 255 255 / 0.86);
-  color: var(--foreground);
+  color: var(--surface-title);
   font-size: 14px;
   font-family: inherit;
   outline: none;
@@ -465,7 +469,7 @@
   font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.05em;
-  color: var(--foreground);
+  color: var(--surface-title);
   margin-bottom: 6px;
 }
 

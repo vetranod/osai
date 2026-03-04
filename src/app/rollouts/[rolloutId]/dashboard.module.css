@@ -98,13 +98,14 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+  color: var(--surface-body-strong);
   padding: 24px;
 }
 
 .cardTitle {
   font-size: 15px;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--surface-title);
   margin-bottom: 4px;
   letter-spacing: -0.02em;
 }
@@ -245,7 +246,7 @@
 .milestoneName {
   font-size: 14px;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--surface-title);
 }
 
 .milestoneLocked .milestoneName {
@@ -380,7 +381,7 @@
 
 .artifactTab:hover {
   border-color: rgb(61 115 177 / 0.34);
-  color: var(--foreground);
+  color: var(--surface-title);
   background: #fff;
 }
 
@@ -395,6 +396,7 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow);
+  color: var(--surface-body-strong);
 }
 
 .artifactViewerHeader {
@@ -461,7 +463,7 @@
 
 .fieldValue {
   font-size: 14px;
-  color: var(--foreground);
+  color: var(--surface-title);
 }
 
 /* Rules & requirements */
@@ -476,7 +478,7 @@
   display: flex;
   gap: 10px;
   font-size: 13px;
-  color: var(--foreground);
+  color: var(--surface-title);
   line-height: 1.5;
 }
 
@@ -516,7 +518,7 @@
 .phaseName {
   font-size: 13px;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--surface-title);
   margin-bottom: 2px;
 }
 
@@ -619,7 +621,7 @@
 }
 
 .zoneLabel {
-  color: var(--foreground);
+  color: var(--surface-title);
   line-height: 1.4;
 }
 
@@ -656,6 +658,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+  color: var(--surface-body-strong);
   padding: 24px;
 }
 
@@ -669,7 +672,7 @@
 .sectionTitle {
   font-size: 15px;
   font-weight: 700;
-  color: var(--foreground);
+  color: var(--surface-title);
 }
 
 .reclassForm {
@@ -706,7 +709,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: rgb(255 255 255 / 0.88);
-  color: var(--foreground);
+  color: var(--surface-title);
   font-size: 13px;
   outline: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
@@ -724,7 +727,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: rgb(255 255 255 / 0.88);
-  color: var(--foreground);
+  color: var(--surface-title);
   font-size: 13px;
   resize: vertical;
   outline: none;
@@ -822,7 +825,7 @@
   border-radius: var(--radius);
   padding: 12px 14px;
   font-size: 13px;
-  color: var(--foreground);
+  color: var(--surface-title);
   line-height: 1.45;
 }
 
@@ -858,7 +861,7 @@
 
 .reclassImpactField {
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--surface-title);
 }
 
 .reclassImpactArrow {
@@ -1119,13 +1122,13 @@
 .errorCardTitle {
   font-size: 20px;
   font-weight: 700;
-  color: var(--foreground);
+  color: var(--surface-title);
   margin-bottom: 8px;
 }
 
 .errorCardMessage {
   font-size: 14px;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   margin-bottom: 24px;
   line-height: 1.6;
 }
@@ -1159,14 +1162,14 @@
   border-radius: var(--radius);
   border: 1px solid var(--border-strong);
   background: transparent;
-  color: var(--foreground-muted);
+  color: var(--surface-body);
   text-decoration: none;
   display: inline-block;
 }
 
 .errorCardLink:hover {
-  border-color: var(--foreground-muted);
-  color: var(--foreground);
+  border-color: var(--surface-label);
+  color: var(--surface-title);
 }
 
 /* ---- Responsive ---- */
@@ -1210,7 +1213,7 @@
 
 .milestoneStatusDescTitle {
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--surface-title);
 }
 
 /* ---- Transition area (button + helper text) (spec A) ---- */
@@ -1271,7 +1274,7 @@
 }
 
 .artifactMetaValue {
-  color: var(--foreground);
+  color: var(--surface-title);
 }
 
 /* ---- Artifact banner (spec J — drawer view) ---- */
@@ -1293,7 +1296,7 @@
 }
 
 .artifactBannerText {
-  color: var(--foreground);
+  color: var(--surface-title);
   line-height: 1.4;
 }
 
@@ -1325,6 +1328,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  color: var(--surface-body-strong);
   padding: 28px 32px;
   max-width: 420px;
   width: 100%;
@@ -1333,7 +1337,7 @@
 .modalTitle {
   font-size: 17px;
   font-weight: 700;
-  color: var(--foreground);
+  color: var(--surface-title);
   margin-bottom: 12px;
 }
 
