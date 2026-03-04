@@ -416,7 +416,7 @@
 
 .artifactVersion {
   font-size: 11px;
-  color: rgb(214 227 245 / 0.72);
+  color: rgb(232 240 250 / 0.9);
   font-family: var(--font-mono);
 }
 
@@ -543,11 +543,11 @@
 /* Context note */
 .contextNote {
   font-size: 13px;
-  color: var(--surface-body);
+  color: rgb(228 237 249 / 0.92);
   line-height: 1.5;
   padding: 10px 14px;
-  background: var(--surface-raised);
-  border-left: 3px solid var(--accent);
+  background: linear-gradient(180deg, rgb(20 40 72 / 0.96), rgb(16 33 61 / 0.98));
+  border-left: 3px solid rgb(111 163 227 / 0.78);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   margin-bottom: 16px;
 }
@@ -587,15 +587,15 @@
 }
 
 .zone_SAFE {
-  background: var(--success-light);
+  background: linear-gradient(180deg, #0d3a2a 0%, #0a3123 100%);
 }
 
 .zone_RESTRICTED {
-  background: var(--warning-light);
+  background: linear-gradient(180deg, #4b2c06 0%, #3d2304 100%);
 }
 
 .zone_HUMAN_ONLY {
-  background: var(--danger-light);
+  background: linear-gradient(180deg, #551616 0%, #451111 100%);
 }
 
 .zoneTag {
@@ -609,19 +609,19 @@
 }
 
 .zone_SAFE .zoneTag {
-  color: var(--success);
+  color: #8af0c2;
 }
 
 .zone_RESTRICTED .zoneTag {
-  color: var(--warning);
+  color: #ffc766;
 }
 
 .zone_HUMAN_ONLY .zoneTag {
-  color: var(--danger);
+  color: #ff8e8e;
 }
 
 .zoneLabel {
-  color: var(--surface-title);
+  color: #f3f7fd;
   line-height: 1.4;
 }
 
@@ -1063,9 +1063,9 @@
   border-color: rgb(23 53 95 / 0.14);
 }
 .badge_subtle {
-  background: var(--surface-raised);
-  color: var(--surface-body);
-  border-color: rgb(168 184 207 / 0.16);
+  background: linear-gradient(180deg, #203b67 0%, #182f55 100%);
+  color: #edf4ff;
+  border-color: rgb(173 200 233 / 0.28);
 }
 
 /* ---- Loading / Error ---- */
@@ -1255,8 +1255,8 @@
   flex-direction: column;
   gap: 6px;
   padding: 12px 18px;
-  background: var(--surface-raised);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #1d3967 0%, #152b4f 100%);
+  border-bottom: 1px solid rgb(255 255 255 / 0.12);
 }
 
 .artifactMetaRow {
@@ -1268,13 +1268,13 @@
 
 .artifactMetaLabel {
   font-weight: 600;
-  color: var(--surface-label);
+  color: rgb(202 220 243 / 0.84);
   min-width: 100px;
   flex-shrink: 0;
 }
 
 .artifactMetaValue {
-  color: var(--surface-title);
+  color: #f5f9ff;
 }
 
 /* ---- Artifact banner (spec J — drawer view) ---- */
@@ -1303,11 +1303,11 @@
 /* ---- Artifact footer line (spec F) ---- */
 .artifactFooter {
   font-size: 12px;
-  color: var(--surface-label);
+  color: rgb(214 228 246 / 0.9);
   line-height: 1.5;
   padding: 12px 18px;
-  border-top: 1px solid var(--border);
-  background: var(--surface-raised);
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  background: linear-gradient(180deg, #183154 0%, #132947 100%);
   margin: 0;
 }
 
