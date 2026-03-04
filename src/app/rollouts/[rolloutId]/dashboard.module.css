@@ -1200,7 +1200,7 @@
 /* ---- Dashboard subheader (spec D) ---- */
 .dashSubheader {
   font-size: 13px;
-  color: var(--surface-body);
+  color: rgb(160 193 232 / 0.88);
   line-height: 1.5;
   margin-top: 4px;
   margin-bottom: 4px;
@@ -1385,7 +1385,7 @@
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: var(--foreground-subtle);
+  color: rgb(160 193 232 / 0.82);
   margin-top: 4px;
 }
 
@@ -1401,7 +1401,7 @@
 
 .dashRefLabel {
   font-weight: 600;
-  color: var(--surface-label);
+  color: rgb(160 193 232 / 0.92);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
