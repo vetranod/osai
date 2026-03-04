@@ -26,7 +26,7 @@
 .archiveTrigger {
   font-size: 12px;
   font-weight: 600;
-  color: #36527c;
+  color: var(--surface-label);
   background: rgb(255 255 255 / 0.78);
   border: 1px solid rgb(61 115 177 / 0.18);
   border-radius: 999px;
@@ -51,7 +51,7 @@
 
 .archiveHint {
   font-size: 11px;
-  color: #6b7f9a;
+  color: var(--foreground-muted);
   text-align: right;
   max-width: 200px;
   line-height: 1.5;
@@ -372,7 +372,7 @@
   font-weight: 600;
   border: 1px solid rgb(61 115 177 / 0.18);
   background: rgb(255 255 255 / 0.74);
-  color: #49617f;
+  color: var(--surface-label);
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.72);
   transition: all 0.18s ease;
@@ -927,7 +927,7 @@
   height: 38px;
   padding: 0 18px;
   background: rgb(255 255 255 / 0.8);
-  color: #36527c;
+  color: var(--surface-label);
   font-size: 13px;
   font-weight: 600;
   border: 1px solid rgb(61 115 177 / 0.18);
@@ -949,7 +949,7 @@
   height: 28px;
   padding: 0 12px;
   background: rgb(255 255 255 / 0.8);
-  color: #49617f;
+  color: var(--surface-label);
   font-size: 12px;
   font-weight: 600;
   border: 1px solid var(--border);

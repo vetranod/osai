@@ -214,14 +214,14 @@
 .exampleRowLabel {
   font-size: 11px;
   font-weight: 700;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .exampleRowValue {
   font-size: 14px;
-  color: var(--foreground-muted);
+  color: var(--surface-body-strong);
   line-height: 1.65;
 }
 
@@ -230,7 +230,7 @@
   background: rgb(247 250 254 / 0.94);
   border-top: 1px solid var(--border);
   font-size: 12px;
-  color: var(--foreground-subtle);
+  color: var(--surface-label);
   line-height: 1.7;
 }
 

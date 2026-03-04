@@ -7,6 +7,10 @@
   --foreground: #102345;
   --foreground-muted: #526684;
   --foreground-subtle: #7f8ea3;
+  --surface-title: #102345;
+  --surface-body: #334b71;
+  --surface-body-strong: #243a60;
+  --surface-label: #3f587f;
 
   --accent: #17355f;
   --accent-hover: #10294a;
@@ -48,6 +52,10 @@
     --foreground: #ecf3ff;
     --foreground-muted: #a8b8cd;
     --foreground-subtle: #7b8da9;
+    --surface-title: #ecf3ff;
+    --surface-body: #c1d0e4;
+    --surface-body-strong: #d8e4f2;
+    --surface-label: #9eb1ca;
 
     --accent: #5b8fcc;
     --accent-hover: #79a8df;

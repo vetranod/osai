@@ -221,14 +221,14 @@
 .packetRowLabel {
   font-size: 11px;
   font-weight: 700;
-  color: #4a6489;
+  color: var(--surface-label);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .packetRowValue {
   font-size: 14px;
-  color: #243a60;
+  color: var(--surface-body-strong);
   line-height: 1.55;
 }
 
@@ -255,13 +255,13 @@
 .diagramBlockLabel {
   font-size: 14px;
   font-weight: 700;
-  color: #0f2145;
+  color: var(--surface-title);
   margin-bottom: 10px;
 }
 
 .diagramBlockSub {
   font-size: 13px;
-  color: #243a60;
+  color: var(--surface-body-strong);
   line-height: 1.65;
 }
 
@@ -276,7 +276,7 @@
   position: relative;
   padding-left: 12px;
   font-size: 13px;
-  color: #243a60;
+  color: var(--surface-body-strong);
 }
 
 .diagramList li::before {
@@ -327,7 +327,7 @@
 
 .frameworkText {
   font-size: 16px;
-  color: #314a72;
+  color: var(--surface-body);
   line-height: 1.75;
 }
 
@@ -341,7 +341,7 @@
 .frameworkIncludesTitle {
   font-size: 14px;
   font-weight: 600;
-  color: #16335d;
+  color: var(--surface-title);
   margin-bottom: 12px;
 }
 
@@ -356,7 +356,7 @@
   position: relative;
   padding-left: 18px;
   font-size: 14px;
-  color: #243a60;
+  color: var(--surface-body-strong);
   line-height: 1.6;
 }
 
@@ -373,7 +373,7 @@
 
 .frameworkCredibility {
   font-size: 13px;
-  color: #445d82;
+  color: var(--surface-label);
   line-height: 1.7;
   padding-left: 14px;
   border-left: 2px solid rgb(61 115 177 / 0.3);
@@ -401,13 +401,13 @@
   border-radius: 18px;
   font-size: 14px;
   font-weight: 600;
-  color: #0f2145;
+  color: var(--surface-title);
 }
 
 .forNote {
   max-width: 720px;
   font-size: 14px;
-  color: #445d82;
+  color: var(--surface-label);
   line-height: 1.7;
   padding-left: 14px;
   border-left: 2px solid rgb(61 115 177 / 0.26);
