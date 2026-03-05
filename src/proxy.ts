@@ -29,9 +29,29 @@ function sanitizeNextPath(raw: string | null): string {
   return raw;
 }
 
+function getCanonicalHost(): string | null {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL;
+  if (!appUrl) return null;
+  try {
+    return new URL(appUrl).host;
+  } catch {
+    return null;
+  }
+}
+
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
   const hasBearerAuth = request.headers.get("authorization")?.startsWith("Bearer ") ?? false;
+  const canonicalHost = getCanonicalHost();
+  const requestHost = request.nextUrl.host;
+
+  // Prevent split auth sessions between hosts (e.g., apex vs www).
+  if (canonicalHost && canonicalHost !== requestHost) {
+    const redirect = request.nextUrl.clone();
+    redirect.host = canonicalHost;
+    return NextResponse.redirect(redirect, 307);
+  }
+
   let response = NextResponse.next({
     request,
   });

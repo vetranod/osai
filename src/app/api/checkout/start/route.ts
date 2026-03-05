@@ -112,12 +112,25 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!user) {
+    const requestHost =
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host") ||
+      new URL(request.url).host;
     return Response.json(
       {
         ok: false,
         message: "Authentication required.",
         reason: authReason,
         has_auth_header: hadAuthHeader,
+        request_host: requestHost,
+        app_host: (() => {
+          try {
+            const app = process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL;
+            return app ? new URL(app).host : null;
+          } catch {
+            return null;
+          }
+        })(),
       },
       { status: 401 }
     );
