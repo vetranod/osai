@@ -642,6 +642,14 @@ function FinalizeStep({
       (leadPairFilled && !form.approving_authority_name && !form.approving_authority_title) ||
       (!form.initiative_lead_name && !form.initiative_lead_title && authorityPairFilled);
 
+  function redirectToLoginResume(): void {
+    const next = buildGenerateResumePath(inputs, form);
+    const loginUrl = new URL("/login", window.location.origin);
+    loginUrl.searchParams.set("next", next);
+    loginUrl.searchParams.set("auth_error", "session_required");
+    window.location.assign(loginUrl.toString());
+  }
+
   useEffect(() => {
     saveGenerateDraft({
       inputs,
@@ -668,12 +676,7 @@ function FinalizeStep({
       }
       const data = await res.json();
       if (res.status === 401) {
-        const reason = typeof data?.reason === "string" ? data.reason : "missing_auth";
-        if (reason === "invalid_token") {
-          setError("Authentication required (invalid token). Please sign out, then sign in again.");
-        } else {
-          setError(`Authentication required (${reason}). Please sign out, then sign in again.`);
-        }
+        redirectToLoginResume();
         return;
       }
       if (!res.ok || !data.ok) {
@@ -704,12 +707,7 @@ function FinalizeStep({
       }
       const data = await res.json();
       if (res.status === 401) {
-        const reason = typeof data?.reason === "string" ? data.reason : "missing_auth";
-        if (reason === "invalid_token") {
-          setError("Authentication required (invalid token). Please sign out, then sign in again.");
-        } else {
-          setError(`Authentication required (${reason}). Please sign out, then sign in again.`);
-        }
+        redirectToLoginResume();
         return;
       }
       if (!res.ok || !data.ok) {
@@ -738,8 +736,15 @@ function FinalizeStep({
     if (form.approving_authority_title) identityPayload.approving_authority_title = form.approving_authority_title.trim();
 
     try {
-      const res = await postDemoCheckoutStart({ ...inputs, ...identityPayload });
+      let res = await postDemoCheckoutStart({ ...inputs, ...identityPayload });
+      if (res.status === 401) {
+        res = await postDemoCheckoutStart({ ...inputs, ...identityPayload });
+      }
       const data = await res.json();
+      if (res.status === 401) {
+        redirectToLoginResume();
+        return;
+      }
       if (!res.ok || !data.ok) {
         setError(data.message ?? "Demo checkout failed.");
         return;
@@ -885,16 +890,6 @@ function FinalizeStep({
             >
               {loading ? "Redirecting..." : "Continue to payment ->"}
             </button>
-            {demoEnabled && (
-              <button
-                type="button"
-                className={styles.btnSecondary}
-                onClick={handleDemoCheckout}
-                disabled={!canSubmit || loading}
-              >
-                Demo (no charge)
-              </button>
-            )}
             {canSkip && (
               <button
                 type="button"
@@ -903,6 +898,16 @@ function FinalizeStep({
                 disabled={loading}
               >
                 Skip for now
+              </button>
+            )}
+            {demoEnabled && (
+              <button
+                type="button"
+                className={styles.btnTertiary}
+                onClick={handleDemoCheckout}
+                disabled={!canSubmit || loading}
+              >
+                Run demo flow (no charge)
               </button>
             )}
           </div>

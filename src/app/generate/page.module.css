@@ -319,6 +319,31 @@
   color: var(--accent);
 }
 
+.btnTertiary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 108px;
+  height: 42px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--surface-label);
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+.btnTertiary:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
 /* ---- Fieldset hint ---- */
 .fieldsetHint {
   font-size: 13px;

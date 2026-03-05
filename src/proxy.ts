@@ -18,6 +18,8 @@ function isApiPath(pathname: string): boolean {
   return (
     pathname === "/api/rollouts" ||
     pathname.startsWith("/api/rollouts/") ||
+    pathname.startsWith("/api/checkout/") ||
+    pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/billing/")
   );
 }
