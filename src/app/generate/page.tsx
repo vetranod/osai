@@ -70,6 +70,49 @@ type PrefillData = {
   identity: FinalizeState;
 };
 
+const GENERATE_DRAFT_KEY = "osai_generate_draft_v1";
+
+function saveGenerateDraft(prefill: PrefillData): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      GENERATE_DRAFT_KEY,
+      JSON.stringify({
+        ...prefill,
+        updatedAt: Date.now(),
+      })
+    );
+  } catch {}
+}
+
+function loadGenerateDraft(): PrefillData | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(GENERATE_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      inputs?: Partial<FormState>;
+      identity?: Partial<FinalizeState>;
+    };
+    return {
+      inputs: {
+        primary_goal: parsed.inputs?.primary_goal ?? "",
+        adoption_state: parsed.inputs?.adoption_state ?? "",
+        sensitivity_anchor: parsed.inputs?.sensitivity_anchor ?? "",
+        leadership_posture: parsed.inputs?.leadership_posture ?? "",
+      },
+      identity: {
+        initiative_lead_name: parsed.identity?.initiative_lead_name ?? "",
+        initiative_lead_title: parsed.identity?.initiative_lead_title ?? "",
+        approving_authority_name: parsed.identity?.approving_authority_name ?? "",
+        approving_authority_title: parsed.identity?.approving_authority_title ?? "",
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function getCheckoutAccessToken(): Promise<string | null> {
   const supabase = getSupabaseBrowserClient();
   const { data: refreshed } = await supabase.auth.refreshSession();
@@ -546,6 +589,13 @@ function FinalizeStep({
       (leadPairFilled && !form.approving_authority_name && !form.approving_authority_title) ||
       (!form.initiative_lead_name && !form.initiative_lead_title && authorityPairFilled);
 
+  useEffect(() => {
+    saveGenerateDraft({
+      inputs,
+      identity: form,
+    });
+  }, [inputs, form]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -567,9 +617,9 @@ function FinalizeStep({
       if (res.status === 401) {
         const reason = typeof data?.reason === "string" ? data.reason : "missing_auth";
         if (reason === "invalid_token") {
-          setError("Your session token is invalid. Please sign out, then sign in again.");
+          setError("Authentication required (invalid token). Please sign out, then sign in again.");
         } else {
-          setError("Authentication required. Please sign out, then sign in again.");
+          setError(`Authentication required (${reason}). Please sign out, then sign in again.`);
         }
         return;
       }
@@ -603,9 +653,9 @@ function FinalizeStep({
       if (res.status === 401) {
         const reason = typeof data?.reason === "string" ? data.reason : "missing_auth";
         if (reason === "invalid_token") {
-          setError("Your session token is invalid. Please sign out, then sign in again.");
+          setError("Authentication required (invalid token). Please sign out, then sign in again.");
         } else {
-          setError("Authentication required. Please sign out, then sign in again.");
+          setError(`Authentication required (${reason}). Please sign out, then sign in again.`);
         }
         return;
       }
@@ -781,7 +831,8 @@ function FinalizeStep({
 
 function GeneratePageInner() {
   const searchParams = useSearchParams();
-  const prefill = useMemo(() => readPrefill(searchParams), [searchParams]);
+  const queryPrefill = useMemo(() => readPrefill(searchParams), [searchParams]);
+  const [storedPrefill, setStoredPrefill] = useState<PrefillData | null>(null);
   const authState = searchParams.get("auth");
   const authError = searchParams.get("auth_error");
   const checkoutState = searchParams.get("checkout");
@@ -796,7 +847,13 @@ function GeneratePageInner() {
     checkoutState === "start_requires_post"
       ? "Checkout starts from the button in this page. Please use Continue to payment."
       : null;
-  const shouldResumeFinalize = resume === "finalize" && hasCompleteIntake(prefill.inputs);
+  const prefill = useMemo(() => {
+    if (hasCompleteIntake(queryPrefill.inputs)) return queryPrefill;
+    if (storedPrefill && hasCompleteIntake(storedPrefill.inputs)) return storedPrefill;
+    return queryPrefill;
+  }, [queryPrefill, storedPrefill]);
+  const restoredFromDraft = !hasCompleteIntake(queryPrefill.inputs) && hasCompleteIntake(prefill.inputs);
+  const shouldResumeFinalize = (resume === "finalize" || restoredFromDraft) && hasCompleteIntake(prefill.inputs);
 
   type Stage =
     | { step: "intake" }
@@ -805,6 +862,10 @@ function GeneratePageInner() {
   const [stage, setStage] = useState<Stage>({ step: "intake" });
   const [resumeLoading, setResumeLoading] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStoredPrefill(loadGenerateDraft());
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -845,6 +906,7 @@ function GeneratePageInner() {
       <>
         {authNotice ? <div className={styles.successBox}>{authNotice}</div> : null}
         {checkoutNotice ? <div className={styles.successBox}>{checkoutNotice}</div> : null}
+        {restoredFromDraft ? <div className={styles.successBox}>Restored your previous progress.</div> : null}
         {resumeLoading ? <div className={styles.successBox}>Restoring your progress...</div> : null}
         {resumeError ? <div className={styles.errorBox}>{resumeError}</div> : null}
         <IntakeForm
@@ -861,6 +923,7 @@ function GeneratePageInner() {
     <>
       {authNotice ? <div className={styles.successBox}>{authNotice}</div> : null}
       {checkoutNotice ? <div className={styles.successBox}>{checkoutNotice}</div> : null}
+      {restoredFromDraft ? <div className={styles.successBox}>Restored your previous progress.</div> : null}
       <FinalizeStep
         output={stage.output}
         inputs={stage.inputs}
