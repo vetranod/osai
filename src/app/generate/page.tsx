@@ -72,13 +72,25 @@ type PrefillData = {
 
 async function getCheckoutAccessToken(): Promise<string | null> {
   const supabase = getSupabaseBrowserClient();
+  const { data: refreshed } = await supabase.auth.refreshSession();
+  if (refreshed.session?.access_token) return refreshed.session.access_token;
+
   const {
     data: { session: existingSession },
   } = await supabase.auth.getSession();
-  if (existingSession?.access_token) return existingSession.access_token;
+  return existingSession?.access_token ?? null;
+}
 
-  const { data } = await supabase.auth.refreshSession();
-  return data.session?.access_token ?? null;
+async function postCheckoutStart(body: Record<string, string>): Promise<Response> {
+  const accessToken = await getCheckoutAccessToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+  return fetch("/api/checkout/start", {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
 }
 
 function buildGenerateResumePath(inputs: FormState, identity: FinalizeState): string {
@@ -535,15 +547,11 @@ function FinalizeStep({
     if (form.approving_authority_title) identityPayload.approving_authority_title = form.approving_authority_title.trim();
 
     try {
-      const accessToken = await getCheckoutAccessToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-
-      const res = await fetch("/api/checkout/start", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ ...inputs, ...identityPayload }),
-      });
+      let res = await postCheckoutStart({ ...inputs, ...identityPayload });
+      // One retry after a forced refresh to avoid false session-expired loops.
+      if (res.status === 401) {
+        res = await postCheckoutStart({ ...inputs, ...identityPayload });
+      }
       const data = await res.json();
       if (res.status === 401) {
         const next = encodeURIComponent(buildGenerateResumePath(inputs, form));
@@ -571,15 +579,11 @@ function FinalizeStep({
     setError(null);
     setLoading(true);
     try {
-      const accessToken = await getCheckoutAccessToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-
-      const res = await fetch("/api/checkout/start", {
-        method: "POST",
-        headers,
-        body: JSON.stringify(inputs),
-      });
+      let res = await postCheckoutStart(inputs);
+      // One retry after a forced refresh to avoid false session-expired loops.
+      if (res.status === 401) {
+        res = await postCheckoutStart(inputs);
+      }
       const data = await res.json();
       if (res.status === 401) {
         const next = encodeURIComponent(buildGenerateResumePath(inputs, form));
