@@ -112,5 +112,14 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ["/generate", "/auth/confirmed", "/rollouts/:path*", "/api/rollouts/:path*", "/api/billing/:path*", "/login"],
+  matcher: [
+    "/generate",
+    "/auth/confirmed",
+    "/rollouts/:path*",
+    "/api/rollouts/:path*",
+    "/api/checkout/:path*",
+    "/api/auth/:path*",
+    "/api/billing/:path*",
+    "/login",
+  ],
 };
