@@ -25,7 +25,7 @@ const ADOPTION_STATE_OPTIONS = [
 ] as const;
 
 const SENSITIVITY_OPTIONS = [
-  { value: "PUBLIC_CONTENT",                label: "Public-facing content",          desc: "Nothing sensitive â€” marketing copy, public communications" },
+  { value: "PUBLIC_CONTENT",                label: "Public-facing content",          desc: "Nothing sensitive - marketing copy, public communications" },
   { value: "INTERNAL_BUSINESS_INFO",        label: "Internal business information",  desc: "Internal documents not intended for outside the firm" },
   { value: "CLIENT_MATERIALS",              label: "Client materials",               desc: "Documents, data, or communications belonging to clients" },
   { value: "FINANCIAL_OPERATIONAL_RECORDS", label: "Financial or operational data",  desc: "Revenue figures, budgets, contracts, or operational records" },
@@ -33,7 +33,7 @@ const SENSITIVITY_OPTIONS = [
 ] as const;
 
 const LEADERSHIP_OPTIONS = [
-  { value: "MOVE_QUICKLY", label: "Move quickly",  desc: "Get this in place fast â€” we'll refine as we go" },
+  { value: "MOVE_QUICKLY", label: "Move quickly",  desc: "Get this in place fast - we'll refine as we go" },
   { value: "BALANCED",     label: "Balanced",      desc: "Move at a reasonable pace with appropriate checkpoints" },
   { value: "CAUTIOUS",     label: "Carefully",     desc: "We want thorough controls before expanding AI use" },
 ] as const;
@@ -280,7 +280,7 @@ function previewRiskTier(anchor: string): string {
     case "CLIENT_MATERIALS": return "Client";
     case "FINANCIAL_OPERATIONAL_RECORDS": return "High";
     case "REGULATED_CONFIDENTIAL": return "Regulated";
-    default: return "â€”";
+    default: return "-";
   }
 }
 
@@ -292,7 +292,7 @@ function previewGuardrailLevel(anchor: string, goal: string): string {
   };
   const score = Math.min(4, floor + (mods[goal] ?? 0));
   const labels: Record<number, string> = { 1: "Low", 2: "Moderate", 3: "High", 4: "Very High" };
-  return labels[score] ?? "â€”";
+  return labels[score] ?? "-";
 }
 
 function previewRolloutSpeed(adoption: string, anchor: string, posture: string): string {
@@ -324,7 +324,7 @@ function previewReviewStandard(anchor: string, goal: string, posture: string): s
   const afterLeader = Math.max(floor, floor + (leaderMods[posture] ?? 0));
   const score = Math.min(4, afterLeader + (reviewMods[goal] ?? 0));
   const labels: Record<number, string> = { 1: "Light", 2: "Standard", 3: "Structured", 4: "Formal" };
-  return labels[score] ?? "â€”";
+  return labels[score] ?? "-";
 }
 
 function PreviewField({ label, value }: { label: string; value: string | null }) {
@@ -334,7 +334,7 @@ function PreviewField({ label, value }: { label: string; value: string | null })
       {value !== null ? (
         <span className={styles.previewFieldValue}>{value}</span>
       ) : (
-        <span className={styles.previewFieldEmpty}>â€”</span>
+        <span className={styles.previewFieldEmpty}>-</span>
       )}
     </div>
   );
@@ -417,7 +417,7 @@ function IntakeForm({
       }
       onComplete({ deferred: true, output: data.output, inputs: form });
     } catch {
-      setError("Network error â€” please try again.");
+      setError("Network error - please try again.");
     } finally {
       setLoading(false);
     }
@@ -548,7 +548,7 @@ function IntakeForm({
                 onClick={() => setWizardStep((s) => s - 1)}
                 disabled={loading}
               >
-                â† Back
+                {"<- Back"}
               </button>
             ) : (
               <span />
@@ -559,7 +559,7 @@ function IntakeForm({
                 className={styles.btnPrimary}
                 disabled={!currentStepFilled || loading}
               >
-                {loading ? "Building your frameworkâ€¦" : "Continue â†’"}
+                {loading ? "Building your framework..." : "Continue ->"}
               </button>
             ) : (
               <button
@@ -568,7 +568,7 @@ function IntakeForm({
                 disabled={!currentStepFilled}
                 onClick={() => setWizardStep((s) => s + 1)}
               >
-                Next â†’
+                {"Next ->"}
               </button>
             )}
           </div>
@@ -692,7 +692,7 @@ function FinalizeStep({
       }
       window.location.assign(data.checkout_url);
     } catch {
-      setError("Network error â€” please try again.");
+      setError("Network error - please try again.");
     } finally {
       setLoading(false);
     }
@@ -723,7 +723,7 @@ function FinalizeStep({
       }
       window.location.assign(data.checkout_url);
     } catch {
-      setError("Network error â€” please try again.");
+      setError("Network error - please try again.");
     } finally {
       setLoading(false);
     }
@@ -791,7 +791,7 @@ function FinalizeStep({
             <p className={styles.contextBannerText}>
               Based on your answers, your framework uses a <strong>{output.rollout_mode.replace(/_/g, " ").toLowerCase()} rollout</strong> focused on <strong>{goalLabel}</strong>
               {output.needs_stabilization ? ", with a stabilization phase to document and standardize current usage before expansion begins" : ""}.
-              Your usage guardrails, review standard, adoption plan, and AI usage policy are ready â€” record who owns this to complete the framework.
+              Your usage guardrails, review standard, adoption plan, and AI usage policy are ready - record who owns this to complete the framework.
             </p>
           </div>
 
@@ -878,7 +878,7 @@ function FinalizeStep({
 
             {solo && (
               <p className={styles.soloNote}>
-                You&apos;re establishing this framework as both the initiative lead and approving authority. Your documents will reflect that â€” no approval routing needed.
+                You&apos;re establishing this framework as both the initiative lead and approving authority. Your documents will reflect that - no approval routing needed.
               </p>
             )}
           </fieldset>
