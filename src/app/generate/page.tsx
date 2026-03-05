@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 
 // ---- Options ----
@@ -101,7 +101,6 @@ function readPrefill(searchParams: { get(name: string): string | null }): Prefil
 // ---- Step 1: Intake Form ----
 
 type OnIntakeComplete =
-  | { deferred: false; rolloutId: string; output: EngineOutput; inputs: FormState }
   | { deferred: true; output: EngineOutput; inputs: FormState };
 
 // Step metadata for the 4-question wizard
@@ -265,25 +264,8 @@ function IntakeForm({
     setError(null);
     setLoading(true);
     try {
-      // REGULATED_CONFIDENTIAL: the DB constraint chk_regulated_identity_required
-      // rejects an insert without identity fields. Evaluate only here — the actual
-      // DB insert happens in the finalize step once identity is collected.
-      if (form.sensitivity_anchor === "REGULATED_CONFIDENTIAL") {
-        const res = await fetch("/api/evaluate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-          setError(data.message ?? "Something went wrong. Please try again.");
-          return;
-        }
-        onComplete({ deferred: true, output: data.output, inputs: form });
-        return;
-      }
-
-      const res = await fetch("/api/rollouts", {
+      // Evaluate only during intake; actual rollout creation happens post-payment.
+      const res = await fetch("/api/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -293,7 +275,7 @@ function IntakeForm({
         setError(data.message ?? "Something went wrong. Please try again.");
         return;
       }
-      onComplete({ deferred: false, rolloutId: data.rollout.id, output: data.output, inputs: form });
+      onComplete({ deferred: true, output: data.output, inputs: form });
     } catch {
       setError("Network error — please try again.");
     } finally {
@@ -469,19 +451,13 @@ function IntakeForm({
 // ---- Step 2: Finalize (identity fields + mode framing) ----
 
 function FinalizeStep({
-  rolloutId,
-  intakeInputs,
   output,
   inputs,
   initialIdentity,
-  onComplete,
 }: {
-  rolloutId: string | null;   // null = deferred (REGULATED): create rollout here
-  intakeInputs?: FormState;   // original intake answers (needed when rolloutId is null)
   output: EngineOutput;
   inputs: FormState;
   initialIdentity: FinalizeState;
-  onComplete: (id: string) => void;
 }) {
   const [form, setForm] = useState<FinalizeState>(initialIdentity);
   const [sameAsLead, setSameAsLead] = useState(false);
@@ -528,40 +504,27 @@ function FinalizeStep({
     setLoading(true);
 
     const identityPayload: Record<string, string> = {};
-    if (form.initiative_lead_name)      identityPayload.initiative_lead_name      = form.initiative_lead_name.trim();
-    if (form.initiative_lead_title)     identityPayload.initiative_lead_title     = form.initiative_lead_title.trim();
-    if (form.approving_authority_name)  identityPayload.approving_authority_name  = form.approving_authority_name.trim();
+    if (form.initiative_lead_name) identityPayload.initiative_lead_name = form.initiative_lead_name.trim();
+    if (form.initiative_lead_title) identityPayload.initiative_lead_title = form.initiative_lead_title.trim();
+    if (form.approving_authority_name) identityPayload.approving_authority_name = form.approving_authority_name.trim();
     if (form.approving_authority_title) identityPayload.approving_authority_title = form.approving_authority_title.trim();
 
     try {
-      // Deferred path (REGULATED): create rollout and identity in one request
-      if (rolloutId === null) {
-        const src = intakeInputs ?? inputs;
-        const res = await fetch("/api/rollouts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...src, ...identityPayload }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-          setError(data.message ?? "Something went wrong. Please try again.");
-          return;
-        }
-        onComplete(data.rollout.id);
-        return;
-      }
-
-      const res = await fetch(`/api/rollouts/${rolloutId}/finalize`, {
-        method: "PATCH",
+      const res = await fetch("/api/checkout/start", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(identityPayload),
+        body: JSON.stringify({ ...inputs, ...identityPayload }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
         setError(data.message ?? "Something went wrong. Please try again.");
         return;
       }
-      onComplete(rolloutId);
+      if (typeof data.checkout_url !== "string") {
+        setError("Missing checkout URL.");
+        return;
+      }
+      window.location.assign(data.checkout_url);
     } catch {
       setError("Network error — please try again.");
     } finally {
@@ -570,22 +533,25 @@ function FinalizeStep({
   }
 
   async function handleSkip() {
-    // Skip is only available for non-REGULATED tiers where rolloutId already exists.
-    if (!rolloutId) return;
+    if (!canSkip) return;
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/rollouts/${rolloutId}/finalize`, {
-        method: "PATCH",
+      const res = await fetch("/api/checkout/start", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify(inputs),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
         setError(data.message ?? "Something went wrong.");
         return;
       }
-      onComplete(rolloutId);
+      if (typeof data.checkout_url !== "string") {
+        setError("Missing checkout URL.");
+        return;
+      }
+      window.location.assign(data.checkout_url);
     } catch {
       setError("Network error — please try again.");
     } finally {
@@ -721,7 +687,7 @@ function FinalizeStep({
               className={styles.btnPrimary}
               disabled={!canSubmit || loading}
             >
-              {loading ? "Saving…" : "Save and continue →"}
+              {loading ? "Redirecting..." : "Continue to payment ->"}
             </button>
             {canSkip && (
               <button
@@ -748,13 +714,11 @@ function FinalizeStep({
 // ---- Root Generate Page ----
 
 function GeneratePageInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const prefill = readPrefill(searchParams);
 
   type Stage =
     | { step: "intake" }
-    | { step: "finalize"; rolloutId: string; output: EngineOutput; inputs: FormState }
     | { step: "finalize_deferred"; output: EngineOutput; inputs: FormState };
 
   const [stage, setStage] = useState<Stage>({ step: "intake" });
@@ -764,36 +728,17 @@ function GeneratePageInner() {
       <IntakeForm
         initialForm={prefill.inputs}
         onComplete={(result) => {
-          if (result.deferred) {
-            setStage({ step: "finalize_deferred", output: result.output, inputs: result.inputs });
-          } else {
-            setStage({ step: "finalize", rolloutId: result.rolloutId, output: result.output, inputs: result.inputs });
-          }
+          setStage({ step: "finalize_deferred", output: result.output, inputs: result.inputs });
         }}
-      />
-    );
-  }
-
-  if (stage.step === "finalize_deferred") {
-    return (
-      <FinalizeStep
-        rolloutId={null}
-        intakeInputs={stage.inputs}
-        output={stage.output}
-        inputs={stage.inputs}
-        initialIdentity={prefill.identity}
-        onComplete={(id) => router.push(`/rollouts/${id}`)}
       />
     );
   }
 
   return (
     <FinalizeStep
-      rolloutId={stage.rolloutId}
       output={stage.output}
       inputs={stage.inputs}
       initialIdentity={prefill.identity}
-      onComplete={(id) => router.push(`/rollouts/${id}`)}
     />
   );
 }
@@ -805,3 +750,5 @@ export default function GeneratePage() {
     </Suspense>
   );
 }
+
+

@@ -9,12 +9,20 @@ function isProtectedPath(pathname: string): boolean {
     pathname.startsWith("/rollouts/") ||
     pathname === "/api/rollouts" ||
     pathname.startsWith("/api/rollouts/") ||
+    pathname === "/api/checkout/start" ||
+    pathname === "/api/checkout/session" ||
     pathname.startsWith("/api/billing/")
   );
 }
 
 function isApiPath(pathname: string): boolean {
-  return pathname === "/api/rollouts" || pathname.startsWith("/api/rollouts/") || pathname.startsWith("/api/billing/");
+  return (
+    pathname === "/api/rollouts" ||
+    pathname.startsWith("/api/rollouts/") ||
+    pathname === "/api/checkout/start" ||
+    pathname === "/api/checkout/session" ||
+    pathname.startsWith("/api/billing/")
+  );
 }
 
 function sanitizeNextPath(raw: string | null): string {
@@ -82,5 +90,5 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ["/generate", "/rollouts/:path*", "/api/rollouts/:path*", "/api/billing/:path*", "/login"],
+  matcher: ["/generate", "/rollouts/:path*", "/api/rollouts/:path*", "/api/checkout/:path*", "/api/billing/:path*", "/login"],
 };
