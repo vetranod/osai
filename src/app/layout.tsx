@@ -46,6 +46,7 @@ export default async function RootLayout({
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "",
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
     demoCheckoutEnabled: process.env.NEXT_PUBLIC_DEMO_CHECKOUT_ENABLED === "true",
+    appUrl: process.env.NEXT_PUBLIC_APP_URL ?? process.env.SITE_URL ?? "",
   };
 
   let user: { id: string; email: string | null; email_confirmed_at: string | null } | null = null;

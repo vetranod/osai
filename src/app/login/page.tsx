@@ -31,6 +31,28 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
   });
 }
 
+function getAuthRedirectBaseUrl(): string {
+  if (typeof window === "undefined") return "";
+
+  const runtimeAppUrl =
+    (window as unknown as { __OSAI_PUBLIC_ENV?: { appUrl?: string } }).__OSAI_PUBLIC_ENV?.appUrl ??
+    "";
+  if (runtimeAppUrl) {
+    try {
+      return new URL(runtimeAppUrl).origin;
+    } catch {}
+  }
+
+  const envAppUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (envAppUrl) {
+    try {
+      return new URL(envAppUrl).origin;
+    } catch {}
+  }
+
+  return window.location.origin;
+}
+
 function LoginPageInner() {
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => normalizeNextPath(searchParams.get("next")), [searchParams]);
@@ -81,7 +103,7 @@ function LoginPageInner() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+            emailRedirectTo: `${getAuthRedirectBaseUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`,
           },
         }),
         AUTH_TIMEOUT_MS
@@ -111,7 +133,7 @@ function LoginPageInner() {
         supabase.auth.signInWithOtp({
           email,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+            emailRedirectTo: `${getAuthRedirectBaseUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`,
           },
         }),
         AUTH_TIMEOUT_MS
