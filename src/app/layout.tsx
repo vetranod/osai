@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import "./globals.css";
 import styles from "./layout.module.css";
 
@@ -35,11 +36,16 @@ export const metadata: Metadata = {
   description: "DeploySure gives your organization structured, auditable AI governance — ready to adopt in minutes.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await getSupabaseServerAuthClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <html lang="en">
       <body className={`${inter.variable} ${geistMono.variable}`}>
@@ -57,6 +63,11 @@ export default function RootLayout({
             <nav className={styles.nav}>
               <Link href="/how-it-works" className={styles.navLink}>How it works</Link>
               <Link href="#" className={styles.navLink}>Contact</Link>
+              {user ? (
+                <Link href="/auth/signout" className={styles.navLink}>Sign out</Link>
+              ) : (
+                <Link href="/login" className={styles.navLink}>Sign in</Link>
+              )}
               <Link href="/generate" className={styles.navCta}>Get started</Link>
             </nav>
           </div>
