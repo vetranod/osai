@@ -20,12 +20,12 @@ export default async function AuthConfirmedPage({ searchParams }: Props) {
     <section className={styles.wrap}>
       <div className={styles.card}>
         <p className={styles.eyebrow}>Account confirmed</p>
-        <h1 className={styles.title}>You&apos;re signed in.</h1>
+        <h1 className={styles.title}>Email confirmed.</h1>
         <p className={styles.subtitle}>
-          Your email was verified successfully. Continue to finish your framework and payment.
+          Your email was verified successfully. Continue to sign in, then complete your framework and payment.
         </p>
         <Link href={next} className={styles.primaryButton}>
-          Continue
+          Continue to sign in
         </Link>
       </div>
     </section>
