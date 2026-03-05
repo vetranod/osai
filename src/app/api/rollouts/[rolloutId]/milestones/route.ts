@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/server/supabaseAdmin";
-import { normalizeJoinedMilestone } from "@/governance/milestones/normalizeMilestoneJoin";
 
 export const runtime = "nodejs";
 
@@ -13,10 +12,6 @@ const ParamsSchema = z.object({
 type MilestoneRow = {
   milestone_id: number;
   status: string;
-  milestones: {
-    code: string;
-    order_index: number;
-  } | null;
 };
 
 export async function GET(
@@ -37,16 +32,7 @@ export async function GET(
 
   const { data, error } = await supabaseAdmin
     .from("rollout_milestone_state")
-    .select(
-      `
-      milestone_id,
-      status,
-      milestones!inner(
-        code,
-        order_index
-      )
-    `
-    )
+    .select("milestone_id, status")
     .eq("rollout_id", rolloutId);
 
   if (error) {
@@ -57,10 +43,34 @@ export async function GET(
   }
 
   const rows = (data ?? []) as unknown as MilestoneRow[];
+  const milestoneIds = Array.from(new Set(rows.map((r) => r.milestone_id))).filter((id) =>
+    Number.isInteger(id)
+  );
+
+  const milestoneMetaById = new Map<number, { code: string; order_index: number }>();
+  if (milestoneIds.length > 0) {
+    const { data: milestoneMeta, error: milestoneMetaError } = await supabaseAdmin
+      .from("milestones")
+      .select("id, code, order_index")
+      .in("id", milestoneIds);
+
+    if (milestoneMetaError) {
+      return NextResponse.json(
+        { error: "Failed to fetch milestone metadata", details: milestoneMetaError.message },
+        { status: 500 }
+      );
+    }
+
+    for (const row of milestoneMeta ?? []) {
+      if (typeof row.id === "number") {
+        milestoneMetaById.set(row.id, { code: String(row.code), order_index: Number(row.order_index) });
+      }
+    }
+  }
 
   const milestones = rows
     .map((r) => {
-      const milestone = normalizeJoinedMilestone<{ code: string; order_index: number }>(r.milestones);
+      const milestone = milestoneMetaById.get(r.milestone_id) ?? null;
       return {
         milestone_id: r.milestone_id,
         code: milestone?.code ?? "",
