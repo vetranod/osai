@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
 
 // ---- Options ----
@@ -510,9 +511,15 @@ function FinalizeStep({
     if (form.approving_authority_title) identityPayload.approving_authority_title = form.approving_authority_title.trim();
 
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
       const res = await fetch("/api/checkout/start", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ ...inputs, ...identityPayload }),
       });
       const data = await res.json();
@@ -537,9 +544,15 @@ function FinalizeStep({
     setError(null);
     setLoading(true);
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
       const res = await fetch("/api/checkout/start", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(inputs),
       });
       const data = await res.json();
@@ -716,6 +729,14 @@ function FinalizeStep({
 function GeneratePageInner() {
   const searchParams = useSearchParams();
   const prefill = readPrefill(searchParams);
+  const authState = searchParams.get("auth");
+  const authError = searchParams.get("auth_error");
+  const authNotice =
+    authState === "confirmed"
+      ? "Email confirmed. You're signed in and can continue."
+      : authError === "exchange_failed"
+        ? "We couldn't complete sign-in from that email link. Please request a new login link."
+        : null;
 
   type Stage =
     | { step: "intake" }
@@ -725,21 +746,27 @@ function GeneratePageInner() {
 
   if (stage.step === "intake") {
     return (
-      <IntakeForm
-        initialForm={prefill.inputs}
-        onComplete={(result) => {
-          setStage({ step: "finalize_deferred", output: result.output, inputs: result.inputs });
-        }}
-      />
+      <>
+        {authNotice ? <div className={styles.successBox}>{authNotice}</div> : null}
+        <IntakeForm
+          initialForm={prefill.inputs}
+          onComplete={(result) => {
+            setStage({ step: "finalize_deferred", output: result.output, inputs: result.inputs });
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <FinalizeStep
-      output={stage.output}
-      inputs={stage.inputs}
-      initialIdentity={prefill.identity}
-    />
+    <>
+      {authNotice ? <div className={styles.successBox}>{authNotice}</div> : null}
+      <FinalizeStep
+        output={stage.output}
+        inputs={stage.inputs}
+        initialIdentity={prefill.identity}
+      />
+    </>
   );
 }
 

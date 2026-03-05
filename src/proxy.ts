@@ -5,6 +5,7 @@ import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase-env";
 function isProtectedPath(pathname: string): boolean {
   return (
     pathname === "/generate" ||
+    pathname === "/auth/confirmed" ||
     pathname === "/rollouts" ||
     pathname.startsWith("/rollouts/") ||
     pathname === "/api/rollouts" ||
@@ -90,5 +91,5 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ["/generate", "/rollouts/:path*", "/api/rollouts/:path*", "/api/checkout/:path*", "/api/billing/:path*", "/login"],
+  matcher: ["/generate", "/auth/confirmed", "/rollouts/:path*", "/api/rollouts/:path*", "/api/checkout/:path*", "/api/billing/:path*", "/login"],
 };

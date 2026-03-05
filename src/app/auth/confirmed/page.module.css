@@ -1,0 +1,58 @@
+.wrap {
+  width: 100%;
+  min-height: calc(100vh - var(--header-height, 72px) - 120px);
+  display: grid;
+  place-items: center;
+  padding: 28px 16px 40px;
+}
+
+.card {
+  width: min(100%, 520px);
+  border-radius: 24px;
+  border: 1px solid rgb(126 156 200 / 0.3);
+  background:
+    radial-gradient(circle at top right, rgb(68 114 179 / 0.14), transparent 40%),
+    linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  padding: 28px;
+  box-shadow: 0 24px 46px rgb(15 46 90 / 0.16);
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #2b5f9d;
+}
+
+.title {
+  margin-top: 10px;
+  font-size: 34px;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: #10284e;
+}
+
+.subtitle {
+  margin-top: 12px;
+  color: #2f4e7b;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.primaryButton {
+  margin-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(135deg, #17345f 0%, #2d66a8 100%);
+  color: #f8fbff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}

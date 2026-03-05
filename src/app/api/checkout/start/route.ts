@@ -48,8 +48,21 @@ export async function POST(request: Request): Promise<Response> {
 
   const supabase = await getSupabaseServerAuthClient();
   const {
-    data: { user },
+    data: { user: cookieUser },
   } = await supabase.auth.getUser();
+  let user = cookieUser;
+
+  if (!user) {
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    if (token) {
+      const {
+        data: { user: tokenUser },
+      } = await supabase.auth.getUser(token);
+      user = tokenUser ?? null;
+    }
+  }
+
   if (!user) {
     return Response.json({ ok: false, message: "Authentication required." }, { status: 401 });
   }

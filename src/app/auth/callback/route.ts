@@ -14,11 +14,21 @@ export async function GET(request: Request): Promise<Response> {
   const next = sanitizeNextPath(requestUrl.searchParams.get("next"));
 
   if (code) {
-    const supabase = await getSupabaseServerAuthClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    try {
+      const supabase = await getSupabaseServerAuthClient();
+      await supabase.auth.exchangeCodeForSession(code);
+
+      const confirmedUrl = new URL("/auth/confirmed", requestUrl.origin);
+      confirmedUrl.searchParams.set("next", next);
+      return NextResponse.redirect(confirmedUrl);
+    } catch {
+      const loginUrl = new URL("/login", requestUrl.origin);
+      loginUrl.searchParams.set("next", next);
+      loginUrl.searchParams.set("auth_error", "exchange_failed");
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   const redirectUrl = new URL(next, requestUrl.origin);
   return NextResponse.redirect(redirectUrl);
 }
-

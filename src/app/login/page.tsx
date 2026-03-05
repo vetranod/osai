@@ -35,6 +35,13 @@ function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => normalizeNextPath(searchParams.get("next")), [searchParams]);
+  const callbackError = useMemo(() => {
+    const code = searchParams.get("auth_error");
+    if (code === "exchange_failed") {
+      return "We couldn't complete sign-in from that email link. Request a new login link.";
+    }
+    return null;
+  }, [searchParams]);
 
   const [mode, setMode] = useState<AuthMode>("sign_in");
   const [email, setEmail] = useState("");
@@ -196,6 +203,7 @@ function LoginPageInner() {
           Email login link
         </button>
 
+        {callbackError ? <p className={styles.error}>{callbackError}</p> : null}
         {status ? <p className={styles.status}>{status}</p> : null}
         {error ? <p className={styles.error}>{error}</p> : null}
 
