@@ -70,6 +70,19 @@ type PrefillData = {
   identity: FinalizeState;
 };
 
+type ClientAuthProof = {
+  userId: string;
+  email: string;
+  exp: number;
+  sig: string;
+};
+
+declare global {
+  interface Window {
+    __OSAI_AUTH_PROOF?: ClientAuthProof | null;
+  }
+}
+
 const GENERATE_DRAFT_KEY = "osai_generate_draft_v1";
 
 function saveGenerateDraft(prefill: PrefillData): void {
@@ -145,6 +158,9 @@ async function postCheckoutStart(body: Record<string, string>): Promise<Response
   const accessToken = await getCheckoutAccessToken();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  if (typeof window !== "undefined" && window.__OSAI_AUTH_PROOF) {
+    headers["x-osai-auth-proof"] = JSON.stringify(window.__OSAI_AUTH_PROOF);
+  }
 
   return fetch("/api/checkout/start", {
     method: "POST",

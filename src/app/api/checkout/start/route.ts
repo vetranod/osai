@@ -1,4 +1,5 @@
 import { evaluateDecision } from "@/decision-engine/engine";
+import { verifyAuthProof } from "@/lib/auth-proof";
 import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import { getAppBaseUrl, getStripePriceId, getStripeServerClient } from "@/lib/stripe-server";
 import { parseCheckoutPayload, toCheckoutMetadata, type CheckoutPayload } from "@/server/checkoutPayload";
@@ -67,14 +68,30 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
+  type CheckoutUser = {
+    id: string;
+    email: string | null;
+    email_confirmed_at: string | null;
+  };
+
   const supabase = await getSupabaseServerAuthClient();
   const {
     data: { user: cookieUser },
   } = await supabase.auth.getUser();
-  let user = cookieUser;
-  let authReason: "cookie_user" | "bearer_token" | "cookie_session_token" | "missing_auth" | "invalid_token" = cookieUser
-    ? "cookie_user"
-    : "missing_auth";
+  let user: CheckoutUser | null = cookieUser
+    ? {
+        id: cookieUser.id,
+        email: cookieUser.email ?? null,
+        email_confirmed_at: cookieUser.email_confirmed_at ?? null,
+      }
+    : null;
+  let authReason:
+    | "cookie_user"
+    | "bearer_token"
+    | "cookie_session_token"
+    | "signed_auth_proof"
+    | "missing_auth"
+    | "invalid_token" = user ? "cookie_user" : "missing_auth";
   let hadAuthHeader = false;
 
   if (!user) {
@@ -86,7 +103,11 @@ export async function POST(request: Request): Promise<Response> {
         data: { user: tokenUser },
       } = await supabase.auth.getUser(token);
       if (tokenUser) {
-        user = tokenUser;
+        user = {
+          id: tokenUser.id,
+          email: tokenUser.email ?? null,
+          email_confirmed_at: tokenUser.email_confirmed_at ?? null,
+        };
         authReason = "bearer_token";
       } else {
         authReason = "invalid_token";
@@ -105,8 +126,31 @@ export async function POST(request: Request): Promise<Response> {
         data: { user: sessionUser },
       } = await supabase.auth.getUser(sessionToken);
       if (sessionUser) {
-        user = sessionUser;
+        user = {
+          id: sessionUser.id,
+          email: sessionUser.email ?? null,
+          email_confirmed_at: sessionUser.email_confirmed_at ?? null,
+        };
         authReason = "cookie_session_token";
+      }
+    }
+  }
+
+  if (!user) {
+    const rawProof = request.headers.get("x-osai-auth-proof");
+    if (rawProof) {
+      try {
+        const proof = verifyAuthProof(JSON.parse(rawProof));
+        if (proof) {
+          user = {
+            id: proof.userId,
+            email: proof.email,
+            email_confirmed_at: new Date().toISOString(),
+          };
+          authReason = "signed_auth_proof";
+        }
+      } catch {
+        // ignore malformed proof
       }
     }
   }

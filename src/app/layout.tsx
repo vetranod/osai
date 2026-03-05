@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { createAuthProof, type AuthProof } from "@/lib/auth-proof";
 import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import "./globals.css";
 import styles from "./layout.module.css";
@@ -46,16 +47,27 @@ export default async function RootLayout({
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
   };
 
-  let user: { id: string } | null = null;
+  let user: { id: string; email: string | null; email_confirmed_at: string | null } | null = null;
+  let authProof: AuthProof | null = null;
   try {
     const supabase = await getSupabaseServerAuthClient();
     const {
       data: { user: currentUser },
     } = await supabase.auth.getUser();
-    user = currentUser ? { id: currentUser.id } : null;
+    user = currentUser
+      ? {
+          id: currentUser.id,
+          email: currentUser.email ?? null,
+          email_confirmed_at: currentUser.email_confirmed_at ?? null,
+        }
+      : null;
+    if (user?.email && user.email_confirmed_at) {
+      authProof = createAuthProof(user.id, user.email);
+    }
   } catch {
     // Auth config/runtime can be unavailable in some deploys; keep shell renderable.
     user = null;
+    authProof = null;
   }
 
   return (
@@ -65,6 +77,12 @@ export default async function RootLayout({
           id="osai-public-env"
           dangerouslySetInnerHTML={{
             __html: `window.__OSAI_PUBLIC_ENV=${JSON.stringify(publicEnv)};`,
+          }}
+        />
+        <script
+          id="osai-auth-proof"
+          dangerouslySetInnerHTML={{
+            __html: `window.__OSAI_AUTH_PROOF=${JSON.stringify(authProof)};`,
           }}
         />
         <header className={styles.header}>
