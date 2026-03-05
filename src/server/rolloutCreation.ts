@@ -123,12 +123,15 @@ function buildDecisionTraceSnapshot(args: {
   return snapshot;
 }
 
-export async function findRolloutByCheckoutSessionId(sessionId: string): Promise<string | null> {
+export async function findRolloutByCheckoutSessionId(sessionId: string, userId?: string | null): Promise<string | null> {
   const supabase = getServiceRoleSupabase();
+  const paymentFilter: Record<string, string> = { checkout_session_id: sessionId };
+  if (userId) paymentFilter.user_id = userId;
   const { data, error } = await supabase
     .from("rollouts")
     .select("id")
-    .contains("decision_trace", { payment: { checkout_session_id: sessionId } })
+    .contains("decision_trace", { payment: paymentFilter })
+    .order("created_at", { ascending: false })
     .limit(1);
 
   if (error) return null;

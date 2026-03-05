@@ -7,7 +7,9 @@
 // ROLLOUT_PLAN, POLICY).
 
 import { z } from "zod";
+import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
+import { userCanAccessRollout } from "@/server/rolloutAccess";
 
 export const runtime = "nodejs";
 
@@ -40,6 +42,18 @@ export async function GET(
   }
 
   const { rolloutId } = paramsParsed.data;
+  const auth = await getSupabaseServerAuthClient();
+  const {
+    data: { user },
+  } = await auth.auth.getUser();
+  if (!user) {
+    return Response.json({ ok: false, error: "Authentication required." }, { status: 401 });
+  }
+  const allowed = await userCanAccessRollout(rolloutId, user.id);
+  if (!allowed) {
+    return Response.json({ ok: false, error: "Rollout not found." }, { status: 404 });
+  }
+
   const supabase = getServiceRoleSupabase();
 
   // Fetch all artifact rows for this rollout

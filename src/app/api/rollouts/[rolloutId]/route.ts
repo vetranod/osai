@@ -1,5 +1,7 @@
-// GET /api/rollouts/:rolloutId — return rollout meta for dashboard
+// GET /api/rollouts/:rolloutId - return rollout meta for dashboard
+import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
+import { userCanAccessRollout } from "@/server/rolloutAccess";
 
 export const runtime = "nodejs";
 
@@ -8,6 +10,19 @@ export async function GET(
   { params }: { params: Promise<{ rolloutId: string }> }
 ): Promise<Response> {
   const { rolloutId } = await params;
+  const auth = await getSupabaseServerAuthClient();
+  const {
+    data: { user },
+  } = await auth.auth.getUser();
+  if (!user) {
+    return Response.json({ ok: false, message: "Authentication required." }, { status: 401 });
+  }
+
+  const allowed = await userCanAccessRollout(rolloutId, user.id);
+  if (!allowed) {
+    return Response.json({ ok: false, message: "Rollout not found." }, { status: 404 });
+  }
+
   const supabase = getServiceRoleSupabase();
 
   const { data, error } = await supabase

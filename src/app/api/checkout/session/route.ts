@@ -26,7 +26,7 @@ export async function GET(request: Request): Promise<Response> {
       return Response.json({ ok: false, message: "Forbidden." }, { status: 403 });
     }
 
-    const rolloutId = await findRolloutByCheckoutSessionId(session.id);
+    const rolloutId = await findRolloutByCheckoutSessionId(session.id, user.id);
     return Response.json({
       ok: true,
       session_id: session.id,
@@ -44,4 +44,3 @@ export async function GET(request: Request): Promise<Response> {
     );
   }
 }
-

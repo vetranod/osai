@@ -2,8 +2,10 @@ import { z } from "zod";
 
 import { validateDecisionInputs } from "@/decision-engine/options";
 import { evaluateDecision } from "@/decision-engine/engine";
+import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
 import { computeIsLoosening, computeChangedFields } from "@/governance/reclassification/proposalAnalysis";
+import { userCanAccessRollout } from "@/server/rolloutAccess";
 import {
   computeMilestoneImpacts,
   milestoneDecisionTable,
@@ -20,6 +22,21 @@ const GetParamsSchema = z.object({
   rolloutId: z.string().uuid(),
 });
 
+async function ensureRolloutAccess(rolloutId: string): Promise<{ ok: true } | { ok: false; response: Response }> {
+  const auth = await getSupabaseServerAuthClient();
+  const {
+    data: { user },
+  } = await auth.auth.getUser();
+  if (!user) {
+    return { ok: false, response: Response.json({ ok: false, message: "Authentication required." }, { status: 401 }) };
+  }
+  const allowed = await userCanAccessRollout(rolloutId, user.id);
+  if (!allowed) {
+    return { ok: false, response: Response.json({ ok: false, message: "Rollout not found." }, { status: 404 }) };
+  }
+  return { ok: true };
+}
+
 export async function GET(
   _request: Request,
   ctx: { params: Promise<{ rolloutId: string }> }
@@ -34,6 +51,8 @@ export async function GET(
   }
 
   const { rolloutId } = paramsParsed.data;
+  const access = await ensureRolloutAccess(rolloutId);
+  if (!access.ok) return access.response;
   const supabase = getServiceRoleSupabase();
 
   const { data: milestoneRows, error: milestoneError } = await supabase
@@ -320,6 +339,8 @@ export async function POST(
   }
 
   const { rolloutId } = paramsParsed.data;
+  const access = await ensureRolloutAccess(rolloutId);
+  if (!access.ok) return access.response;
   const { event_type, patch } = bodyParsed.data;
 
   const supabase = getServiceRoleSupabase();
