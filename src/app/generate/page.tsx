@@ -121,7 +121,24 @@ async function getCheckoutAccessToken(): Promise<string | null> {
   const {
     data: { session: existingSession },
   } = await supabase.auth.getSession();
-  return existingSession?.access_token ?? null;
+  if (existingSession?.access_token) return existingSession.access_token;
+
+  // Bridge server cookie auth -> bearer token when browser client session is missing.
+  try {
+    const res = await fetch("/api/auth/token", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (typeof data?.access_token === "string" && data.access_token) {
+      return data.access_token;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 async function postCheckoutStart(body: Record<string, string>): Promise<Response> {
