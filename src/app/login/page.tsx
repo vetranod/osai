@@ -52,18 +52,25 @@ function LoginPageInner() {
     const supabase = getSupabaseBrowserClient();
 
     if (mode === "sign_in") {
-      const { error: signInError } = await withTimeout(
-        supabase.auth.signInWithPassword({ email, password }),
-        AUTH_TIMEOUT_MS
-      );
-      if (signInError) {
-        setBusy(false);
-        setError(signInError.message);
-        return;
-      }
+      try {
+        const { error: signInError } = await withTimeout(
+          supabase.auth.signInWithPassword({ email, password }),
+          AUTH_TIMEOUT_MS
+        );
+        if (signInError) {
+          setError(signInError.message);
+          return;
+        }
 
-      router.replace(nextPath);
-      router.refresh();
+        setStatus("Signed in. Redirecting...");
+        setBusy(false);
+        router.replace(nextPath);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Request failed. Please try again.");
+      } finally {
+        setBusy(false);
+      }
       return;
     }
 
