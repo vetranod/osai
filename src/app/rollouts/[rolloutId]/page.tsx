@@ -869,12 +869,33 @@ export default function RolloutDashboard() {
         fetch(`/api/rollouts/${rolloutId}`),
         fetch(`/api/rollouts/${rolloutId}/reclassifications`),
       ]);
+      const readApiError = async (res: Response): Promise<string> => {
+        try {
+          const body = await res.json();
+          const detail = typeof body?.details === "string"
+            ? body.details
+            : typeof body?.message === "string"
+              ? body.message
+              : typeof body?.error === "string"
+                ? body.error
+                : null;
+          return detail ?? `HTTP ${res.status}`;
+        } catch {
+          return `HTTP ${res.status}`;
+        }
+      };
       if (mRes.status === 404 || aRes.status === 404) {
         setLoadError("not-found");
         return;
       }
       if (!mRes.ok || !aRes.ok) {
-        setLoadError("Failed to load rollout data. Please try again.");
+        if (!mRes.ok) {
+          const detail = await readApiError(mRes);
+          setLoadError(`Failed to load milestones (${detail}).`);
+          return;
+        }
+        const detail = await readApiError(aRes);
+        setLoadError(`Failed to load artifacts (${detail}).`);
         return;
       }
       const [mData, aData] = await Promise.all([mRes.json(), aRes.json()]);

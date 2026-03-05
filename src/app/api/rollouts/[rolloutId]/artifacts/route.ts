@@ -45,7 +45,7 @@ export async function GET(
   // Fetch all artifact rows for this rollout
   const { data, error } = await supabase
     .from("artifacts")
-    .select("id, artifact_type, version, content_json, content_markdown, unlocked_by_milestone_id, created_at")
+    .select("id, artifact_type, version, content_json, created_at")
     .eq("rollout_id", rolloutId)
     .order("artifact_type", { ascending: true })
     .order("version",       { ascending: false });
@@ -69,7 +69,16 @@ export async function GET(
 
   // Return in canonical order; include null entries for types not yet generated
   const artifacts = ARTIFACT_TYPE_ORDER.map((type: ArtifactType) => {
-    const row = latestByType.get(type) ?? null;
+    const row = (latestByType.get(type) ?? null) as
+      | {
+          id?: string | null;
+          version?: number | null;
+          content_json?: Record<string, unknown> | null;
+          content_markdown?: string | null;
+          unlocked_by_milestone_id?: number | null;
+          created_at?: string | null;
+        }
+      | null;
     return {
       artifact_type:            type,
       generated:                row !== null,
