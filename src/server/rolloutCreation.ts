@@ -19,7 +19,7 @@ export type IdentityFields = Partial<
 >;
 
 type PaymentMeta = {
-  provider: "stripe";
+  provider: "stripe" | "demo";
   checkout_session_id: string;
   payment_status: string;
   user_id?: string | null;
