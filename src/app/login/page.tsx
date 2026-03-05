@@ -7,12 +7,28 @@ import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
 
 type AuthMode = "sign_in" | "sign_up";
+const AUTH_TIMEOUT_MS = 15000;
 
 function normalizeNextPath(raw: string | null): string {
   if (!raw) return "/generate";
   if (!raw.startsWith("/")) return "/generate";
   if (raw.startsWith("//")) return "/generate";
   return raw;
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Request timed out. Please try again.")), timeoutMs);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
 }
 
 function LoginPageInner() {
@@ -36,7 +52,10 @@ function LoginPageInner() {
     const supabase = getSupabaseBrowserClient();
 
     if (mode === "sign_in") {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { error: signInError } = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        AUTH_TIMEOUT_MS
+      );
       if (signInError) {
         setBusy(false);
         setError(signInError.message);
@@ -48,21 +67,29 @@ function LoginPageInner() {
       return;
     }
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
-      },
-    });
+    try {
+      const { error: signUpError } = await withTimeout(
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+          },
+        }),
+        AUTH_TIMEOUT_MS
+      );
 
-    setBusy(false);
-    if (signUpError) {
-      setError(signUpError.message);
-      return;
+      setBusy(false);
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+
+      setStatus("Account created. Check your inbox for the confirmation link.");
+    } catch (err) {
+      setBusy(false);
+      setError(err instanceof Error ? err.message : "Request failed. Please try again.");
     }
-
-    setStatus("Account created. Check your inbox for the confirmation link.");
   }
 
   async function handleMagicLink() {
@@ -71,20 +98,28 @@ function LoginPageInner() {
     setStatus(null);
 
     const supabase = getSupabaseBrowserClient();
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
-      },
-    });
+    try {
+      const { error: otpError } = await withTimeout(
+        supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+          },
+        }),
+        AUTH_TIMEOUT_MS
+      );
 
-    setBusy(false);
-    if (otpError) {
-      setError(otpError.message);
-      return;
+      setBusy(false);
+      if (otpError) {
+        setError(otpError.message);
+        return;
+      }
+
+      setStatus("Login link sent. Check your inbox to continue.");
+    } catch (err) {
+      setBusy(false);
+      setError(err instanceof Error ? err.message : "Request failed. Please try again.");
     }
-
-    setStatus("Magic link sent. Check your inbox to continue.");
   }
 
   return (
@@ -154,11 +189,11 @@ function LoginPageInner() {
 
         <button
           type="button"
-          className={styles.secondaryButton}
+          className={styles.magicLinkButton}
           disabled={busy || !email}
           onClick={handleMagicLink}
         >
-          Email me a magic link
+          Email login link
         </button>
 
         {status ? <p className={styles.status}>{status}</p> : null}
