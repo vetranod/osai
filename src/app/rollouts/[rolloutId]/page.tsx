@@ -122,8 +122,8 @@ const STATUS_TRANSITIONS: Record<MilestoneStatus, MilestoneStatus | null> = {
 
 const STATUS_LABELS: Record<MilestoneStatus, string> = {
   LOCKED: "Not started",
-  IN_PROGRESS: "In progress",
-  AWAITING_CONFIRMATION: "In progress",
+  IN_PROGRESS: "In Progress",
+  AWAITING_CONFIRMATION: "In Progress",
   CONFIRMED: "Reviewed",
   ACTIVATED: "Active",
   PAUSED: "Paused",
@@ -200,11 +200,33 @@ const BADGE_COLORS: Record<string, string> = {
   ACKNOWLEDGED: "info",
 };
 
+function toTitleCase(input: string): string {
+  return input
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function formatEnumDisplay(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "-";
+  const hasUnderscore = raw.includes("_");
+  const isUpperToken = /^[A-Z0-9 _-]+$/.test(raw);
+  const normalized = raw.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+  if (hasUnderscore || isUpperToken) return toTitleCase(normalized);
+  return raw;
+}
+
+function formatFieldLabel(field: string): string {
+  return toTitleCase(field.replace(/_/g, " "));
+}
+
 function Badge({ value, label }: { value: string; label?: string }) {
   const color = BADGE_COLORS[value] ?? "info";
   return (
     <span className={`${styles.badge} ${styles[`badge_${color}`]}`}>
-      {label ?? value.replace(/_/g, " ")}
+      {label ?? formatEnumDisplay(value)}
     </span>
   );
 }
@@ -230,7 +252,7 @@ function renderArtifactContent(artifact: Artifact) {
             ].map(([label, val]) => (
               <div key={String(label)} className={styles.artifactField}>
                 <span className={styles.fieldLabel}>{String(label)}</span>
-                <span className={styles.fieldValue}>{String(val ?? "—").replace(/_/g, " ")}</span>
+                <span className={styles.fieldValue}>{formatEnumDisplay(val)}</span>
               </div>
             ))}
           </div>
@@ -585,8 +607,8 @@ function ReclassificationPanel({
       .map((key) => ({
         field: key,
         label: OUTPUT_DIFF_LABELS[key],
-        from: String(prior[key]).replace(/_/g, " "),
-        to:   String(proposed[key]).replace(/_/g, " "),
+        from: formatEnumDisplay(prior[key]),
+        to:   formatEnumDisplay(proposed[key]),
       }));
   }
 
@@ -611,7 +633,7 @@ function ReclassificationPanel({
           </p>
           {(["primary_goal", "adoption_state", "sensitivity_anchor", "leadership_posture"] as const).map((field) => (
             <div key={field} className={styles.reclassField}>
-              <label className={styles.reclassLabel}>{field.replace(/_/g, " ")}</label>
+              <label className={styles.reclassLabel}>{formatFieldLabel(field)}</label>
               <select
                 className={styles.select}
                 value={form[field]}
@@ -659,7 +681,7 @@ function ReclassificationPanel({
                       return `${impact.milestone_code}: no immediate state change; updated configuration will be used when this stage is reached.`;
                     }
 
-                    return `${impact.milestone_code}: ${impact.current_status.replace(/_/g, " ").toLowerCase()} -> ${impact.recommended_action.toLowerCase()}. ${impact.reason}`;
+                    return `${impact.milestone_code}: ${formatEnumDisplay(impact.current_status)} -> ${formatEnumDisplay(impact.recommended_action)}. ${impact.reason}`;
                   });
             return (
               <div key={r.id} className={styles.reclassItem}>
@@ -678,7 +700,7 @@ function ReclassificationPanel({
 
                 {r.changed_fields.length > 0 && (
                   <p className={styles.reclassFields}>
-                    Fields changed: {r.changed_fields.join(", ").replace(/_/g, " ")}
+                    Fields changed: {r.changed_fields.map((f) => formatFieldLabel(f)).join(", ")}
                   </p>
                 )}
 
@@ -796,7 +818,7 @@ function ReclassificationPanel({
               </div>
               {r.changed_fields.length > 0 && (
                 <p className={styles.reclassFields}>
-                  Fields: {r.changed_fields.join(", ").replace(/_/g, " ")}
+                  Fields: {r.changed_fields.map((f) => formatFieldLabel(f)).join(", ")}
                 </p>
               )}
             </div>
@@ -1120,7 +1142,7 @@ export default function RolloutDashboard() {
 
   const STATUS_DISPLAY: Record<MilestoneStatus, string> = {
     LOCKED: "Not started",
-    IN_PROGRESS: "In progress",
+    IN_PROGRESS: "In Progress",
     AWAITING_CONFIRMATION: "Draft complete",
     CONFIRMED: "Review complete",
     ACTIVATED: "Active",
