@@ -19,6 +19,21 @@ function buildCancelUrl(baseUrl: string, payload: CheckoutPayload): string {
   return cancel.toString();
 }
 
+function resolveBaseUrl(request: Request): string {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost || request.headers.get("host");
+  if (host) {
+    const proto = request.headers.get("x-forwarded-proto") || "https";
+    return `${proto}://${host}`;
+  }
+
+  try {
+    return new URL(request.url).origin;
+  } catch {
+    return getAppBaseUrl();
+  }
+}
+
 export async function POST(request: Request): Promise<Response> {
   let body: unknown;
   try {
@@ -78,7 +93,7 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const stripe = getStripeServerClient();
-    const baseUrl = getAppBaseUrl();
+    const baseUrl = resolveBaseUrl(request);
     const successUrl = new URL("/generate/success", baseUrl);
     successUrl.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
 
