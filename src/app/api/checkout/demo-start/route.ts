@@ -10,6 +10,20 @@ function isDemoCheckoutEnabled(): boolean {
   return process.env.OSAI_DEMO_CHECKOUT_ENABLED === "true";
 }
 
+function isDemoEmailAllowed(email: string): boolean {
+  const raw = process.env.OSAI_DEMO_ALLOWED_EMAILS ?? "";
+  const allowed = raw
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (allowed.length === 0) {
+    return process.env.VERCEL_ENV !== "production";
+  }
+
+  return allowed.includes(email.trim().toLowerCase());
+}
+
 export async function POST(request: Request): Promise<Response> {
   if (!isDemoCheckoutEnabled()) {
     return Response.json({ ok: false, message: "Not found." }, { status: 404 });
@@ -97,6 +111,16 @@ export async function POST(request: Request): Promise<Response> {
       {
         ok: false,
         message: "Please verify your account email before demo checkout.",
+      },
+      { status: 403 }
+    );
+  }
+
+  if (!isDemoEmailAllowed(user.email)) {
+    return Response.json(
+      {
+        ok: false,
+        message: "Demo checkout is restricted for this account.",
       },
       { status: 403 }
     );

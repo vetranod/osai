@@ -594,16 +594,19 @@ function FinalizeStep({
   output,
   inputs,
   initialIdentity,
+  showDemoCta,
 }: {
   output: EngineOutput;
   inputs: FormState;
   initialIdentity: FinalizeState;
+  showDemoCta: boolean;
 }) {
   const [form, setForm] = useState<FinalizeState>(initialIdentity);
   const [sameAsLead, setSameAsLead] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const demoEnabled =
+    showDemoCta &&
     typeof window !== "undefined" &&
     ((window as unknown as { __OSAI_PUBLIC_ENV?: { demoCheckoutEnabled?: boolean } }).__OSAI_PUBLIC_ENV
       ?.demoCheckoutEnabled === true);
@@ -926,6 +929,7 @@ function FinalizeStep({
 
 function GeneratePageInner() {
   const searchParams = useSearchParams();
+  const demoQueryEnabled = searchParams.get("demo") === "1";
   const queryPrefill = useMemo(() => readPrefill(searchParams), [searchParams]);
   const [storedPrefill, setStoredPrefill] = useState<PrefillData | null>(null);
   const authState = searchParams.get("auth");
@@ -1023,6 +1027,7 @@ function GeneratePageInner() {
         output={stage.output}
         inputs={stage.inputs}
         initialIdentity={prefill.identity}
+        showDemoCta={demoQueryEnabled}
       />
     </>
   );

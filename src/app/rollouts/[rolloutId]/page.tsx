@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./dashboard.module.css";
 
 // ---- Types ----
@@ -229,6 +230,30 @@ function Badge({ value, label }: { value: string; label?: string }) {
       {label ?? formatEnumDisplay(value)}
     </span>
   );
+}
+
+async function getDashboardAccessToken(): Promise<string | null> {
+  const supabase = getSupabaseBrowserClient();
+  const { data: refreshed } = await supabase.auth.refreshSession();
+  if (refreshed.session?.access_token) return refreshed.session.access_token;
+
+  const {
+    data: { session: existingSession },
+  } = await supabase.auth.getSession();
+  if (existingSession?.access_token) return existingSession.access_token;
+
+  try {
+    const res = await fetch("/api/auth/token", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.access_token === "string" && data.access_token ? data.access_token : null;
+  } catch {
+    return null;
+  }
 }
 
 // ---- Artifact Viewer ----
@@ -885,12 +910,33 @@ export default function RolloutDashboard() {
 
   const loadData = useCallback(async () => {
     try {
+      const accessToken = await getDashboardAccessToken();
+      const requestHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined;
+      const fetchWithAuth = (url: string) =>
+        fetch(url, {
+          credentials: "include",
+          cache: "no-store",
+          headers: requestHeaders,
+        });
+
       const [mRes, aRes, rRes, rcRes] = await Promise.all([
-        fetch(`/api/rollouts/${rolloutId}/milestones`),
-        fetch(`/api/rollouts/${rolloutId}/artifacts`),
-        fetch(`/api/rollouts/${rolloutId}`),
-        fetch(`/api/rollouts/${rolloutId}/reclassifications`),
+        fetchWithAuth(`/api/rollouts/${rolloutId}/milestones`),
+        fetchWithAuth(`/api/rollouts/${rolloutId}/artifacts`),
+        fetchWithAuth(`/api/rollouts/${rolloutId}`),
+        fetchWithAuth(`/api/rollouts/${rolloutId}/reclassifications`),
       ]);
+      if (
+        mRes.status === 401 ||
+        aRes.status === 401 ||
+        rRes.status === 401 ||
+        rcRes.status === 401
+      ) {
+        const loginUrl = new URL("/login", window.location.origin);
+        loginUrl.searchParams.set("next", `/rollouts/${rolloutId}`);
+        loginUrl.searchParams.set("auth_error", "session_required");
+        window.location.assign(loginUrl.toString());
+        return;
+      }
       const readApiError = async (res: Response): Promise<string> => {
         try {
           const body = await res.json();
