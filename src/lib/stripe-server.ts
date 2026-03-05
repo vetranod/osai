@@ -2,17 +2,22 @@ import Stripe from "stripe";
 
 let cached: Stripe | null = null;
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+function requireAnyEnv(names: string[]): string {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value) return value;
   }
-  return value;
+
+  throw new Error(`Missing required environment variable: ${names.join(" or ")}`);
+}
+
+function requireEnv(name: string): string {
+  return requireAnyEnv([name]);
 }
 
 export function getStripeServerClient(): Stripe {
   if (cached) return cached;
-  const secretKey = requireEnv("STRIPE_SECRET_KEY");
+  const secretKey = requireAnyEnv(["STRIPE_SECRET_KEY", "STRIPE_API_KEY"]);
   cached = new Stripe(secretKey, {
     apiVersion: "2026-02-25.clover",
   });

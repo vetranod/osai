@@ -221,11 +221,11 @@
   max-width: 1100px;
   margin: 0 auto 14px;
   padding: 12px 16px;
-  background: var(--success-light);
-  border: 1px solid var(--success);
+  background: #e8f6ef;
+  border: 1px solid #2b8a57;
   border-radius: var(--radius);
   font-size: 13px;
-  color: #1f5f4e;
+  color: #123f2f;
 }
 
 /* ---- Error ---- */
@@ -394,20 +394,24 @@
 .nameLabel {
   font-size: 12px;
   font-weight: 600;
-  color: var(--surface-label);
+  color: #1e3f6f;
 }
 
 .nameInput {
   height: 42px;
   padding: 0 14px;
-  border: 1.5px solid var(--border);
+  border: 1.5px solid #6f8db8;
   border-radius: var(--radius);
-  background: rgb(255 255 255 / 0.86);
-  color: var(--surface-title);
+  background: #fff;
+  color: #0f2447;
   font-size: 14px;
   font-family: inherit;
   outline: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.nameInput::placeholder {
+  color: #4f6990;
 }
 
 .nameInput:focus {
@@ -428,7 +432,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--surface-body);
+  color: #294d7e;
   cursor: pointer;
   margin-bottom: 14px;
 }
@@ -444,11 +448,11 @@
 .soloNote {
   margin-top: 12px;
   font-size: 13px;
-  color: #1f4633;
+  color: #123825;
   line-height: 1.6;
   padding: 10px 14px;
-  background: var(--success-light);
-  border-left: 3px solid var(--success);
+  background: #e7f5ee;
+  border-left: 3px solid #2b8a57;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
