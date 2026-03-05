@@ -88,6 +88,7 @@ async function postCheckoutStart(body: Record<string, string>): Promise<Response
 
   return fetch("/api/checkout/start", {
     method: "POST",
+    credentials: "include",
     headers,
     body: JSON.stringify(body),
   });
@@ -564,8 +565,12 @@ function FinalizeStep({
       }
       const data = await res.json();
       if (res.status === 401) {
-        const next = encodeURIComponent(buildGenerateResumePath(inputs, form));
-        window.location.assign(`/login?next=${next}&auth_error=session_required`);
+        const reason = typeof data?.reason === "string" ? data.reason : "missing_auth";
+        if (reason === "invalid_token") {
+          setError("Your session token is invalid. Please sign out, then sign in again.");
+        } else {
+          setError("Authentication required. Please sign out, then sign in again.");
+        }
         return;
       }
       if (!res.ok || !data.ok) {
@@ -596,8 +601,12 @@ function FinalizeStep({
       }
       const data = await res.json();
       if (res.status === 401) {
-        const next = encodeURIComponent(buildGenerateResumePath(inputs, form));
-        window.location.assign(`/login?next=${next}&auth_error=session_required`);
+        const reason = typeof data?.reason === "string" ? data.reason : "missing_auth";
+        if (reason === "invalid_token") {
+          setError("Your session token is invalid. Please sign out, then sign in again.");
+        } else {
+          setError("Authentication required. Please sign out, then sign in again.");
+        }
         return;
       }
       if (!res.ok || !data.ok) {

@@ -72,20 +72,55 @@ export async function POST(request: Request): Promise<Response> {
     data: { user: cookieUser },
   } = await supabase.auth.getUser();
   let user = cookieUser;
+  let authReason: "cookie_user" | "bearer_token" | "cookie_session_token" | "missing_auth" | "invalid_token" = cookieUser
+    ? "cookie_user"
+    : "missing_auth";
+  let hadAuthHeader = false;
 
   if (!user) {
     const authHeader = request.headers.get("authorization");
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    hadAuthHeader = Boolean(token);
     if (token) {
       const {
         data: { user: tokenUser },
       } = await supabase.auth.getUser(token);
-      user = tokenUser ?? null;
+      if (tokenUser) {
+        user = tokenUser;
+        authReason = "bearer_token";
+      } else {
+        authReason = "invalid_token";
+      }
+    }
+  }
+
+  // Fallback: attempt to resolve from session cookie token directly.
+  if (!user) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const sessionToken = session?.access_token;
+    if (sessionToken) {
+      const {
+        data: { user: sessionUser },
+      } = await supabase.auth.getUser(sessionToken);
+      if (sessionUser) {
+        user = sessionUser;
+        authReason = "cookie_session_token";
+      }
     }
   }
 
   if (!user) {
-    return Response.json({ ok: false, message: "Authentication required." }, { status: 401 });
+    return Response.json(
+      {
+        ok: false,
+        message: "Authentication required.",
+        reason: authReason,
+        has_auth_header: hadAuthHeader,
+      },
+      { status: 401 }
+    );
   }
   if (!user.email || !user.email_confirmed_at) {
     return Response.json(
