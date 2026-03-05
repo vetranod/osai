@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
@@ -95,6 +95,7 @@ async function postCheckoutStart(body: Record<string, string>): Promise<Response
 
 function buildGenerateResumePath(inputs: FormState, identity: FinalizeState): string {
   const params = new URLSearchParams();
+  params.set("resume", "finalize");
   params.set("primary_goal", inputs.primary_goal);
   params.set("adoption_state", inputs.adoption_state);
   params.set("sensitivity_anchor", inputs.sensitivity_anchor);
@@ -104,6 +105,15 @@ function buildGenerateResumePath(inputs: FormState, identity: FinalizeState): st
   if (identity.approving_authority_name) params.set("approving_authority_name", identity.approving_authority_name);
   if (identity.approving_authority_title) params.set("approving_authority_title", identity.approving_authority_title);
   return `/generate?${params.toString()}`;
+}
+
+function hasCompleteIntake(inputs: FormState): boolean {
+  return Boolean(
+    inputs.primary_goal &&
+    inputs.adoption_state &&
+    inputs.sensitivity_anchor &&
+    inputs.leadership_posture
+  );
 }
 
 // ---- Helpers ----
@@ -762,10 +772,11 @@ function FinalizeStep({
 
 function GeneratePageInner() {
   const searchParams = useSearchParams();
-  const prefill = readPrefill(searchParams);
+  const prefill = useMemo(() => readPrefill(searchParams), [searchParams]);
   const authState = searchParams.get("auth");
   const authError = searchParams.get("auth_error");
   const checkoutState = searchParams.get("checkout");
+  const resume = searchParams.get("resume");
   const authNotice =
     authState === "confirmed"
       ? "Email confirmed. You're signed in and can continue."
@@ -776,18 +787,57 @@ function GeneratePageInner() {
     checkoutState === "start_requires_post"
       ? "Checkout starts from the button in this page. Please use Continue to payment."
       : null;
+  const shouldResumeFinalize = resume === "finalize" && hasCompleteIntake(prefill.inputs);
 
   type Stage =
     | { step: "intake" }
     | { step: "finalize_deferred"; output: EngineOutput; inputs: FormState };
 
   const [stage, setStage] = useState<Stage>({ step: "intake" });
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function resumeFinalizeStage() {
+      if (!shouldResumeFinalize || stage.step !== "intake") return;
+      setResumeError(null);
+      setResumeLoading(true);
+      try {
+        const res = await fetch("/api/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(prefill.inputs),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          if (active) setResumeError(data.message ?? "Could not restore your progress. Please continue below.");
+          return;
+        }
+        if (active) {
+          setStage({ step: "finalize_deferred", output: data.output, inputs: prefill.inputs });
+        }
+      } catch {
+        if (active) setResumeError("Could not restore your progress. Please continue below.");
+      } finally {
+        if (active) setResumeLoading(false);
+      }
+    }
+
+    void resumeFinalizeStage();
+    return () => {
+      active = false;
+    };
+  }, [prefill.inputs, shouldResumeFinalize, stage.step]);
 
   if (stage.step === "intake") {
     return (
       <>
         {authNotice ? <div className={styles.successBox}>{authNotice}</div> : null}
         {checkoutNotice ? <div className={styles.successBox}>{checkoutNotice}</div> : null}
+        {resumeLoading ? <div className={styles.successBox}>Restoring your progress...</div> : null}
+        {resumeError ? <div className={styles.errorBox}>{resumeError}</div> : null}
         <IntakeForm
           initialForm={prefill.inputs}
           onComplete={(result) => {
