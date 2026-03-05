@@ -41,10 +41,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await getSupabaseServerAuthClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: { id: string } | null = null;
+  try {
+    const supabase = await getSupabaseServerAuthClient();
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+    user = currentUser ? { id: currentUser.id } : null;
+  } catch {
+    // Auth config/runtime can be unavailable in some deploys; keep shell renderable.
+    user = null;
+  }
 
   return (
     <html lang="en">

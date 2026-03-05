@@ -25,30 +25,35 @@ function sanitizeNextPath(raw: string | null): string {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const { pathname, search } = request.nextUrl;
   let response = NextResponse.next({
     request,
   });
 
-  const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
+  let user: { id: string } | null = null;
+  try {
+    const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        },
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({
-          request,
-        });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-      },
-    },
-  });
+    });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname, search } = request.nextUrl;
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+    user = currentUser ? { id: currentUser.id } : null;
+  } catch {
+    user = null;
+  }
 
   if (!user && isProtectedPath(pathname)) {
     if (isApiPath(pathname)) {
@@ -79,4 +84,3 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 export const config = {
   matcher: ["/generate", "/rollouts/:path*", "/api/rollouts/:path*", "/api/billing/:path*", "/login"],
 };
-
