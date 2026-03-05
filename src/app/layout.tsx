@@ -41,6 +41,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const publicEnv = {
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "",
+    supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+  };
+
   let user: { id: string } | null = null;
   try {
     const supabase = await getSupabaseServerAuthClient();
@@ -56,6 +61,12 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${geistMono.variable}`}>
+        <script
+          id="osai-public-env"
+          dangerouslySetInnerHTML={{
+            __html: `window.__OSAI_PUBLIC_ENV=${JSON.stringify(publicEnv)};`,
+          }}
+        />
         <header className={styles.header}>
           <div className={styles.headerInner}>
             <Link href="/" className={styles.logo}>
