@@ -70,6 +70,17 @@ type PrefillData = {
   identity: FinalizeState;
 };
 
+async function getCheckoutAccessToken(): Promise<string | null> {
+  const supabase = getSupabaseBrowserClient();
+  const {
+    data: { session: existingSession },
+  } = await supabase.auth.getSession();
+  if (existingSession?.access_token) return existingSession.access_token;
+
+  const { data } = await supabase.auth.refreshSession();
+  return data.session?.access_token ?? null;
+}
+
 // ---- Helpers ----
 
 function isSoloMode(f: FinalizeState): boolean {
@@ -511,9 +522,7 @@ function FinalizeStep({
     if (form.approving_authority_title) identityPayload.approving_authority_title = form.approving_authority_title.trim();
 
     try {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
+      const accessToken = await getCheckoutAccessToken();
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
@@ -523,6 +532,11 @@ function FinalizeStep({
         body: JSON.stringify({ ...inputs, ...identityPayload }),
       });
       const data = await res.json();
+      if (res.status === 401) {
+        const next = encodeURIComponent("/generate");
+        window.location.assign(`/login?next=${next}&auth_error=session_required`);
+        return;
+      }
       if (!res.ok || !data.ok) {
         setError(data.message ?? "Something went wrong. Please try again.");
         return;
@@ -544,9 +558,7 @@ function FinalizeStep({
     setError(null);
     setLoading(true);
     try {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
+      const accessToken = await getCheckoutAccessToken();
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
@@ -556,6 +568,11 @@ function FinalizeStep({
         body: JSON.stringify(inputs),
       });
       const data = await res.json();
+      if (res.status === 401) {
+        const next = encodeURIComponent("/generate");
+        window.location.assign(`/login?next=${next}&auth_error=session_required`);
+        return;
+      }
       if (!res.ok || !data.ok) {
         setError(data.message ?? "Something went wrong.");
         return;
