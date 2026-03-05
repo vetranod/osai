@@ -765,12 +765,17 @@ function GeneratePageInner() {
   const prefill = readPrefill(searchParams);
   const authState = searchParams.get("auth");
   const authError = searchParams.get("auth_error");
+  const checkoutState = searchParams.get("checkout");
   const authNotice =
     authState === "confirmed"
       ? "Email confirmed. You're signed in and can continue."
       : authError === "exchange_failed"
         ? "We couldn't complete sign-in from that email link. Please request a new login link."
         : null;
+  const checkoutNotice =
+    checkoutState === "start_requires_post"
+      ? "Checkout starts from the button in this page. Please use Continue to payment."
+      : null;
 
   type Stage =
     | { step: "intake" }
@@ -782,6 +787,7 @@ function GeneratePageInner() {
     return (
       <>
         {authNotice ? <div className={styles.successBox}>{authNotice}</div> : null}
+        {checkoutNotice ? <div className={styles.successBox}>{checkoutNotice}</div> : null}
         <IntakeForm
           initialForm={prefill.inputs}
           onComplete={(result) => {
@@ -795,6 +801,7 @@ function GeneratePageInner() {
   return (
     <>
       {authNotice ? <div className={styles.successBox}>{authNotice}</div> : null}
+      {checkoutNotice ? <div className={styles.successBox}>{checkoutNotice}</div> : null}
       <FinalizeStep
         output={stage.output}
         inputs={stage.inputs}

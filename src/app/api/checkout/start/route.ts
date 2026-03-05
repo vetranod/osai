@@ -5,6 +5,12 @@ import { parseCheckoutPayload, toCheckoutMetadata, type CheckoutPayload } from "
 
 export const runtime = "nodejs";
 
+export async function GET(request: Request): Promise<Response> {
+  const url = new URL("/generate", request.url);
+  url.searchParams.set("checkout", "start_requires_post");
+  return Response.redirect(url, 307);
+}
+
 function buildCancelUrl(baseUrl: string, payload: CheckoutPayload): string {
   const cancel = new URL("/generate", baseUrl);
   cancel.searchParams.set("payment", "cancelled");
