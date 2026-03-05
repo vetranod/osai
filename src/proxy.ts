@@ -35,6 +35,7 @@ function sanitizeNextPath(raw: string | null): string {
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
+  const hasBearerAuth = request.headers.get("authorization")?.startsWith("Bearer ") ?? false;
   let response = NextResponse.next({
     request,
   });
@@ -66,6 +67,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   if (!user && isProtectedPath(pathname)) {
     if (isApiPath(pathname)) {
+      // Allow API routes to proceed when caller provides a bearer token.
+      // Route handlers can validate token directly even if auth cookie is stale/missing.
+      if (hasBearerAuth) return response;
       return NextResponse.json(
         { ok: false, message: "Authentication required." },
         { status: 401 }
@@ -81,9 +85,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   if (user && pathname === "/login") {
     const next = sanitizeNextPath(request.nextUrl.searchParams.get("next"));
+    const nextUrl = new URL(next, request.nextUrl.origin);
     const target = request.nextUrl.clone();
-    target.pathname = next;
-    target.search = "";
+    target.pathname = nextUrl.pathname;
+    target.search = nextUrl.search;
     return NextResponse.redirect(target);
   }
 

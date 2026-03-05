@@ -81,6 +81,19 @@ async function getCheckoutAccessToken(): Promise<string | null> {
   return data.session?.access_token ?? null;
 }
 
+function buildGenerateResumePath(inputs: FormState, identity: FinalizeState): string {
+  const params = new URLSearchParams();
+  params.set("primary_goal", inputs.primary_goal);
+  params.set("adoption_state", inputs.adoption_state);
+  params.set("sensitivity_anchor", inputs.sensitivity_anchor);
+  params.set("leadership_posture", inputs.leadership_posture);
+  if (identity.initiative_lead_name) params.set("initiative_lead_name", identity.initiative_lead_name);
+  if (identity.initiative_lead_title) params.set("initiative_lead_title", identity.initiative_lead_title);
+  if (identity.approving_authority_name) params.set("approving_authority_name", identity.approving_authority_name);
+  if (identity.approving_authority_title) params.set("approving_authority_title", identity.approving_authority_title);
+  return `/generate?${params.toString()}`;
+}
+
 // ---- Helpers ----
 
 function isSoloMode(f: FinalizeState): boolean {
@@ -533,7 +546,7 @@ function FinalizeStep({
       });
       const data = await res.json();
       if (res.status === 401) {
-        const next = encodeURIComponent("/generate");
+        const next = encodeURIComponent(buildGenerateResumePath(inputs, form));
         window.location.assign(`/login?next=${next}&auth_error=session_required`);
         return;
       }
@@ -569,7 +582,7 @@ function FinalizeStep({
       });
       const data = await res.json();
       if (res.status === 401) {
-        const next = encodeURIComponent("/generate");
+        const next = encodeURIComponent(buildGenerateResumePath(inputs, form));
         window.location.assign(`/login?next=${next}&auth_error=session_required`);
         return;
       }
