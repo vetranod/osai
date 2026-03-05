@@ -99,7 +99,7 @@ export default async function RootLayout({
             </Link>
             <nav className={styles.nav}>
               <Link href="/how-it-works" className={styles.navLink}>How it works</Link>
-              <Link href="mailto:info@deploysure.com" className={styles.navLink}>info@deploysure.com</Link>
+              <Link href="mailto:info@deploysure.com" className={styles.navLink}>Contact</Link>
               {user ? (
                 <Link href="/auth/signout" className={styles.navLink}>Sign out</Link>
               ) : (
@@ -125,7 +125,7 @@ export default async function RootLayout({
             </div>
             <div className={styles.footerColCenter}>
               <Link href="/how-it-works" className={styles.footerLink}>How it works</Link>
-              <Link href="mailto:info@deploysure.com" className={styles.footerLink}>info@deploysure.com</Link>
+              <Link href="mailto:info@deploysure.com" className={styles.footerLink}>Contact</Link>
             </div>
             <div className={styles.footerColRight}>
               <p className={styles.footerLegal}>
