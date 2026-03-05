@@ -84,8 +84,8 @@ export default async function RootLayout({
           <div className={styles.footerInner}>
             <div className={styles.footerCol}>
               <div className={styles.footerBrand}>
-                <BrandMark compact />
-                <div className={styles.footerBrandText}>
+                <BrandMark />
+                <div className={styles.logoLockup}>
                   <span className={styles.logoWordmark}>
                     Deploy<span className={styles.logoWordmarkAccent}>Sure</span>
                   </span>

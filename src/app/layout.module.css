@@ -209,13 +209,7 @@
 .footerBrand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-}
-
-.footerBrandText {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: 14px;
 }
 
 .footerLegal {
