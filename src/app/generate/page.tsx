@@ -85,11 +85,17 @@ declare global {
 
 const GENERATE_DRAFT_KEY = "osai_generate_draft_v1";
 
+function getGenerateDraftKey(): string {
+  if (typeof window === "undefined") return `${GENERATE_DRAFT_KEY}:anon`;
+  const userId = window.__OSAI_AUTH_PROOF?.userId?.trim();
+  return userId ? `${GENERATE_DRAFT_KEY}:${userId}` : `${GENERATE_DRAFT_KEY}:anon`;
+}
+
 function saveGenerateDraft(prefill: PrefillData): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(
-      GENERATE_DRAFT_KEY,
+      getGenerateDraftKey(),
       JSON.stringify({
         ...prefill,
         updatedAt: Date.now(),
@@ -101,7 +107,7 @@ function saveGenerateDraft(prefill: PrefillData): void {
 function loadGenerateDraft(): PrefillData | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(GENERATE_DRAFT_KEY);
+    const raw = window.localStorage.getItem(getGenerateDraftKey());
     if (!raw) return null;
     const parsed = JSON.parse(raw) as {
       inputs?: Partial<FormState>;
@@ -595,11 +601,13 @@ function FinalizeStep({
   inputs,
   initialIdentity,
   showDemoCta,
+  onBackToQuestions,
 }: {
   output: EngineOutput;
   inputs: FormState;
   initialIdentity: FinalizeState;
   showDemoCta: boolean;
+  onBackToQuestions: () => void;
 }) {
   const [form, setForm] = useState<FinalizeState>(initialIdentity);
   const [sameAsLead, setSameAsLead] = useState(false);
@@ -887,6 +895,14 @@ function FinalizeStep({
 
           <div className={styles.formFooter}>
             <button
+              type="button"
+              className={styles.btnSecondary}
+              onClick={onBackToQuestions}
+              disabled={loading}
+            >
+              {"← Back to questions"}
+            </button>
+            <button
               type="submit"
               className={styles.btnPrimary}
               disabled={!canSubmit || loading}
@@ -1028,6 +1044,7 @@ function GeneratePageInner() {
         inputs={stage.inputs}
         initialIdentity={prefill.identity}
         showDemoCta={demoQueryEnabled}
+        onBackToQuestions={() => setStage({ step: "intake" })}
       />
     </>
   );
