@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, FormEvent, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
@@ -32,7 +32,6 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 }
 
 function LoginPageInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => normalizeNextPath(searchParams.get("next")), [searchParams]);
   const callbackError = useMemo(() => {
@@ -73,8 +72,7 @@ function LoginPageInner() {
         }
 
         setStatus("Signed in. Redirecting...");
-        router.replace(nextPath);
-        router.refresh();
+        window.location.assign(nextPath);
         return;
       }
 
