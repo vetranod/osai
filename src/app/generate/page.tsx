@@ -548,7 +548,7 @@ function IntakeForm({
                 onClick={() => setWizardStep((s) => s - 1)}
                 disabled={loading}
               >
-                {"<- Back"}
+                {"← Back"}
               </button>
             ) : (
               <span />
@@ -559,7 +559,7 @@ function IntakeForm({
                 className={styles.btnPrimary}
                 disabled={!currentStepFilled || loading}
               >
-                {loading ? "Building your framework..." : "Continue ->"}
+                {loading ? "Building your framework..." : "Continue →"}
               </button>
             ) : (
               <button
@@ -568,7 +568,7 @@ function IntakeForm({
                 disabled={!currentStepFilled}
                 onClick={() => setWizardStep((s) => s + 1)}
               >
-                {"Next ->"}
+                {"Next →"}
               </button>
             )}
           </div>
