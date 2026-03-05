@@ -49,10 +49,10 @@ function LoginPageInner() {
     setError(null);
     setStatus(null);
 
-    const supabase = getSupabaseBrowserClient();
+    try {
+      const supabase = getSupabaseBrowserClient();
 
-    if (mode === "sign_in") {
-      try {
+      if (mode === "sign_in") {
         const { error: signInError } = await withTimeout(
           supabase.auth.signInWithPassword({ email, password }),
           AUTH_TIMEOUT_MS
@@ -63,18 +63,11 @@ function LoginPageInner() {
         }
 
         setStatus("Signed in. Redirecting...");
-        setBusy(false);
         router.replace(nextPath);
         router.refresh();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Request failed. Please try again.");
-      } finally {
-        setBusy(false);
+        return;
       }
-      return;
-    }
 
-    try {
       const { error: signUpError } = await withTimeout(
         supabase.auth.signUp({
           email,
@@ -86,7 +79,6 @@ function LoginPageInner() {
         AUTH_TIMEOUT_MS
       );
 
-      setBusy(false);
       if (signUpError) {
         setError(signUpError.message);
         return;
@@ -94,8 +86,9 @@ function LoginPageInner() {
 
       setStatus("Account created. Check your inbox for the confirmation link.");
     } catch (err) {
-      setBusy(false);
       setError(err instanceof Error ? err.message : "Request failed. Please try again.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -104,8 +97,8 @@ function LoginPageInner() {
     setError(null);
     setStatus(null);
 
-    const supabase = getSupabaseBrowserClient();
     try {
+      const supabase = getSupabaseBrowserClient();
       const { error: otpError } = await withTimeout(
         supabase.auth.signInWithOtp({
           email,
@@ -116,7 +109,6 @@ function LoginPageInner() {
         AUTH_TIMEOUT_MS
       );
 
-      setBusy(false);
       if (otpError) {
         setError(otpError.message);
         return;
@@ -124,8 +116,9 @@ function LoginPageInner() {
 
       setStatus("Login link sent. Check your inbox to continue.");
     } catch (err) {
-      setBusy(false);
       setError(err instanceof Error ? err.message : "Request failed. Please try again.");
+    } finally {
+      setBusy(false);
     }
   }
 
