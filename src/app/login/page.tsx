@@ -98,7 +98,7 @@ function LoginPageInner() {
           await bridgeBrowserSessionToServer();
         }
         setStatus("Signed in. Redirecting...");
-        window.location.assign(nextPath);
+        window.location.assign(`/auth/continue?next=${encodeURIComponent(nextPath)}`);
         return;
       }
 

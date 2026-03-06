@@ -781,7 +781,7 @@ function FinalizeStep({
         return;
       }
       await bridgeBrowserSessionToServer();
-      window.location.assign(data.dashboard_url);
+      window.location.assign(`/auth/continue?next=${encodeURIComponent(data.dashboard_url)}`);
     } catch {
       setError("Network error — please try again.");
     } finally {
