@@ -23,6 +23,20 @@ function AuthContinuePageInner() {
     let cancelled = false;
 
     async function continueToTarget() {
+      try {
+        const tokenRes = await fetch("/api/auth/token", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (tokenRes.ok) {
+          window.location.assign(next);
+          return;
+        }
+      } catch {
+        // Fall through to browser-session recovery.
+      }
+
       const supabase = getSupabaseBrowserClient();
       const {
         data: { session },
