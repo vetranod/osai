@@ -780,6 +780,10 @@ function FinalizeStep({
       }
       const data = await res.json();
       if (res.status === 401) {
+        if (data?.reason === "missing_auth") {
+          redirectToLoginResume();
+          return;
+        }
         const detailParts = [
           data?.message ?? "Authentication required.",
           typeof data?.reason === "string" ? `reason=${data.reason}` : null,

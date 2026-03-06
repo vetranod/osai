@@ -3,6 +3,8 @@
 import { Suspense, FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
+import { cacheBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
 
@@ -94,11 +96,23 @@ function LoginPageInner() {
           AUTH_TIMEOUT_MS
         );
         const signInData = (await res.json().catch(() => null)) as
-          | { ok?: boolean; message?: string }
+          | { ok?: boolean; message?: string; access_token?: string; refresh_token?: string }
           | null;
         if (!res.ok || signInData?.ok === false) {
           setError(signInData?.message ?? "Sign-in failed.");
           return;
+        }
+
+        if (signInData?.access_token && signInData.refresh_token) {
+          const supabase = getSupabaseBrowserClient();
+          const { data: restored, error: restoreError } = await supabase.auth.setSession({
+            access_token: signInData.access_token,
+            refresh_token: signInData.refresh_token,
+          });
+          if (!restoreError && restored.session?.access_token) {
+            cacheBrowserSession(restored.session);
+            await bridgeBrowserSessionToServer();
+          }
         }
 
         setStatus("Signed in. Redirecting...");

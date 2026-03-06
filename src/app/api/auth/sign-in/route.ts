@@ -44,5 +44,7 @@ export async function POST(request: Request): Promise<Response> {
     ok: true,
     user_id: data.user.id,
     email: data.user.email ?? null,
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
   });
 }
