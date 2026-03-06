@@ -753,7 +753,14 @@ function FinalizeStep({
       }
       const data = await res.json();
       if (res.status === 401) {
-        redirectToLoginResume();
+        const detailParts = [
+          data?.message ?? "Authentication required.",
+          typeof data?.reason === "string" ? `reason=${data.reason}` : null,
+          typeof data?.request_host === "string" ? `request_host=${data.request_host}` : null,
+          typeof data?.app_host === "string" ? `app_host=${data.app_host}` : null,
+          typeof data?.has_auth_header === "boolean" ? `has_auth_header=${String(data.has_auth_header)}` : null,
+        ].filter(Boolean);
+        setError(`Demo auth failed: ${detailParts.join(" | ")}`);
         return;
       }
       if (!res.ok || !data.ok) {
