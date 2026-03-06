@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { absoluteUrl, buildPageMetadata, SITE_NAME } from "./seo";
+import { articles } from "./_content/articles";
 import styles from "./page.module.css";
 
 const GUIDE_LINKS = [
@@ -255,6 +256,29 @@ export default function LandingPage() {
               <p className={styles.guideCardText}>{guide.text}</p>
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <p className={styles.sectionLabel}>Resources</p>
+        <h2 className={styles.sectionHeading}>Practical reading on AI governance</h2>
+        <p className={styles.guidesIntro}>
+          Educational guides on frameworks, policy, risk classification, and rollout planning for teams that want to understand the subject before they build.
+        </p>
+        <div className={styles.resourceGrid}>
+          {articles.slice(0, 4).map((article) => (
+            <Link key={article.slug} href={`/resources/${article.slug}`} className={styles.resourceCard}>
+              <span className={styles.resourceCategory}>{article.category}</span>
+              <h3 className={styles.resourceCardTitle}>{article.title}</h3>
+              <p className={styles.resourceCardText}>{article.description}</p>
+              <span className={styles.resourceMeta}>{article.readingMinutes} min read</span>
+            </Link>
+          ))}
+        </div>
+        <div className={styles.resourcesFooter}>
+          <Link href="/resources" className={styles.resourcesAllLink}>
+            View all resources
+          </Link>
         </div>
       </section>
 
