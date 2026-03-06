@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
 
@@ -135,12 +136,18 @@ function loadGenerateDraft(): PrefillData | null {
 async function getCheckoutAccessToken(): Promise<string | null> {
   const supabase = getSupabaseBrowserClient();
   const { data: refreshed } = await supabase.auth.refreshSession();
-  if (refreshed.session?.access_token) return refreshed.session.access_token;
+  if (refreshed.session?.access_token) {
+    await bridgeBrowserSessionToServer();
+    return refreshed.session.access_token;
+  }
 
   const {
     data: { session: existingSession },
   } = await supabase.auth.getSession();
-  if (existingSession?.access_token) return existingSession.access_token;
+  if (existingSession?.access_token) {
+    await bridgeBrowserSessionToServer();
+    return existingSession.access_token;
+  }
 
   // Bridge server cookie auth -> bearer token when browser client session is missing.
   try {
@@ -698,6 +705,7 @@ function FinalizeStep({
         setError("Missing checkout URL.");
         return;
       }
+      await bridgeBrowserSessionToServer();
       window.location.assign(data.checkout_url);
     } catch {
       setError("Network error - please try again.");
@@ -729,6 +737,7 @@ function FinalizeStep({
         setError("Missing checkout URL.");
         return;
       }
+      await bridgeBrowserSessionToServer();
       window.location.assign(data.checkout_url);
     } catch {
       setError("Network error - please try again.");
@@ -771,6 +780,7 @@ function FinalizeStep({
         setError("Missing dashboard URL.");
         return;
       }
+      await bridgeBrowserSessionToServer();
       window.location.assign(data.dashboard_url);
     } catch {
       setError("Network error — please try again.");

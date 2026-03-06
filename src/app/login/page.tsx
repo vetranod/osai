@@ -3,6 +3,7 @@
 import { Suspense, FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
 
@@ -84,7 +85,7 @@ function LoginPageInner() {
       const supabase = getSupabaseBrowserClient();
 
       if (mode === "sign_in") {
-        const { error: signInError } = await withTimeout(
+        const { data: signInData, error: signInError } = await withTimeout(
           supabase.auth.signInWithPassword({ email, password }),
           AUTH_TIMEOUT_MS
         );
@@ -93,6 +94,9 @@ function LoginPageInner() {
           return;
         }
 
+        if (signInData.session?.access_token && signInData.session.refresh_token) {
+          await bridgeBrowserSessionToServer();
+        }
         setStatus("Signed in. Redirecting...");
         window.location.assign(nextPath);
         return;

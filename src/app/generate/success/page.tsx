@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
 
@@ -18,12 +19,18 @@ type SessionStatus = {
 async function getCheckoutStatusAccessToken(): Promise<string | null> {
   const supabase = getSupabaseBrowserClient();
   const { data: refreshed } = await supabase.auth.refreshSession();
-  if (refreshed.session?.access_token) return refreshed.session.access_token;
+  if (refreshed.session?.access_token) {
+    await bridgeBrowserSessionToServer();
+    return refreshed.session.access_token;
+  }
 
   const {
     data: { session: existingSession },
   } = await supabase.auth.getSession();
-  if (existingSession?.access_token) return existingSession.access_token;
+  if (existingSession?.access_token) {
+    await bridgeBrowserSessionToServer();
+    return existingSession.access_token;
+  }
 
   try {
     const res = await fetch("/api/auth/token", {
@@ -81,6 +88,7 @@ function SuccessInner() {
         setStatus(data);
 
         if (res.ok && data.ok && data.rollout_id) {
+          await bridgeBrowserSessionToServer();
           router.replace(`/rollouts/${data.rollout_id}`);
           return;
         }
