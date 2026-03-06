@@ -3,7 +3,6 @@
 import { Suspense, FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import { cacheBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
@@ -86,18 +85,48 @@ function LoginPageInner() {
       const supabase = getSupabaseBrowserClient();
 
       if (mode === "sign_in") {
-        const { data: signInData, error: signInError } = await withTimeout(
-          supabase.auth.signInWithPassword({ email, password }),
+        const signInRes = await withTimeout(
+          fetch("/api/auth/sign-in", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+          }),
           AUTH_TIMEOUT_MS
         );
-        if (signInError) {
-          setError(signInError.message);
+
+        const signInBody = (await signInRes.json().catch(() => null)) as
+          | {
+              ok?: boolean;
+              message?: string;
+              access_token?: string;
+              refresh_token?: string;
+            }
+          | null;
+
+        if (!signInRes.ok || !signInBody?.ok) {
+          setError(signInBody?.message ?? "Sign-in failed.");
           return;
         }
 
-        if (signInData.session?.access_token && signInData.session.refresh_token) {
-          cacheBrowserSession(signInData.session);
-          void bridgeBrowserSessionToServer();
+        if (signInBody.access_token && signInBody.refresh_token) {
+          const { data: restored, error: restoreError } = await supabase.auth.setSession({
+            access_token: signInBody.access_token,
+            refresh_token: signInBody.refresh_token,
+          });
+
+          if (!restoreError && restored.session?.access_token && restored.session.refresh_token) {
+            cacheBrowserSession(restored.session);
+          } else {
+            cacheBrowserSession({
+              access_token: signInBody.access_token,
+              refresh_token: signInBody.refresh_token,
+              expires_at: null,
+              user: null,
+            });
+          }
         }
 
         setStatus("Signed in. Redirecting...");

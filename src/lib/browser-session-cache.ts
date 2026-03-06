@@ -13,11 +13,23 @@ type CachedBrowserSession = {
   cached_at: number;
 };
 
+type SessionCacheSeed =
+  | Pick<Session, "access_token" | "refresh_token" | "expires_at" | "user">
+  | {
+      access_token: string;
+      refresh_token: string;
+      expires_at?: number | null;
+      user?: {
+        id?: string | null;
+        email?: string | null;
+      } | null;
+    };
+
 function canUseSessionStorage(): boolean {
   return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined";
 }
 
-export function cacheBrowserSession(session: Pick<Session, "access_token" | "refresh_token" | "expires_at" | "user"> | null): void {
+export function cacheBrowserSession(session: SessionCacheSeed | null): void {
   if (!canUseSessionStorage()) return;
   if (!session?.access_token || !session.refresh_token) return;
 

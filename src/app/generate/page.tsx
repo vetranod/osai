@@ -1022,6 +1022,36 @@ function GeneratePageInner() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function restoreBrowserAuthFromCache() {
+      const cachedSession = getCachedBrowserSession();
+      if (!cachedSession) return;
+
+      const supabase = getSupabaseBrowserClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) return;
+
+      const { data: restored, error } = await supabase.auth.setSession({
+        access_token: cachedSession.access_token,
+        refresh_token: cachedSession.refresh_token,
+      });
+      if (cancelled) return;
+      if (!error && restored.session?.access_token) {
+        cacheBrowserSession(restored.session);
+        void bridgeBrowserSessionToServer();
+      }
+    }
+
+    void restoreBrowserAuthFromCache();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     let active = true;
 
     async function resumeFinalizeStage() {
