@@ -1,5 +1,6 @@
 import { validateDecisionInputs } from "@/decision-engine/options";
 import { evaluateDecision } from "@/decision-engine/engine";
+import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import { createRolloutFromInputs, type IdentityFields } from "@/server/rolloutCreation";
 
 export const runtime = "nodejs";
@@ -23,6 +24,14 @@ function extractIdentityFields(raw: Record<string, unknown>): IdentityFields {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const auth = await getSupabaseServerAuthClient();
+  const {
+    data: { user },
+  } = await auth.auth.getUser();
+  if (!user) {
+    return Response.json({ ok: false, message: "Authentication required." }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -53,31 +62,13 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  try {
-    const created = await createRolloutFromInputs({
-      inputs,
-      identityFields,
-      generateM1Artifacts: true,
-    });
-
-    return Response.json(
-      {
-        ok: true,
-        rollout: created.rollout,
-        output: created.output,
-        trace: created.trace,
-        seeded_milestones: created.seeded_milestones,
-      },
-      { status: 201 }
-    );
-  } catch (error) {
-    return Response.json(
-      {
-        ok: false,
-        message: error instanceof Error ? error.message : "Failed to save rollout.",
-      },
-      { status: 500 }
-    );
-  }
+  return Response.json(
+    {
+      ok: false,
+      message: "Direct rollout creation is disabled. Start from checkout or the approved demo flow instead.",
+      output_preview: outputPreview,
+      identity_fields_received: Object.keys(identityFields),
+    },
+    { status: 403 }
+  );
 }
-

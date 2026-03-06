@@ -55,20 +55,50 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
+  type DemoUser = {
+    id: string;
+    email: string | null;
+    email_confirmed_at: string | null;
+  };
+
   const supabase = await getSupabaseServerAuthClient();
   const {
     data: { user: cookieUser },
   } = await supabase.auth.getUser();
-  let user = cookieUser;
+  let user: DemoUser | null = cookieUser
+    ? {
+        id: cookieUser.id,
+        email: cookieUser.email ?? null,
+        email_confirmed_at: cookieUser.email_confirmed_at ?? null,
+      }
+    : null;
+  let authReason:
+    | "cookie_user"
+    | "bearer_token"
+    | "cookie_session_token"
+    | "signed_auth_proof"
+    | "missing_auth"
+    | "invalid_token" = user ? "cookie_user" : "missing_auth";
+  let hadAuthHeader = false;
 
   if (!user) {
     const authHeader = request.headers.get("authorization");
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    hadAuthHeader = Boolean(token);
     if (token) {
       const {
         data: { user: tokenUser },
       } = await supabase.auth.getUser(token);
-      user = tokenUser ?? null;
+      if (tokenUser) {
+        user = {
+          id: tokenUser.id,
+          email: tokenUser.email ?? null,
+          email_confirmed_at: tokenUser.email_confirmed_at ?? null,
+        };
+        authReason = "bearer_token";
+      } else {
+        authReason = "invalid_token";
+      }
     }
   }
 
@@ -80,7 +110,14 @@ export async function POST(request: Request): Promise<Response> {
       const {
         data: { user: sessionUser },
       } = await supabase.auth.getUser(session.access_token);
-      user = sessionUser ?? null;
+      if (sessionUser) {
+        user = {
+          id: sessionUser.id,
+          email: sessionUser.email ?? null,
+          email_confirmed_at: sessionUser.email_confirmed_at ?? null,
+        };
+        authReason = "cookie_session_token";
+      }
     }
   }
 
@@ -94,7 +131,8 @@ export async function POST(request: Request): Promise<Response> {
             id: proof.userId,
             email: proof.email,
             email_confirmed_at: new Date().toISOString(),
-          } as typeof cookieUser;
+          };
+          authReason = "signed_auth_proof";
         }
       } catch {
         // ignore malformed proof
@@ -103,7 +141,28 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!user) {
-    return Response.json({ ok: false, message: "Authentication required." }, { status: 401 });
+    const requestHost =
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host") ||
+      new URL(request.url).host;
+    return Response.json(
+      {
+        ok: false,
+        message: "Authentication required.",
+        reason: authReason,
+        has_auth_header: hadAuthHeader,
+        request_host: requestHost,
+        app_host: (() => {
+          try {
+            const app = process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL;
+            return app ? new URL(app).host : null;
+          } catch {
+            return null;
+          }
+        })(),
+      },
+      { status: 401 }
+    );
   }
 
   if (!user.email || !user.email_confirmed_at) {

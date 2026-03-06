@@ -1267,6 +1267,9 @@ export default function RolloutDashboard() {
         {/* Archive / Restart — top-right corner, low prominence */}
         {rolloutMeta && (isArchived || canArchive) && (
           <div className={styles.archiveCorner}>
+            <Link href={`/rollouts/${rolloutId}/packet`} className={styles.archiveTrigger}>
+              Open print packet
+            </Link>
             {isArchived ? (
               <Link href={restartHref} className={styles.archiveTrigger}>
                 Restart from this rollout
@@ -1286,6 +1289,13 @@ export default function RolloutDashboard() {
                 : "One restart included. Read-only after archive."}
             </p>
             {archiveError && <div className={styles.errorBox}>{archiveError}</div>}
+          </div>
+        )}
+        {rolloutMeta && !(isArchived || canArchive) && (
+          <div className={styles.archiveCorner}>
+            <Link href={`/rollouts/${rolloutId}/packet`} className={styles.archiveTrigger}>
+              Open print packet
+            </Link>
           </div>
         )}
       </div>

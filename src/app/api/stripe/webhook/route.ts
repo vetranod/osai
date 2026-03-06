@@ -5,8 +5,21 @@ import { createRolloutFromInputs, findRolloutByCheckoutSessionId } from "@/serve
 
 export const runtime = "nodejs";
 
+function isRolloutCreationReady(session: Stripe.Checkout.Session): boolean {
+  return session.payment_status === "paid" || session.payment_status === "no_payment_required";
+}
+
 async function handleCompletedSession(session: Stripe.Checkout.Session): Promise<void> {
   if (!session.id) return;
+  if (!isRolloutCreationReady(session)) {
+    console.warn("stripe webhook: checkout completed before payment settled", {
+      sessionId: session.id,
+      paymentStatus: session.payment_status ?? null,
+      sessionStatus: session.status ?? null,
+    });
+    return;
+  }
+
   const existing = await findRolloutByCheckoutSessionId(session.id);
   if (existing) return;
 
@@ -45,6 +58,7 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json({ ok: true });
   } catch (error) {
+    console.error("stripe webhook processing failed", error);
     return Response.json(
       {
         ok: false,
@@ -54,4 +68,3 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 }
-

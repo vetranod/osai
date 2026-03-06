@@ -125,17 +125,128 @@ function buildDecisionTraceSnapshot(args: {
 
 export async function findRolloutByCheckoutSessionId(sessionId: string, userId?: string | null): Promise<string | null> {
   const supabase = getServiceRoleSupabase();
-  const paymentFilter: Record<string, string> = { checkout_session_id: sessionId };
-  if (userId) paymentFilter.user_id = userId;
-  const { data, error } = await supabase
+  let query = supabase
     .from("rollouts")
     .select("id")
-    .contains("decision_trace", { payment: paymentFilter })
+    .eq("payment_checkout_session_id", sessionId)
     .order("created_at", { ascending: false })
     .limit(1);
 
+  if (userId) {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data, error } = await query;
+
   if (error) return null;
   return data?.[0]?.id ?? null;
+}
+
+async function rollbackPartialRolloutCreation(rolloutId: string): Promise<void> {
+  const supabase = getServiceRoleSupabase();
+
+  // Best-effort cleanup for non-transactional creation steps.
+  await supabase.from("artifacts").delete().eq("rollout_id", rolloutId);
+  await supabase.from("rollout_milestone_state").delete().eq("rollout_id", rolloutId);
+  await supabase.from("rollouts").delete().eq("id", rolloutId);
+}
+
+function isMissingCreateRolloutRpc(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === "PGRST202" || error.message?.includes("osai_create_rollout") === true;
+}
+
+async function createRolloutLegacy(args: {
+  inputs: DecisionInputs;
+  identityFields: IdentityFields;
+  payment?: PaymentMeta;
+  decision_trace: Record<string, unknown>;
+  output: ReturnType<typeof evaluateDecision>["output"];
+  trace: ReturnType<typeof evaluateDecision>["trace"];
+  generateM1Artifacts: boolean;
+}): Promise<{
+  rollout: Record<string, unknown>;
+  output: ReturnType<typeof evaluateDecision>["output"];
+  trace: ReturnType<typeof evaluateDecision>["trace"];
+  seeded_milestones: number;
+}> {
+  const { inputs, identityFields, payment, decision_trace, output, trace, generateM1Artifacts } = args;
+  const supabase = getServiceRoleSupabase();
+  const rolloutInsert = await supabase
+    .from("rollouts")
+    .insert({
+      primary_goal: inputs.primary_goal,
+      adoption_state: inputs.adoption_state,
+      sensitivity_anchor: inputs.sensitivity_anchor,
+      leadership_posture: inputs.leadership_posture,
+      rollout_mode: output.rollout_mode,
+      guardrail_strictness: output.guardrail_strictness,
+      review_depth: output.review_depth,
+      policy_tone: output.policy_tone,
+      maturity_state: output.maturity_state,
+      primary_risk_driver: output.primary_risk_driver,
+      needs_stabilization: output.needs_stabilization,
+      sensitivity_tier: output.sensitivity_tier,
+      decision_trace,
+      user_id: payment?.user_id ?? null,
+      payment_checkout_session_id: payment?.checkout_session_id ?? null,
+      payment_provider: payment?.provider ?? null,
+      payment_status: payment?.payment_status ?? null,
+      ...identityFields,
+    })
+    .select("*")
+    .single();
+
+  if (rolloutInsert.error) {
+    throw new Error(`Failed to save rollout: ${rolloutInsert.error.message}`);
+  }
+  const rollout = rolloutInsert.data;
+
+  try {
+    const milestoneFetch = await supabase
+      .from("milestones")
+      .select("id")
+      .order("order_index", { ascending: true });
+    if (milestoneFetch.error) {
+      throw new Error(`Failed to fetch milestone templates: ${milestoneFetch.error.message}`);
+    }
+    const milestones = milestoneFetch.data ?? [];
+
+    const seedRows = milestones.map((m, i) => ({
+      rollout_id: rollout.id,
+      milestone_id: m.id,
+      status: i === 0 ? "IN_PROGRESS" : "LOCKED",
+      checklist_state: {},
+      notes: null,
+    }));
+
+    if (seedRows.length > 0) {
+      const seedInsert = await supabase.from("rollout_milestone_state").insert(seedRows);
+      if (seedInsert.error) {
+        throw new Error(`Rollout was created but milestone seeding failed: ${seedInsert.error.message}`);
+      }
+    }
+
+    if (generateM1Artifacts) {
+      const m1Row = milestones[0];
+      if (m1Row?.id) {
+        const artifactResult = await generateArtifactsForMilestone(rollout.id as string, m1Row.id, "M1");
+        if (artifactResult.errors.length > 0) {
+          throw new Error(`Rollout artifacts failed to initialize: ${artifactResult.errors.join("; ")}`);
+        }
+      }
+    }
+
+    return {
+      rollout,
+      output,
+      trace,
+      seeded_milestones: seedRows.length,
+    };
+  } catch (error) {
+    await rollbackPartialRolloutCreation(String(rollout.id)).catch(() => null);
+    throw error;
+  }
 }
 
 export async function createRolloutFromInputs(args: {
@@ -151,6 +262,27 @@ export async function createRolloutFromInputs(args: {
 }> {
   const { inputs, identityFields, payment, generateM1Artifacts = true } = args;
   const result = evaluateDecision(inputs);
+
+  if (payment?.checkout_session_id) {
+    const existingRolloutId = await findRolloutByCheckoutSessionId(payment.checkout_session_id, payment.user_id);
+    if (existingRolloutId) {
+      const supabase = getServiceRoleSupabase();
+      const [{ data: rollout }, { count }] = await Promise.all([
+        supabase.from("rollouts").select("*").eq("id", existingRolloutId).single(),
+        supabase
+          .from("rollout_milestone_state")
+          .select("*", { count: "exact", head: true })
+          .eq("rollout_id", existingRolloutId),
+      ]);
+
+      return {
+        rollout: rollout ?? { id: existingRolloutId },
+        output: result.output,
+        trace: result.trace,
+        seeded_milestones: count ?? 0,
+      };
+    }
+  }
   const decision_trace = buildDecisionTraceSnapshot({
     inputs,
     outputs: result.output,
@@ -159,67 +291,76 @@ export async function createRolloutFromInputs(args: {
   });
 
   const supabase = getServiceRoleSupabase();
-  const rolloutInsert = await supabase
-    .from("rollouts")
-    .insert({
-      primary_goal: inputs.primary_goal,
-      adoption_state: inputs.adoption_state,
-      sensitivity_anchor: inputs.sensitivity_anchor,
-      leadership_posture: inputs.leadership_posture,
-      rollout_mode: result.output.rollout_mode,
-      guardrail_strictness: result.output.guardrail_strictness,
-      review_depth: result.output.review_depth,
-      policy_tone: result.output.policy_tone,
-      maturity_state: result.output.maturity_state,
-      primary_risk_driver: result.output.primary_risk_driver,
-      needs_stabilization: result.output.needs_stabilization,
-      sensitivity_tier: result.output.sensitivity_tier,
-      decision_trace,
-      ...identityFields,
-    })
-    .select("*")
-    .single();
+  const rpc = await supabase.rpc("osai_create_rollout", {
+    p_inputs: inputs,
+    p_outputs: result.output,
+    p_identity_fields: identityFields,
+    p_decision_trace: decision_trace,
+    p_user_id: payment?.user_id ?? null,
+    p_payment_checkout_session_id: payment?.checkout_session_id ?? null,
+    p_payment_provider: payment?.provider ?? null,
+    p_payment_status: payment?.payment_status ?? null,
+  });
 
-  if (rolloutInsert.error) {
-    throw new Error(`Failed to save rollout: ${rolloutInsert.error.message}`);
+  if (rpc.error && !isMissingCreateRolloutRpc(rpc.error)) {
+    throw new Error(`Failed to create rollout: ${rpc.error.message}`);
   }
-  const rollout = rolloutInsert.data;
 
-  const milestoneFetch = await supabase
-    .from("milestones")
-    .select("id")
-    .order("order_index", { ascending: true });
-  if (milestoneFetch.error) {
-    throw new Error(`Failed to fetch milestone templates: ${milestoneFetch.error.message}`);
-  }
-  const milestones = milestoneFetch.data ?? [];
+  if (rpc.data) {
+    const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+    const rolloutId = row?.rollout_id as string | undefined;
+    const seededMilestones = Number(row?.seeded_milestones ?? 0);
 
-  const seedRows = milestones.map((m, i) => ({
-    rollout_id: rollout.id,
-    milestone_id: m.id,
-    status: i === 0 ? "IN_PROGRESS" : "LOCKED",
-    checklist_state: {},
-    notes: null,
-  }));
-
-  if (seedRows.length > 0) {
-    const seedInsert = await supabase.from("rollout_milestone_state").insert(seedRows);
-    if (seedInsert.error) {
-      throw new Error(`Rollout was created but milestone seeding failed: ${seedInsert.error.message}`);
+    if (!rolloutId) {
+      throw new Error("Rollout creation RPC returned no rollout id.");
     }
-  }
 
-  if (generateM1Artifacts) {
-    const m1Row = milestones[0];
-    if (m1Row?.id) {
-      await generateArtifactsForMilestone(rollout.id as string, m1Row.id, "M1").catch(() => null);
+    const { data: rollout, error: rolloutError } = await supabase
+      .from("rollouts")
+      .select("*")
+      .eq("id", rolloutId)
+      .single();
+
+    if (rolloutError || !rollout) {
+      throw new Error(`Rollout was created but could not be loaded: ${rolloutError?.message ?? "missing rollout row"}`);
     }
+
+    if (generateM1Artifacts) {
+      const { data: m1Row, error: m1Error } = await supabase
+        .from("milestones")
+        .select("id")
+        .eq("code", "M1")
+        .maybeSingle();
+
+      if (m1Error) {
+        await rollbackPartialRolloutCreation(rolloutId).catch(() => null);
+        throw new Error(`Rollout was created but M1 lookup failed: ${m1Error.message}`);
+      }
+
+      if (m1Row?.id) {
+        const artifactResult = await generateArtifactsForMilestone(rolloutId, m1Row.id, "M1");
+        if (artifactResult.errors.length > 0) {
+          await rollbackPartialRolloutCreation(rolloutId).catch(() => null);
+          throw new Error(`Rollout artifacts failed to initialize: ${artifactResult.errors.join("; ")}`);
+        }
+      }
+    }
+
+    return {
+      rollout,
+      output: result.output,
+      trace: result.trace,
+      seeded_milestones: seededMilestones,
+    };
   }
 
-  return {
-    rollout,
+  return createRolloutLegacy({
+    inputs,
+    identityFields,
+    payment,
+    decision_trace,
     output: result.output,
     trace: result.trace,
-    seeded_milestones: seedRows.length,
-  };
+    generateM1Artifacts,
+  });
 }

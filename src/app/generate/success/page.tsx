@@ -3,15 +3,41 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
 
 type SessionStatus = {
   ok: boolean;
   payment_status?: string;
   status?: string;
+  rollout_status?: "ready" | "paid_processing" | "pending_payment";
   rollout_id?: string | null;
   message?: string;
 };
+
+async function getCheckoutStatusAccessToken(): Promise<string | null> {
+  const supabase = getSupabaseBrowserClient();
+  const { data: refreshed } = await supabase.auth.refreshSession();
+  if (refreshed.session?.access_token) return refreshed.session.access_token;
+
+  const {
+    data: { session: existingSession },
+  } = await supabase.auth.getSession();
+  if (existingSession?.access_token) return existingSession.access_token;
+
+  try {
+    const res = await fetch("/api/auth/token", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.access_token === "string" && data.access_token ? data.access_token : null;
+  } catch {
+    return null;
+  }
+}
 
 function SuccessInner() {
   const router = useRouter();
@@ -19,6 +45,7 @@ function SuccessInner() {
   const sessionId = useMemo(() => searchParams.get("session_id"), [searchParams]);
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
     const currentSessionId = sessionId;
@@ -30,12 +57,24 @@ function SuccessInner() {
 
     let cancelled = false;
     const started = Date.now();
+    setTimedOut(false);
 
     async function poll() {
       try {
+        const accessToken = await getCheckoutStatusAccessToken();
+        const headers: Record<string, string> = {};
+        if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+        if (typeof window !== "undefined" && (window as unknown as { __OSAI_AUTH_PROOF?: unknown }).__OSAI_AUTH_PROOF) {
+          headers["x-osai-auth-proof"] = JSON.stringify(
+            (window as unknown as { __OSAI_AUTH_PROOF?: unknown }).__OSAI_AUTH_PROOF
+          );
+        }
+
         const res = await fetch(`/api/checkout/session?session_id=${encodeURIComponent(sid)}`, {
           method: "GET",
           cache: "no-store",
+          credentials: "include",
+          headers,
         });
         const data = (await res.json()) as SessionStatus;
         if (cancelled) return;
@@ -51,6 +90,8 @@ function SuccessInner() {
 
       if (Date.now() - started < 120000 && !cancelled) {
         setTimeout(poll, 2200);
+      } else if (!cancelled) {
+        setTimedOut(true);
       }
     }
 
@@ -59,6 +100,11 @@ function SuccessInner() {
       cancelled = true;
     };
   }, [router, sessionId]);
+
+  const waitingMessage =
+    status?.rollout_status === "paid_processing"
+      ? "Payment is confirmed. We are still finalizing your rollout."
+      : "Still processing. This usually takes a few seconds.";
 
   return (
     <section className={styles.wrap}>
@@ -72,13 +118,30 @@ function SuccessInner() {
         {status?.rollout_id ? (
           <p className={styles.ok}>Redirecting to your rollout dashboard...</p>
         ) : (
-          <p className={styles.pending}>Still processing. This usually takes a few seconds.</p>
+          <p className={styles.pending}>{waitingMessage}</p>
         )}
+
+        {timedOut ? (
+          <p className={styles.error}>
+            This is taking longer than expected. Your payment may be complete, but the rollout has not been linked yet.
+            You can retry this page shortly or contact support with your checkout session id.
+          </p>
+        ) : null}
 
         {error ? <p className={styles.error}>{error}</p> : null}
         {status && !status.ok && status.message ? <p className={styles.error}>{status.message}</p> : null}
+        {timedOut && sessionId ? <p className={styles.body}>Checkout session: <code>{sessionId}</code></p> : null}
 
         <div className={styles.actions}>
+          {sessionId ? (
+            <button
+              className={styles.link}
+              onClick={() => window.location.reload()}
+              type="button"
+            >
+              Check again
+            </button>
+          ) : null}
           <Link className={styles.link} href="/generate">
             Return to builder
           </Link>
