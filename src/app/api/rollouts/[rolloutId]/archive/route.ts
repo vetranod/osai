@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
 import { MilestoneStatus } from "@/governance/milestones/milestoneStatus";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,7 @@ function normalizeJoinedMilestone(raw: JoinedMilestone | JoinedMilestone[] | nul
 }
 
 export async function POST(
-  _request: Request,
+  request: Request,
   ctx: { params: Promise<{ rolloutId: string }> }
 ): Promise<Response> {
   const paramsRaw = await ctx.params;
@@ -30,6 +31,8 @@ export async function POST(
   }
 
   const { rolloutId } = paramsParsed.data;
+  const access = await requireRolloutAccess(request, rolloutId);
+  if (!access.ok) return access.response;
   const supabase = getServiceRoleSupabase();
 
   const { data: rollout, error: rolloutErr } = await supabase

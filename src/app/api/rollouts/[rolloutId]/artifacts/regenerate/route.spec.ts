@@ -36,9 +36,18 @@ vi.mock("@/governance/artifacts/generateArtifactsForMilestone", () => ({
   generateArtifactsForMilestone,
 }));
 
+const requireRolloutAccess = vi.fn();
+vi.mock("@/server/requestAuth", () => ({
+  requireRolloutAccess,
+}));
+
 describe("POST /api/rollouts/:rolloutId/artifacts/regenerate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    requireRolloutAccess.mockResolvedValue({
+      ok: true,
+      user: { id: "user-1" },
+    });
     rolloutStateQuery.select.mockReturnValue(rolloutStateQuery);
     rolloutStateQuery.eq.mockResolvedValue({
       data: [

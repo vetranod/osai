@@ -7,9 +7,8 @@
 // ROLLOUT_PLAN, POLICY).
 
 import { z } from "zod";
-import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
-import { userCanAccessRollout } from "@/server/rolloutAccess";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -29,7 +28,7 @@ const ARTIFACT_TYPE_ORDER = [
 type ArtifactType = (typeof ARTIFACT_TYPE_ORDER)[number];
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ rolloutId: string }> }
 ): Promise<Response> {
   const paramsRaw = await ctx.params;
@@ -42,17 +41,8 @@ export async function GET(
   }
 
   const { rolloutId } = paramsParsed.data;
-  const auth = await getSupabaseServerAuthClient();
-  const {
-    data: { user },
-  } = await auth.auth.getUser();
-  if (!user) {
-    return Response.json({ ok: false, error: "Authentication required." }, { status: 401 });
-  }
-  const allowed = await userCanAccessRollout(rolloutId, user.id);
-  if (!allowed) {
-    return Response.json({ ok: false, error: "Rollout not found." }, { status: 404 });
-  }
+  const access = await requireRolloutAccess(req, rolloutId);
+  if (!access.ok) return access.response;
 
   const supabase = getServiceRoleSupabase();
 

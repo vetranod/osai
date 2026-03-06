@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import { supabaseAdmin } from "@/server/supabaseAdmin";
-import { userCanAccessRollout } from "@/server/rolloutAccess";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -17,7 +16,7 @@ type MilestoneRow = {
 };
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ rolloutId: string }> }
 ) {
   const paramsRaw = await ctx.params;
@@ -31,17 +30,8 @@ export async function GET(
   }
 
   const { rolloutId } = parsed.data;
-  const auth = await getSupabaseServerAuthClient();
-  const {
-    data: { user },
-  } = await auth.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  }
-  const allowed = await userCanAccessRollout(rolloutId, user.id);
-  if (!allowed) {
-    return NextResponse.json({ error: "Rollout not found." }, { status: 404 });
-  }
+  const access = await requireRolloutAccess(req, rolloutId);
+  if (!access.ok) return access.response;
 
   const { data, error } = await supabaseAdmin
     .from("rollout_milestone_state")

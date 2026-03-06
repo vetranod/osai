@@ -14,6 +14,7 @@ import {
   generateArtifactsForMilestone,
   type ArtifactType,
 } from "@/governance/artifacts/generateArtifactsForMilestone";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -105,6 +106,8 @@ export async function POST(
   }
 
   const { rolloutId, milestoneId } = paramsParsed.data;
+  const access = await requireRolloutAccess(req, rolloutId);
+  if (!access.ok) return access.response;
 
   let bodyJson: unknown;
   try {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -46,6 +47,8 @@ export async function POST(
 
   const { rolloutId, reclassId } = paramsParsed.data;
   const { acknowledged_by } = bodyParsed.data;
+  const access = await requireRolloutAccess(req, rolloutId);
+  if (!access.ok) return access.response;
 
   const supabase = getServiceRoleSupabase();
 

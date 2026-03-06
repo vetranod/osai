@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
 import type { MilestoneImpact } from "@/governance/reclassification/milestoneImpactPolicy";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -58,7 +59,7 @@ function classifyApplyRpcError(message: string | undefined): { error: string; st
 }
 
 export async function POST(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ rolloutId: string; reclassId: string }> }
 ): Promise<Response> {
   const paramsRaw = await ctx.params;
@@ -71,6 +72,8 @@ export async function POST(
   }
 
   const { rolloutId, reclassId } = parsed.data;
+  const access = await requireRolloutAccess(req, rolloutId);
+  if (!access.ok) return access.response;
 
   const supabase = getServiceRoleSupabase();
 

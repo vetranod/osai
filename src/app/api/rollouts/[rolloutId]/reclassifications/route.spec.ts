@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const rolloutId = "5b45ff74-4835-4f90-a95c-16187e1f6c01";
+const requireRolloutAccess = vi.fn();
+
+vi.mock("@/server/requestAuth", () => ({
+  requireRolloutAccess,
+}));
 
 function createRolloutsBuilder(statusRow: unknown, rolloutRow: unknown) {
   let callCount = 0;
@@ -48,6 +53,10 @@ describe("POST /api/rollouts/:rolloutId/reclassifications", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    requireRolloutAccess.mockResolvedValue({
+      ok: true,
+      user: { id: "user-1" },
+    });
   });
 
   it("persists computed outputs and milestone impacts for a proposal", async () => {

@@ -1,6 +1,7 @@
 import { getServiceRoleSupabase } from "@/lib/supabase-server";
 import { generateArtifactsForMilestone } from "@/governance/artifacts/generateArtifactsForMilestone";
 import { normalizeJoinedMilestone } from "@/governance/milestones/normalizeMilestoneJoin";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,8 @@ export async function PATCH(
   { params }: { params: Promise<{ rolloutId: string }> }
 ): Promise<Response> {
   const { rolloutId } = await params;
+  const access = await requireRolloutAccess(request, rolloutId);
+  if (!access.ok) return access.response;
 
   let body: unknown;
   try {

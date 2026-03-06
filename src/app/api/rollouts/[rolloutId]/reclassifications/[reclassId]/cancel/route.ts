@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/server/supabaseAdmin";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -11,7 +12,7 @@ const ParamsSchema = z.object({
 });
 
 export async function POST(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ rolloutId: string; reclassId: string }> }
 ) {
   const paramsRaw = await ctx.params;
@@ -24,6 +25,8 @@ export async function POST(
   }
 
   const { rolloutId, reclassId } = parsed.data;
+  const access = await requireRolloutAccess(req, rolloutId);
+  if (!access.ok) return access.response;
 
   const { data: rollout, error: rolloutErr } = await supabaseAdmin
     .from("rollouts")

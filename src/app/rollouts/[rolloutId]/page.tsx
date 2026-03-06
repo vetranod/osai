@@ -282,6 +282,37 @@ async function getDashboardAccessToken(): Promise<string | null> {
   return getCachedBrowserSession()?.access_token ?? null;
 }
 
+async function buildDashboardRequestHeaders(headersInit?: HeadersInit): Promise<Record<string, string>> {
+  const headers = new Headers(headersInit ?? undefined);
+  const accessToken = await getDashboardAccessToken();
+  if (accessToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  if (
+    typeof window !== "undefined" &&
+    (window as unknown as { __OSAI_AUTH_PROOF?: unknown }).__OSAI_AUTH_PROOF &&
+    !headers.has("x-osai-auth-proof")
+  ) {
+    headers.set(
+      "x-osai-auth-proof",
+      JSON.stringify((window as unknown as { __OSAI_AUTH_PROOF?: unknown }).__OSAI_AUTH_PROOF)
+    );
+  }
+
+  return Object.fromEntries(headers.entries());
+}
+
+async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<Response> {
+  const headers = await buildDashboardRequestHeaders(init.headers);
+  return fetch(url, {
+    credentials: "include",
+    cache: "no-store",
+    ...init,
+    headers,
+  });
+}
+
 // ---- Artifact Viewer ----
 
 function renderArtifactContent(artifact: Artifact) {
@@ -594,7 +625,7 @@ function ReclassificationPanel({
       if (form.sensitivity_anchor) patch.sensitivity_anchor = form.sensitivity_anchor;
       if (form.leadership_posture) patch.leadership_posture = form.leadership_posture;
 
-      const res = await fetch(`/api/rollouts/${rolloutId}/reclassifications`, {
+      const res = await fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event_type: deriveEventType(), patch }),
@@ -628,7 +659,7 @@ function ReclassificationPanel({
             }
           : {};
 
-      const res = await fetch(
+      const res = await fetchDashboardApi(
         `/api/rollouts/${rolloutId}/reclassifications/${rid}/${action}`,
         {
           method: "POST",
@@ -936,20 +967,11 @@ export default function RolloutDashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      const accessToken = await getDashboardAccessToken();
-      const requestHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined;
-      const fetchWithAuth = (url: string) =>
-        fetch(url, {
-          credentials: "include",
-          cache: "no-store",
-          headers: requestHeaders,
-        });
-
       const [mRes, aRes, rRes, rcRes] = await Promise.all([
-        fetchWithAuth(`/api/rollouts/${rolloutId}/milestones`),
-        fetchWithAuth(`/api/rollouts/${rolloutId}/artifacts`),
-        fetchWithAuth(`/api/rollouts/${rolloutId}`),
-        fetchWithAuth(`/api/rollouts/${rolloutId}/reclassifications`),
+        fetchDashboardApi(`/api/rollouts/${rolloutId}/milestones`),
+        fetchDashboardApi(`/api/rollouts/${rolloutId}/artifacts`),
+        fetchDashboardApi(`/api/rollouts/${rolloutId}`),
+        fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`),
       ]);
       if (
         mRes.status === 401 ||
@@ -1036,7 +1058,7 @@ export default function RolloutDashboard() {
     setArchiveError(null);
     setArchiving(true);
     try {
-      const res = await fetch(`/api/rollouts/${rolloutId}/archive`, { method: "POST" });
+      const res = await fetchDashboardApi(`/api/rollouts/${rolloutId}/archive`, { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.ok === false) {
         setArchiveError(data.error ?? data.message ?? "Archive failed.");
@@ -1058,7 +1080,7 @@ export default function RolloutDashboard() {
       if (isArchived) return;
       // Fire-and-forget: if the regenerate endpoint finds nothing missing it's a no-op.
       try {
-        const res = await fetch(`/api/rollouts/${rolloutId}/artifacts/regenerate`, { method: "POST" });
+        const res = await fetchDashboardApi(`/api/rollouts/${rolloutId}/artifacts/regenerate`, { method: "POST" });
         if (res.ok) {
           const data = await res.json();
           if (data.generated?.length > 0) await loadData();
@@ -1081,7 +1103,7 @@ export default function RolloutDashboard() {
   }
 
   async function postTransition(milestoneId: number, toStatus: MilestoneStatus): Promise<boolean> {
-    const res = await fetch(
+    const res = await fetchDashboardApi(
       `/api/rollouts/${rolloutId}/milestones/${milestoneId}/transition`,
       {
         method: "POST",
@@ -1128,7 +1150,7 @@ export default function RolloutDashboard() {
     // earlier RPC commit succeeded while the HTTP response to the client was lost).
     // The endpoint is idempotent: it skips artifact types that already exist.
     try {
-      const bfRes = await fetch(`/api/rollouts/${rolloutId}/artifacts/regenerate`, { method: "POST" });
+      const bfRes = await fetchDashboardApi(`/api/rollouts/${rolloutId}/artifacts/regenerate`, { method: "POST" });
       if (bfRes.ok) {
         const bfData = await bfRes.json();
         if (Array.isArray(bfData.generated) && bfData.generated.length > 0) {

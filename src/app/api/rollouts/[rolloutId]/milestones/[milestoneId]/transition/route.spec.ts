@@ -41,6 +41,7 @@ function buildSupabaseMock() {
 
 const supabaseMock = buildSupabaseMock();
 const generateArtifactsForMilestone = vi.fn();
+const requireRolloutAccess = vi.fn();
 
 vi.mock("@/server/supabaseAdmin", () => {
   return {
@@ -54,9 +55,19 @@ vi.mock("@/governance/artifacts/generateArtifactsForMilestone", () => {
   };
 });
 
+vi.mock("@/server/requestAuth", () => {
+  return {
+    requireRolloutAccess,
+  };
+});
+
 describe("POST /api/rollouts/:rolloutId/milestones/:milestoneId/transition", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    requireRolloutAccess.mockResolvedValue({
+      ok: true,
+      user: { id: "user-1" },
+    });
     supabaseMock.__queuedResults.length = 0;
     generateArtifactsForMilestone.mockResolvedValue({
       generated: [],

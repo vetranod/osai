@@ -14,6 +14,7 @@ import { supabaseAdmin } from "@/server/supabaseAdmin";
 import { generateArtifactsForMilestone } from "@/governance/artifacts/generateArtifactsForMilestone";
 import type { ArtifactType } from "@/governance/artifacts/generateArtifactsForMilestone";
 import { normalizeJoinedMilestone } from "@/governance/milestones/normalizeMilestoneJoin";
+import { requireRolloutAccess } from "@/server/requestAuth";
 
 export const runtime = "nodejs";
 
@@ -33,7 +34,7 @@ const ParamsSchema = z.object({
 });
 
 export async function POST(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ rolloutId: string }> }
 ) {
   const paramsRaw = await ctx.params;
@@ -46,6 +47,8 @@ export async function POST(
   }
 
   const { rolloutId } = parsed.data;
+  const access = await requireRolloutAccess(req, rolloutId);
+  if (!access.ok) return access.response;
 
   // Fetch all milestone states with their codes
   const { data: milestoneRows, error: msErr } = await supabaseAdmin
