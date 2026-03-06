@@ -413,6 +413,50 @@
   border-left: 2px solid rgb(61 115 177 / 0.26);
 }
 
+.guidesIntro {
+  max-width: 760px;
+  font-size: 15px;
+  color: var(--foreground-muted);
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.guideGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.guideCard {
+  display: block;
+  padding: 24px 22px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 251 255 / 0.98));
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.guideCard:hover {
+  transform: translateY(-1px);
+  border-color: rgb(61 115 177 / 0.28);
+  box-shadow: 0 18px 30px rgb(16 35 69 / 0.08);
+}
+
+.guideCardTitle {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--surface-title);
+  margin-bottom: 10px;
+}
+
+.guideCardText {
+  font-size: 14px;
+  color: var(--surface-body);
+  line-height: 1.75;
+}
+
 .bottomCta {
   margin: 80px 0;
   padding: 80px 56px;
@@ -515,6 +559,10 @@
 
   .forGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .guideGrid {
+    grid-template-columns: 1fr;
   }
 }
 

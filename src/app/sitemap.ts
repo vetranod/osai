@@ -23,5 +23,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.9,
     },
+    {
+      url: absoluteUrl("/ai-governance-for-law-firms"),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    },
+    {
+      url: absoluteUrl("/ai-governance-for-consulting-firms"),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    },
+    {
+      url: absoluteUrl("/ai-policy-for-small-business"),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    },
+    {
+      url: absoluteUrl("/ai-governance-framework-vs-ai-policy"),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.72,
+    },
   ];
 }

@@ -3,6 +3,29 @@ import Link from "next/link";
 import { absoluteUrl, buildPageMetadata, SITE_NAME } from "./seo";
 import styles from "./page.module.css";
 
+const GUIDE_LINKS = [
+  {
+    href: "/ai-governance-for-law-firms",
+    title: "AI Governance for Law Firms",
+    text: "Clarify rollout boundaries and review expectations for confidentiality-heavy legal work.",
+  },
+  {
+    href: "/ai-governance-for-consulting-firms",
+    title: "AI Governance for Consulting Firms",
+    text: "Balance delivery speed with stronger guardrails for client-facing consulting teams.",
+  },
+  {
+    href: "/ai-policy-for-small-business",
+    title: "AI Policy for Small Business",
+    text: "Give smaller teams a practical AI operating position before ad hoc usage becomes the norm.",
+  },
+  {
+    href: "/ai-governance-framework-vs-ai-policy",
+    title: "AI Governance Framework vs AI Policy",
+    text: "Understand why a rules document alone is not the same thing as a rollout framework.",
+  },
+] as const;
+
 export const metadata: Metadata = buildPageMetadata({
   title: "AI Governance Framework for Small Teams | DeploySure",
   description:
@@ -216,6 +239,23 @@ export default function LandingPage() {
           DeploySure is best suited to teams with fewer than 25 employees and
           other small businesses that need rollout planning and governance structure.
         </p>
+      </section>
+
+      <section className={styles.section}>
+        <p className={styles.sectionLabel}>Guides</p>
+        <h2 className={styles.sectionHeading}>Explore AI governance by use case</h2>
+        <p className={styles.guidesIntro}>
+          These public guides are designed to answer narrower search intent and help teams
+          understand where a governance framework fits before they enter the builder.
+        </p>
+        <div className={styles.guideGrid}>
+          {GUIDE_LINKS.map((guide) => (
+            <Link key={guide.href} href={guide.href} className={styles.guideCard}>
+              <h3 className={styles.guideCardTitle}>{guide.title}</h3>
+              <p className={styles.guideCardText}>{guide.text}</p>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className={styles.bottomCta}>
