@@ -1,5 +1,6 @@
 "use client";
 
+import { getCachedBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export type BrowserAuthBridgeResult =
@@ -21,8 +22,11 @@ export async function bridgeBrowserSessionToServer(): Promise<BrowserAuthBridgeR
   const {
     data: { session },
   } = await supabase.auth.getSession();
+  const cachedSession = getCachedBrowserSession();
+  const accessToken = session?.access_token || cachedSession?.access_token || "";
+  const refreshToken = session?.refresh_token || cachedSession?.refresh_token || "";
 
-  if (!session?.access_token || !session.refresh_token) {
+  if (!accessToken || !refreshToken) {
     return {
       ok: false,
       message: "No active browser session was found.",
@@ -37,11 +41,11 @@ export async function bridgeBrowserSessionToServer(): Promise<BrowserAuthBridgeR
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
+      access_token: accessToken,
+      refresh_token: refreshToken,
     }),
   })
     .then(async (res) => {

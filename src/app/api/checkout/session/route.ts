@@ -5,6 +5,22 @@ import { findRolloutByCheckoutSessionId } from "@/server/rolloutCreation";
 
 export const runtime = "nodejs";
 
+function resolveCheckoutUserId(session: {
+  client_reference_id?: string | null;
+  metadata?: Record<string, string | null> | null;
+}): string | null {
+  const clientReferenceId =
+    typeof session.client_reference_id === "string" && session.client_reference_id
+      ? session.client_reference_id
+      : null;
+  const metadataUserId =
+    typeof session.metadata?.user_id === "string" && session.metadata.user_id
+      ? session.metadata.user_id
+      : null;
+
+  return clientReferenceId || metadataUserId;
+}
+
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("session_id");
@@ -90,7 +106,8 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const stripe = getStripeServerClient();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (session.client_reference_id && session.client_reference_id !== user.id) {
+    const checkoutUserId = resolveCheckoutUserId(session);
+    if (checkoutUserId && checkoutUserId !== user.id) {
       return Response.json({ ok: false, message: "Forbidden." }, { status: 403 });
     }
 

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
+import { cacheBrowserSession, getCachedBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
 
@@ -20,6 +21,7 @@ async function getCheckoutStatusAccessToken(): Promise<string | null> {
   const supabase = getSupabaseBrowserClient();
   const { data: refreshed } = await supabase.auth.refreshSession();
   if (refreshed.session?.access_token) {
+    cacheBrowserSession(refreshed.session);
     await bridgeBrowserSessionToServer();
     return refreshed.session.access_token;
   }
@@ -28,8 +30,22 @@ async function getCheckoutStatusAccessToken(): Promise<string | null> {
     data: { session: existingSession },
   } = await supabase.auth.getSession();
   if (existingSession?.access_token) {
+    cacheBrowserSession(existingSession);
     await bridgeBrowserSessionToServer();
     return existingSession.access_token;
+  }
+
+  const cachedSession = getCachedBrowserSession();
+  if (cachedSession) {
+    const { data: restored, error: restoreError } = await supabase.auth.setSession({
+      access_token: cachedSession.access_token,
+      refresh_token: cachedSession.refresh_token,
+    });
+    if (!restoreError && restored.session?.access_token) {
+      cacheBrowserSession(restored.session);
+      await bridgeBrowserSessionToServer();
+      return restored.session.access_token;
+    }
   }
 
   try {
@@ -38,12 +54,15 @@ async function getCheckoutStatusAccessToken(): Promise<string | null> {
       credentials: "include",
       cache: "no-store",
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return typeof data?.access_token === "string" && data.access_token ? data.access_token : null;
+    if (res.ok) {
+      const data = await res.json();
+      return typeof data?.access_token === "string" && data.access_token ? data.access_token : null;
+    }
   } catch {
-    return null;
+    // Fall through to cached session token.
   }
+
+  return getCachedBrowserSession()?.access_token ?? null;
 }
 
 function SuccessInner() {

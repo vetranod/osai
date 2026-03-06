@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
+import { cacheBrowserSession, getCachedBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "../confirmed/page.module.css";
 
@@ -38,6 +39,16 @@ function AuthContinuePageInner() {
       }
 
       const supabase = getSupabaseBrowserClient();
+      const cachedSession = getCachedBrowserSession();
+      if (cachedSession) {
+        const { data: restored, error: restoreError } = await supabase.auth.setSession({
+          access_token: cachedSession.access_token,
+          refresh_token: cachedSession.refresh_token,
+        });
+        if (!restoreError && restored.session?.access_token) {
+          cacheBrowserSession(restored.session);
+        }
+      }
       const {
         data: { session },
       } = await supabase.auth.getSession();

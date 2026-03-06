@@ -9,6 +9,19 @@ function isRolloutCreationReady(session: Stripe.Checkout.Session): boolean {
   return session.payment_status === "paid" || session.payment_status === "no_payment_required";
 }
 
+function resolveCheckoutUserId(session: Stripe.Checkout.Session): string | null {
+  const clientReferenceId =
+    typeof session.client_reference_id === "string" && session.client_reference_id
+      ? session.client_reference_id
+      : null;
+  const metadataUserId =
+    typeof session.metadata?.user_id === "string" && session.metadata.user_id
+      ? session.metadata.user_id
+      : null;
+
+  return clientReferenceId || metadataUserId;
+}
+
 async function handleCompletedSession(session: Stripe.Checkout.Session): Promise<void> {
   if (!session.id) return;
   if (!isRolloutCreationReady(session)) {
@@ -28,6 +41,11 @@ async function handleCompletedSession(session: Stripe.Checkout.Session): Promise
     throw new Error("Checkout metadata was missing or invalid.");
   }
 
+  const checkoutUserId = resolveCheckoutUserId(session);
+  if (!checkoutUserId) {
+    throw new Error("Checkout session was missing user linkage.");
+  }
+
   await createRolloutFromInputs({
     inputs: payload.inputs,
     identityFields: payload.identity,
@@ -36,7 +54,7 @@ async function handleCompletedSession(session: Stripe.Checkout.Session): Promise
       provider: "stripe",
       checkout_session_id: session.id,
       payment_status: session.payment_status ?? "unknown",
-      user_id: session.client_reference_id ?? null,
+      user_id: checkoutUserId,
     },
   });
 }
