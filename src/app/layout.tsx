@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { createAuthProof, type AuthProof } from "@/lib/auth-proof";
+import { buildPageMetadata, SITE_NAME } from "@/app/seo";
 import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import "./globals.css";
 import styles from "./layout.module.css";
@@ -33,8 +34,22 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
 }
 
 export const metadata: Metadata = {
-  title: `${PRODUCT_NAME} — AI Governance Platform`,
-  description: "DeploySure gives your organization structured, auditable AI governance — ready to adopt in minutes.",
+  ...buildPageMetadata({
+    title: `${PRODUCT_NAME} | AI Governance Platform`,
+    description:
+      "DeploySure gives professional teams a structured AI governance framework with rollout guardrails, review controls, and a client-ready policy packet.",
+    path: "/",
+    keywords: [
+      "AI governance",
+      "AI policy generator",
+      "AI rollout framework",
+      "AI guardrails",
+      "small business AI governance",
+      "professional services AI policy",
+    ],
+  }),
+  applicationName: SITE_NAME,
+  category: "business",
 };
 
 export default async function RootLayout({

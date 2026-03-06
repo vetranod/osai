@@ -1,0 +1,17 @@
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/app/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Authentication | DeploySure",
+  description: "Secure authentication flow for DeploySure accounts.",
+  path: "/auth",
+  noIndex: true,
+});
+
+export default function AuthLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return children;
+}

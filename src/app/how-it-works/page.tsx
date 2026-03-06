@@ -1,9 +1,72 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { absoluteUrl, buildPageMetadata } from "../seo";
 import styles from "./page.module.css";
 
+export const metadata: Metadata = buildPageMetadata({
+  title: "How AI Governance Framework Generation Works | DeploySure",
+  description:
+    "See how DeploySure evaluates AI rollout inputs, assigns governance posture, and produces a structured governance packet for professional teams.",
+  path: "/how-it-works",
+  keywords: [
+    "how AI governance works",
+    "AI rollout planning",
+    "AI governance process",
+    "deterministic AI governance",
+  ],
+});
+
 export default function HowItWorksPage() {
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What inputs does DeploySure use?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "DeploySure evaluates the primary goal, current adoption level, data sensitivity, and leadership posture for the rollout.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What does the system produce?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "It produces a structured AI governance packet covering rollout posture, guardrails, review structure, milestone rollout planning, and policy guidance.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Who is DeploySure for?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "DeploySure is designed for professional teams and small organizations that want to adopt AI without losing operational control.",
+        },
+      },
+    ],
+  };
+
+  const aboutJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "How DeploySure Works",
+    url: absoluteUrl("/how-it-works"),
+    description:
+      "Overview of DeploySure's deterministic AI governance framework generation process.",
+  };
+
   return (
     <div className={styles.wrap}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutJsonLd) }}
+      />
       <section className={styles.hero}>
         <p className={styles.heroLabel}>How DeploySure Works</p>
         <h1 className={styles.heroTitle}>The methodology behind the framework.</h1>

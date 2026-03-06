@@ -1,5 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { absoluteUrl, buildPageMetadata, SITE_NAME } from "./seo";
 import styles from "./page.module.css";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "AI Governance Framework for Small Teams | DeploySure",
+  description:
+    "Generate a structured AI governance framework with rollout pacing, review controls, usage guardrails, and a polished governance packet for your firm.",
+  path: "/",
+  keywords: [
+    "AI governance framework",
+    "AI policy for small business",
+    "AI governance for law firms",
+    "AI governance for consultants",
+    "AI rollout plan",
+    "AI guardrail policy",
+  ],
+});
 
 function PacketPreview({ compact = false }: { compact?: boolean }) {
   return (
@@ -43,8 +60,30 @@ function PacketPreview({ compact = false }: { compact?: boolean }) {
 }
 
 export default function LandingPage() {
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: SITE_NAME,
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    url: absoluteUrl("/"),
+    description:
+      "DeploySure helps professional teams generate a structured AI governance framework with rollout guardrails, review controls, and implementation milestones.",
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "USD",
+      price: "150",
+      availability: "https://schema.org/InStock",
+      url: absoluteUrl("/generate"),
+    },
+  };
+
   return (
     <div className={styles.wrap}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <span className={styles.heroKicker}>DeploySure</span>
