@@ -2,24 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase-env";
 
-function isProtectedPath(pathname: string): boolean {
-  return (
-    pathname === "/generate" ||
-    pathname === "/auth/confirmed" ||
-    pathname === "/rollouts" ||
-    pathname.startsWith("/rollouts/") ||
-    pathname === "/api/rollouts" ||
-    pathname.startsWith("/api/rollouts/") ||
-    pathname.startsWith("/api/billing/")
-  );
-}
-
-function isApiPath(pathname: string): boolean {
+function isProtectedApiPath(pathname: string): boolean {
   return (
     pathname === "/api/rollouts" ||
     pathname.startsWith("/api/rollouts/") ||
-    pathname.startsWith("/api/checkout/") ||
-    pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/billing/")
   );
 }
@@ -42,7 +28,7 @@ function getCanonicalHost(): string | null {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const { pathname, search } = request.nextUrl;
+  const { pathname } = request.nextUrl;
   const hasBearerAuth = request.headers.get("authorization")?.startsWith("Bearer ") ?? false;
   const canonicalHost = getCanonicalHost();
   const requestHost = request.nextUrl.host;
@@ -83,22 +69,14 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     user = null;
   }
 
-  if (!user && isProtectedPath(pathname)) {
-    if (isApiPath(pathname)) {
-      // Allow API routes to proceed when caller provides a bearer token.
-      // Route handlers can validate token directly even if auth cookie is stale/missing.
-      if (hasBearerAuth) return response;
-      return NextResponse.json(
-        { ok: false, message: "Authentication required." },
-        { status: 401 }
-      );
-    }
-
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
-    loginUrl.search = "";
-    loginUrl.searchParams.set("next", `${pathname}${search}`);
-    return NextResponse.redirect(loginUrl);
+  if (!user && isProtectedApiPath(pathname)) {
+    // Allow API routes to proceed when caller provides a bearer token.
+    // Route handlers can validate token directly even if auth cookie is stale/missing.
+    if (hasBearerAuth) return response;
+    return NextResponse.json(
+      { ok: false, message: "Authentication required." },
+      { status: 401 }
+    );
   }
 
   if (user && pathname === "/login") {
