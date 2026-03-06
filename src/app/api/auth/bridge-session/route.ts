@@ -26,6 +26,18 @@ export async function POST(request: Request): Promise<Response> {
 
   const supabase = await getSupabaseServerAuthClient();
   const { access_token, refresh_token } = parsed.data;
+  const requestHost =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    new URL(request.url).host;
+  const appHost = (() => {
+    try {
+      const app = process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL;
+      return app ? new URL(app).host : null;
+    } catch {
+      return null;
+    }
+  })();
 
   const {
     data: { user: tokenUser },
@@ -33,7 +45,14 @@ export async function POST(request: Request): Promise<Response> {
   } = await supabase.auth.getUser(access_token);
   if (tokenError || !tokenUser) {
     return Response.json(
-      { ok: false, message: "Invalid access token." },
+      {
+        ok: false,
+        message: "Invalid access token.",
+        reason: "invalid_access_token",
+        details: tokenError?.message ?? null,
+        request_host: requestHost,
+        app_host: appHost,
+      },
       { status: 401 }
     );
   }
@@ -44,7 +63,14 @@ export async function POST(request: Request): Promise<Response> {
   });
   if (sessionError) {
     return Response.json(
-      { ok: false, message: "Failed to bridge session.", details: sessionError.message },
+      {
+        ok: false,
+        message: "Failed to bridge session.",
+        reason: "set_session_failed",
+        details: sessionError.message,
+        request_host: requestHost,
+        app_host: appHost,
+      },
       { status: 401 }
     );
   }
@@ -52,5 +78,7 @@ export async function POST(request: Request): Promise<Response> {
   return Response.json({
     ok: true,
     user_id: tokenUser.id,
+    request_host: requestHost,
+    app_host: appHost,
   });
 }

@@ -33,21 +33,28 @@ function AuthContinuePageInner() {
         return;
       }
 
-      let bridged = false;
+      let bridgeError: string | null = null;
       for (let attempt = 0; attempt < 3; attempt += 1) {
-        bridged = await bridgeBrowserSessionToServer();
-        if (bridged) break;
+        const bridged = await bridgeBrowserSessionToServer();
+        if (bridged.ok) {
+          window.location.assign(next);
+          return;
+        }
+        bridgeError = [
+          bridged.message,
+          bridged.reason ? `reason=${bridged.reason}` : null,
+          bridged.details ? `details=${bridged.details}` : null,
+          bridged.request_host ? `request_host=${bridged.request_host}` : null,
+          bridged.app_host ? `app_host=${bridged.app_host}` : null,
+        ]
+          .filter(Boolean)
+          .join(" | ");
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
-      if (!bridged) {
-        if (!cancelled) {
-          setError("We could not finalize your authenticated session on the server. Sign in again to continue.");
-        }
-        return;
+      if (!cancelled) {
+        setError(bridgeError ?? "We could not finalize your authenticated session on the server. Sign in again to continue.");
       }
-
-      window.location.assign(next);
     }
 
     void continueToTarget();
