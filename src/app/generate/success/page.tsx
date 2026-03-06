@@ -107,8 +107,8 @@ function SuccessInner() {
         setStatus(data);
 
         if (res.ok && data.ok && data.rollout_id) {
-          await bridgeBrowserSessionToServer();
-          router.replace(`/auth/continue?next=${encodeURIComponent(`/rollouts/${data.rollout_id}`)}`);
+          void bridgeBrowserSessionToServer();
+          router.replace(`/rollouts/${data.rollout_id}`);
           return;
         }
       } catch {

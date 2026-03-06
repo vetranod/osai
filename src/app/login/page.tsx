@@ -86,37 +86,22 @@ function LoginPageInner() {
       const supabase = getSupabaseBrowserClient();
 
       if (mode === "sign_in") {
-        const res = await withTimeout(
-          fetch("/api/auth/sign-in", {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          }),
+        const { data: signInData, error: signInError } = await withTimeout(
+          supabase.auth.signInWithPassword({ email, password }),
           AUTH_TIMEOUT_MS
         );
-        const signInData = (await res.json().catch(() => null)) as
-          | { ok?: boolean; message?: string; access_token?: string; refresh_token?: string }
-          | null;
-        if (!res.ok || signInData?.ok === false) {
-          setError(signInData?.message ?? "Sign-in failed.");
+        if (signInError) {
+          setError(signInError.message);
           return;
         }
 
-        if (signInData?.access_token && signInData.refresh_token) {
-          const supabase = getSupabaseBrowserClient();
-          const { data: restored, error: restoreError } = await supabase.auth.setSession({
-            access_token: signInData.access_token,
-            refresh_token: signInData.refresh_token,
-          });
-          if (!restoreError && restored.session?.access_token) {
-            cacheBrowserSession(restored.session);
-            await bridgeBrowserSessionToServer();
-          }
+        if (signInData.session?.access_token && signInData.session.refresh_token) {
+          cacheBrowserSession(signInData.session);
+          void bridgeBrowserSessionToServer();
         }
 
         setStatus("Signed in. Redirecting...");
-        window.location.assign(`/auth/continue?next=${encodeURIComponent(nextPath)}`);
+        window.location.assign(nextPath);
         return;
       }
 

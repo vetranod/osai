@@ -18,7 +18,7 @@ function sanitizeNextPath(raw: string | null): string {
 function AuthContinuePageInner() {
   const searchParams = useSearchParams();
   const next = useMemo(() => sanitizeNextPath(searchParams.get("next")), [searchParams]);
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>("Finalizing your secure session.");
 
   useEffect(() => {
     let cancelled = false;
@@ -53,33 +53,19 @@ function AuthContinuePageInner() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session?.access_token || !session.refresh_token) {
-        if (!cancelled) setError("No active browser session was found. Sign in again to continue.");
-        return;
-      }
-
-      let bridgeError: string | null = null;
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        const bridged = await bridgeBrowserSessionToServer();
-        if (bridged.ok) {
-          window.location.assign(next);
-          return;
+      if (session?.access_token && session.refresh_token) {
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          const bridged = await bridgeBrowserSessionToServer();
+          if (bridged.ok) {
+            window.location.assign(next);
+            return;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
-        bridgeError = [
-          bridged.message,
-          bridged.reason ? `reason=${bridged.reason}` : null,
-          bridged.details ? `details=${bridged.details}` : null,
-          bridged.request_host ? `request_host=${bridged.request_host}` : null,
-          bridged.app_host ? `app_host=${bridged.app_host}` : null,
-        ]
-          .filter(Boolean)
-          .join(" | ");
-        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
-      if (!cancelled) {
-        setError(bridgeError ?? "We could not finalize your authenticated session on the server. Sign in again to continue.");
-      }
+      if (!cancelled) setStatus("Continuing to your next page.");
+      window.location.assign(next);
     }
 
     void continueToTarget();
@@ -87,8 +73,6 @@ function AuthContinuePageInner() {
       cancelled = true;
     };
   }, [next]);
-
-  const loginHref = `/login?next=${encodeURIComponent(next)}`;
 
   return (
     <section className={styles.wrap}>
@@ -98,16 +82,10 @@ function AuthContinuePageInner() {
         <p className={styles.subtitle}>
           We are finalizing your secure session and taking you back to your rollout.
         </p>
-        {error ? (
-          <>
-            <p className={styles.subtitle}>{error}</p>
-            <Link href={loginHref} className={styles.primaryButton}>
-              Return to sign in
-            </Link>
-          </>
-        ) : (
-          <p className={styles.subtitle}>Please wait a moment.</p>
-        )}
+        <p className={styles.subtitle}>{status}</p>
+        <Link href={next} className={styles.primaryButton}>
+          Continue now
+        </Link>
       </div>
     </section>
   );

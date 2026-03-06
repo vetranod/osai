@@ -802,8 +802,8 @@ function FinalizeStep({
         setError("Missing dashboard URL.");
         return;
       }
-      await bridgeBrowserSessionToServer();
-      window.location.assign(`/auth/continue?next=${encodeURIComponent(data.dashboard_url)}`);
+      void bridgeBrowserSessionToServer();
+      window.location.assign(data.dashboard_url);
     } catch {
       setError("Network error — please try again.");
     } finally {
