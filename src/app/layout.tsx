@@ -79,11 +79,12 @@ export default async function RootLayout({
         }
       : null;
     // Invited demo users (app_metadata.demo_access) see the demo button without the global env flag.
-    if (currentUser?.app_metadata?.demo_access === true) {
+    const hasDemoAccess = currentUser?.app_metadata?.demo_access === true;
+    if (hasDemoAccess) {
       publicEnv.demoCheckoutEnabled = true;
     }
     if (user?.email && user.email_confirmed_at) {
-      authProof = createAuthProof(user.id, user.email);
+      authProof = createAuthProof(user.id, user.email, hasDemoAccess);
     }
   } catch {
     // Auth config/runtime can be unavailable in some deploys; keep shell renderable.

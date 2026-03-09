@@ -131,9 +131,26 @@ export async function POST(request: Request): Promise<Response> {
             id: proof.userId,
             email: proof.email,
             email_confirmed_at: new Date().toISOString(),
-            has_demo_access: false,
+            has_demo_access: proof.demoAccess === true,
           };
           authReason = "signed_auth_proof";
+        }
+      } catch {
+        // ignore malformed proof
+      }
+    }
+  }
+
+  // Secondary demo-access grant via auth proof: the layout signs demoAccess=true
+  // when app_metadata.demo_access is set server-side. If cookie/bearer auth found
+  // the user but has_demo_access is still false, upgrade it from the verified proof.
+  if (user && !user.has_demo_access) {
+    const rawProof = request.headers.get("x-osai-auth-proof");
+    if (rawProof) {
+      try {
+        const proof = verifyAuthProof(JSON.parse(rawProof));
+        if (proof && proof.userId === user.id && proof.demoAccess === true) {
+          user = { ...user, has_demo_access: true };
         }
       } catch {
         // ignore malformed proof

@@ -5,6 +5,7 @@ export type AuthProof = {
   email: string;
   exp: number;
   sig: string;
+  demoAccess?: boolean;
 };
 
 function getAuthProofSecret(): string {
@@ -15,18 +16,24 @@ function getAuthProofSecret(): string {
   return secret;
 }
 
-function signPayload(userId: string, email: string, exp: number): string {
-  const payload = `${userId}|${email}|${exp}`;
+function signPayload(userId: string, email: string, exp: number, demoAccess: boolean): string {
+  const payload = `${userId}|${email}|${exp}|${demoAccess ? "1" : "0"}`;
   return createHmac("sha256", getAuthProofSecret()).update(payload).digest("hex");
 }
 
-export function createAuthProof(userId: string, email: string, ttlSeconds = 1800): AuthProof {
+export function createAuthProof(
+  userId: string,
+  email: string,
+  hasDemoAccess = false,
+  ttlSeconds = 1800
+): AuthProof {
   const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
   return {
     userId,
     email,
     exp,
-    sig: signPayload(userId, email, exp),
+    sig: signPayload(userId, email, exp, hasDemoAccess),
+    demoAccess: hasDemoAccess || undefined,
   };
 }
 
@@ -40,7 +47,8 @@ export function verifyAuthProof(candidate: unknown): AuthProof | null {
   if (typeof proof.sig !== "string") return null;
   if (proof.exp < Math.floor(Date.now() / 1000)) return null;
 
-  const expected = signPayload(proof.userId, proof.email, proof.exp);
+  const demoAccess = proof.demoAccess === true;
+  const expected = signPayload(proof.userId, proof.email, proof.exp, demoAccess);
   const a = Buffer.from(expected, "utf8");
   const b = Buffer.from(proof.sig, "utf8");
   if (a.length !== b.length) return null;
@@ -51,5 +59,6 @@ export function verifyAuthProof(candidate: unknown): AuthProof | null {
     email: proof.email,
     exp: proof.exp,
     sig: proof.sig,
+    demoAccess: demoAccess || undefined,
   };
 }
