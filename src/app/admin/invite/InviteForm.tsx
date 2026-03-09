@@ -15,8 +15,24 @@ export default function InviteForm() {
     try {
       const supabase = getSupabaseBrowserClient();
       const { data: { session } } = await supabase.auth.getSession();
+      let accessToken = session?.access_token ?? null;
+
+      // Fall back to server-side token endpoint (covers SSR-only login sessions
+      // where the browser Supabase client was never hydrated with setSession).
+      if (!accessToken) {
+        try {
+          const tokenRes = await fetch("/api/auth/token", { credentials: "include" });
+          if (tokenRes.ok) {
+            const tokenData = await tokenRes.json();
+            if (typeof tokenData?.access_token === "string") {
+              accessToken = tokenData.access_token;
+            }
+          }
+        } catch { /* ignore */ }
+      }
+
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
       const res = await fetch("/api/admin/demo-invite", {
         method: "POST",
