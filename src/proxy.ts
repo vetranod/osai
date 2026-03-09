@@ -96,6 +96,7 @@ export const config = {
     "/generate",
     "/auth/confirmed",
     "/rollouts/:path*",
+    "/admin/:path*",
     "/api/rollouts/:path*",
     "/api/checkout/:path*",
     "/api/auth/:path*",
