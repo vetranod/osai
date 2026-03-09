@@ -94,6 +94,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 export const config = {
   matcher: [
     "/generate",
+    "/demo/generate",
     "/auth/confirmed",
     "/rollouts/:path*",
     "/admin/:path*",

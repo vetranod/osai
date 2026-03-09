@@ -18,9 +18,10 @@ export async function GET(request: Request): Promise<Response> {
       const supabase = await getSupabaseServerAuthClient();
       await supabase.auth.exchangeCodeForSession(code);
 
-      const confirmedUrl = new URL("/auth/confirmed", requestUrl.origin);
-      confirmedUrl.searchParams.set("next", next);
-      return NextResponse.redirect(confirmedUrl);
+      // Redirect directly to the destination — no intermediate confirmed page.
+      // For invite/magic-link flows the user is already authenticated at this point.
+      const destUrl = new URL(next, requestUrl.origin);
+      return NextResponse.redirect(destUrl);
     } catch {
       const loginUrl = new URL("/login", requestUrl.origin);
       loginUrl.searchParams.set("next", next);

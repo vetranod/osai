@@ -5,23 +5,23 @@ import { sendDemoInvite } from "./actions";
 
 export default function InviteForm() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "success" | "existing" | "error">("idle");
+  const [sentEmail, setSentEmail] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("idle");
-    setMessage("");
     startTransition(async () => {
       const result = await sendDemoInvite(email);
       if (result.ok) {
-        setStatus("success");
-        setMessage(`Invite sent to ${result.email}`);
+        setSentEmail(result.email);
+        setStatus(result.note === "existing_user" ? "existing" : "success");
         setEmail("");
       } else {
+        setErrorMsg(result.message);
         setStatus("error");
-        setMessage(result.message);
       }
     });
   }
@@ -34,7 +34,9 @@ export default function InviteForm() {
         demo wizard and can generate their governance packet — no payment required.
       </p>
       <form onSubmit={handleSubmit}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 500, marginBottom: 6, color: "#374151" }}>
+        <label
+          style={{ display: "block", fontSize: 13, fontWeight: 500, marginBottom: 6, color: "#374151" }}
+        >
           Email address
         </label>
         <input
@@ -69,19 +71,39 @@ export default function InviteForm() {
             opacity: isPending ? 0.7 : 1,
           }}
         >
-          {isPending ? "Sending..." : "Send invite"}
+          {isPending ? "Sending…" : "Send invite"}
         </button>
       </form>
-      {message && (
-        <p
+
+      {status === "success" && (
+        <p style={{ marginTop: 16, fontSize: 14, color: "#16a34a" }}>
+          ✓ Invite sent to <strong>{sentEmail}</strong>. They'll receive a magic link to the demo wizard.
+        </p>
+      )}
+
+      {status === "existing" && (
+        <div
           style={{
             marginTop: 16,
+            padding: "12px 14px",
+            background: "#fefce8",
+            border: "1px solid #fde68a",
+            borderRadius: 6,
             fontSize: 14,
-            color: status === "error" ? "#dc2626" : "#16a34a",
+            color: "#713f12",
           }}
         >
-          {message}
-        </p>
+          <strong>{sentEmail}</strong> already has an account — demo access has been granted.
+          Ask them to sign in at{" "}
+          <a href="/demo/generate" style={{ color: "#92400e" }}>
+            deploysure.com/demo/generate
+          </a>
+          .
+        </div>
+      )}
+
+      {status === "error" && (
+        <p style={{ marginTop: 16, fontSize: 14, color: "#dc2626" }}>{errorMsg}</p>
       )}
     </div>
   );
