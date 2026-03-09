@@ -171,7 +171,10 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ ok: false, message: "Not found." }, { status: 404 });
   }
 
-  if (!user.email || !user.email_confirmed_at) {
+  // Invited users (has_demo_access) skip the email-confirmation gate —
+  // the invite flow confirms ownership; requiring email_confirmed_at blocks
+  // users who accepted via the implicit-flow token path.
+  if (!user.has_demo_access && (!user.email || !user.email_confirmed_at)) {
     return Response.json(
       {
         ok: false,

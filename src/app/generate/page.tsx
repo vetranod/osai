@@ -946,7 +946,7 @@ function FinalizeStep({
               className={styles.btnPrimary}
               disabled={!canSubmit || loading}
             >
-              {loading ? "Redirecting..." : "Continue to payment ->"}
+              {loading ? "Redirecting..." : "Continue to payment"}
             </button>
             {canSkip && (
               <button

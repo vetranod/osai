@@ -95,6 +95,7 @@ export async function sendDemoInvite(
     if (inviteData.user?.id) {
       await admin.auth.admin.updateUserById(inviteData.user.id, {
         app_metadata: { demo_access: true },
+        email_confirm: true,
       });
     }
 
