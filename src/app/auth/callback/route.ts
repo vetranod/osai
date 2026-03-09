@@ -48,8 +48,16 @@ export async function GET(request: Request): Promise<Response> {
   var p = new URLSearchParams(hash);
   var at = p.get('access_token');
   var rt = p.get('refresh_token');
+  var exp = p.get('expires_at');
   var next = decodeURIComponent(${JSON.stringify(encodedNext)});
   if(at && rt){
+    try{
+      window.sessionStorage.setItem('osai_browser_session_cache_v1',JSON.stringify({
+        access_token:at,refresh_token:rt,
+        expires_at:exp?parseInt(exp,10):null,
+        user_id:null,email:null,cached_at:Date.now()
+      }));
+    }catch(e){}
     fetch('/api/auth/bridge-session',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
