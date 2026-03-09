@@ -78,6 +78,10 @@ export default async function RootLayout({
           email_confirmed_at: currentUser.email_confirmed_at ?? null,
         }
       : null;
+    // Invited demo users (app_metadata.demo_access) see the demo button without the global env flag.
+    if (currentUser?.app_metadata?.demo_access === true) {
+      publicEnv.demoCheckoutEnabled = true;
+    }
     if (user?.email && user.email_confirmed_at) {
       authProof = createAuthProof(user.id, user.email);
     }

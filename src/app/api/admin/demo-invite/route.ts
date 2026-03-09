@@ -1,0 +1,65 @@
+import { getServiceRoleSupabase } from "@/lib/supabase-server";
+import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
+
+export const runtime = "nodejs";
+
+function getAdminEmail(): string {
+  return (process.env.OSAI_ADMIN_EMAIL ?? "").trim().toLowerCase();
+}
+
+export async function POST(request: Request): Promise<Response> {
+  // Must be authenticated as the admin account.
+  const supabase = await getSupabaseServerAuthClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || !user.email) {
+    return Response.json({ ok: false, message: "Authentication required." }, { status: 401 });
+  }
+
+  const adminEmail = getAdminEmail();
+  if (!adminEmail || user.email.trim().toLowerCase() !== adminEmail) {
+    return Response.json({ ok: false, message: "Not authorized." }, { status: 403 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ ok: false, message: "Invalid JSON body." }, { status: 400 });
+  }
+
+  const email =
+    typeof (body as Record<string, unknown>).email === "string"
+      ? ((body as Record<string, unknown>).email as string).trim().toLowerCase()
+      : "";
+
+  if (!email || !email.includes("@")) {
+    return Response.json({ ok: false, message: "Valid email required." }, { status: 400 });
+  }
+
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? process.env.SITE_URL ?? "https://deploysure.com";
+  const redirectTo = `${appUrl}/auth/callback?next=/demo/generate`;
+
+  const admin = getServiceRoleSupabase();
+
+  const { data: inviteData, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { demo_access: true }, // user_metadata
+    redirectTo,
+  });
+
+  if (error) {
+    return Response.json({ ok: false, message: error.message }, { status: 500 });
+  }
+
+  // Also stamp app_metadata (tamper-proof — only writable via service role).
+  if (inviteData.user?.id) {
+    await admin.auth.admin.updateUserById(inviteData.user.id, {
+      app_metadata: { demo_access: true },
+    });
+  }
+
+  return Response.json({ ok: true, email });
+}

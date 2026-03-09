@@ -25,10 +25,6 @@ function isDemoEmailAllowed(email: string): boolean {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  if (!isDemoCheckoutEnabled()) {
-    return Response.json({ ok: false, message: "Not found." }, { status: 404 });
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -59,6 +55,7 @@ export async function POST(request: Request): Promise<Response> {
     id: string;
     email: string | null;
     email_confirmed_at: string | null;
+    has_demo_access: boolean;
   };
 
   const supabase = await getSupabaseServerAuthClient();
@@ -70,6 +67,7 @@ export async function POST(request: Request): Promise<Response> {
         id: cookieUser.id,
         email: cookieUser.email ?? null,
         email_confirmed_at: cookieUser.email_confirmed_at ?? null,
+        has_demo_access: cookieUser.app_metadata?.demo_access === true,
       }
     : null;
   let authReason:
@@ -94,6 +92,7 @@ export async function POST(request: Request): Promise<Response> {
           id: tokenUser.id,
           email: tokenUser.email ?? null,
           email_confirmed_at: tokenUser.email_confirmed_at ?? null,
+          has_demo_access: tokenUser.app_metadata?.demo_access === true,
         };
         authReason = "bearer_token";
       } else {
@@ -115,6 +114,7 @@ export async function POST(request: Request): Promise<Response> {
           id: sessionUser.id,
           email: sessionUser.email ?? null,
           email_confirmed_at: sessionUser.email_confirmed_at ?? null,
+          has_demo_access: sessionUser.app_metadata?.demo_access === true,
         };
         authReason = "cookie_session_token";
       }
@@ -131,6 +131,7 @@ export async function POST(request: Request): Promise<Response> {
             id: proof.userId,
             email: proof.email,
             email_confirmed_at: new Date().toISOString(),
+            has_demo_access: false,
           };
           authReason = "signed_auth_proof";
         }
@@ -165,6 +166,11 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
+  // Allow invited users (app_metadata.demo_access) or global demo when enabled.
+  if (!user.has_demo_access && !isDemoCheckoutEnabled()) {
+    return Response.json({ ok: false, message: "Not found." }, { status: 404 });
+  }
+
   if (!user.email || !user.email_confirmed_at) {
     return Response.json(
       {
@@ -175,7 +181,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  if (!isDemoEmailAllowed(user.email)) {
+  if (!user.has_demo_access && !isDemoEmailAllowed(user.email)) {
     return Response.json(
       {
         ok: false,
