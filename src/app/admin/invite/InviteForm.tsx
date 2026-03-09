@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { sendDemoInvite } from "./actions";
 
-export default function InviteForm() {
+export default function InviteForm({ adminProof }: { adminProof: string }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "existing" | "error">("idle");
   const [sentEmail, setSentEmail] = useState("");
@@ -14,7 +14,7 @@ export default function InviteForm() {
     e.preventDefault();
     setStatus("idle");
     startTransition(async () => {
-      const result = await sendDemoInvite(email);
+      const result = await sendDemoInvite(email, adminProof);
       if (result.ok) {
         setSentEmail(result.email);
         setStatus(result.note === "existing_user" ? "existing" : "success");
@@ -35,7 +35,13 @@ export default function InviteForm() {
       </p>
       <form onSubmit={handleSubmit}>
         <label
-          style={{ display: "block", fontSize: 13, fontWeight: 500, marginBottom: 6, color: "#374151" }}
+          style={{
+            display: "block",
+            fontSize: 13,
+            fontWeight: 500,
+            marginBottom: 6,
+            color: "#374151",
+          }}
         >
           Email address
         </label>
@@ -77,7 +83,8 @@ export default function InviteForm() {
 
       {status === "success" && (
         <p style={{ marginTop: 16, fontSize: 14, color: "#16a34a" }}>
-          ✓ Invite sent to <strong>{sentEmail}</strong>. They'll receive a magic link to the demo wizard.
+          ✓ Invite sent to <strong>{sentEmail}</strong>. They will receive a magic link to the
+          demo wizard.
         </p>
       )}
 
@@ -94,7 +101,7 @@ export default function InviteForm() {
           }}
         >
           <strong>{sentEmail}</strong> already has an account — demo access has been granted.
-          Ask them to sign in at{" "}
+          Ask them to sign in and visit{" "}
           <a href="/demo/generate" style={{ color: "#92400e" }}>
             deploysure.com/demo/generate
           </a>
