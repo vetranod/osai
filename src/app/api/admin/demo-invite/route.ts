@@ -10,10 +10,18 @@ function getAdminEmail(): string {
 export async function POST(request: Request): Promise<Response> {
   // Must be authenticated as the admin account.
   const supabase = await getSupabaseServerAuthClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let resolvedUser = (await supabase.auth.getUser()).data.user;
 
+  // Fall back to bearer token if SSR cookies aren't hydrated.
+  if (!resolvedUser) {
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    if (token) {
+      resolvedUser = (await supabase.auth.getUser(token)).data.user ?? null;
+    }
+  }
+
+  const user = resolvedUser;
   if (!user || !user.email) {
     return Response.json({ ok: false, message: "Authentication required." }, { status: 401 });
   }
