@@ -30,6 +30,39 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
-  const redirectUrl = new URL(next, requestUrl.origin);
-  return NextResponse.redirect(redirectUrl);
+  // No ?code= present — this is likely an implicit-flow invite where Supabase
+  // appended tokens to the URL fragment (#access_token=…).  Fragments are
+  // browser-only: the server never sees them, and a server-side redirect would
+  // silently drop them.  Instead, serve a tiny HTML page whose inline script
+  // reads the fragment, pushes the tokens to the SSR bridge, then navigates
+  // to the destination.
+  const encodedNext = encodeURIComponent(next);
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>Signing in…</title>
+<style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#94a3b8}</style>
+</head><body><p>Signing you in…</p>
+<script>
+(function(){
+  var hash = window.location.hash.replace(/^#/,'');
+  var p = new URLSearchParams(hash);
+  var at = p.get('access_token');
+  var rt = p.get('refresh_token');
+  var next = decodeURIComponent(${JSON.stringify(encodedNext)});
+  if(at && rt){
+    fetch('/api/auth/bridge-session',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({access_token:at,refresh_token:rt})
+    }).finally(function(){ window.location.href = next; });
+  } else {
+    window.location.href = next;
+  }
+})();
+</script></body></html>`;
+
+  return new Response(html, {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
 }
