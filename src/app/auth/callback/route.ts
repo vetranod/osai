@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
-import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase-env";
 
 function sanitizeNextPath(raw: string | null): string {
   if (!raw) return "/generate";
@@ -8,20 +9,33 @@ function sanitizeNextPath(raw: string | null): string {
   return raw;
 }
 
-export async function GET(request: Request): Promise<Response> {
+export async function GET(request: NextRequest): Promise<Response> {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const next = sanitizeNextPath(requestUrl.searchParams.get("next"));
 
   if (code) {
-    try {
-      const supabase = await getSupabaseServerAuthClient();
-      await supabase.auth.exchangeCodeForSession(code);
+    // PKCE flow: exchange the code for a session and write cookies directly
+    // onto the redirect response so they survive the navigation to `next`.
+    const destUrl = new URL(next, requestUrl.origin);
+    const response = NextResponse.redirect(destUrl);
 
-      // Redirect directly to the destination — no intermediate confirmed page.
-      // For invite/magic-link flows the user is already authenticated at this point.
-      const destUrl = new URL(next, requestUrl.origin);
-      return NextResponse.redirect(destUrl);
+    const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    });
+
+    try {
+      await supabase.auth.exchangeCodeForSession(code);
+      return response;
     } catch {
       const loginUrl = new URL("/login", requestUrl.origin);
       loginUrl.searchParams.set("next", next);
@@ -30,12 +44,10 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
-  // No ?code= present — this is likely an implicit-flow invite where Supabase
-  // appended tokens to the URL fragment (#access_token=…).  Fragments are
-  // browser-only: the server never sees them, and a server-side redirect would
-  // silently drop them.  Instead, serve a tiny HTML page whose inline script
-  // reads the fragment, seeds sessionStorage, pushes tokens to the SSR bridge,
-  // then routes through /auth/continue which has the full session-recovery chain.
+  // No ?code= present — implicit-flow invite (tokens in URL fragment #access_token=…).
+  // Fragments are browser-only; serve an HTML page whose inline script reads the hash,
+  // seeds sessionStorage, calls bridge-session, then routes through /auth/continue
+  // which has the full session-recovery chain as a fallback.
   const encodedContinue = encodeURIComponent(`/auth/continue?next=${encodeURIComponent(next)}`);
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
