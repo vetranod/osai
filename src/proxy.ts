@@ -100,6 +100,7 @@ export const config = {
     "/api/checkout/:path*",
     "/api/auth/:path*",
     "/api/billing/:path*",
+    "/api/admin/:path*",
     "/login",
   ],
 };
