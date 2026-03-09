@@ -34,9 +34,9 @@ export async function GET(request: Request): Promise<Response> {
   // appended tokens to the URL fragment (#access_token=…).  Fragments are
   // browser-only: the server never sees them, and a server-side redirect would
   // silently drop them.  Instead, serve a tiny HTML page whose inline script
-  // reads the fragment, pushes the tokens to the SSR bridge, then navigates
-  // to the destination.
-  const encodedNext = encodeURIComponent(next);
+  // reads the fragment, seeds sessionStorage, pushes tokens to the SSR bridge,
+  // then routes through /auth/continue which has the full session-recovery chain.
+  const encodedContinue = encodeURIComponent(`/auth/continue?next=${encodeURIComponent(next)}`);
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <title>Signing in…</title>
@@ -49,7 +49,7 @@ export async function GET(request: Request): Promise<Response> {
   var at = p.get('access_token');
   var rt = p.get('refresh_token');
   var exp = p.get('expires_at');
-  var next = decodeURIComponent(${JSON.stringify(encodedNext)});
+  var next = decodeURIComponent(${JSON.stringify(encodedContinue)});
   if(at && rt){
     try{
       window.sessionStorage.setItem('osai_browser_session_cache_v1',JSON.stringify({
