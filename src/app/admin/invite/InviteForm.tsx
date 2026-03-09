@@ -1,58 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { useState, useTransition } from "react";
+import { sendDemoInvite } from "./actions";
 
 export default function InviteForm() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus("loading");
+    setStatus("idle");
     setMessage("");
-    try {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      let accessToken = session?.access_token ?? null;
-
-      // Fall back to server-side token endpoint (covers SSR-only login sessions
-      // where the browser Supabase client was never hydrated with setSession).
-      if (!accessToken) {
-        try {
-          const tokenRes = await fetch("/api/auth/token", { credentials: "include" });
-          if (tokenRes.ok) {
-            const tokenData = await tokenRes.json();
-            if (typeof tokenData?.access_token === "string") {
-              accessToken = tokenData.access_token;
-            }
-          }
-        } catch { /* ignore */ }
-      }
-
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-
-      const res = await fetch("/api/admin/demo-invite", {
-        method: "POST",
-        headers,
-        credentials: "include",
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setStatus("error");
-        setMessage(data.message ?? "Something went wrong.");
-      } else {
+    startTransition(async () => {
+      const result = await sendDemoInvite(email);
+      if (result.ok) {
         setStatus("success");
-        setMessage(`Invite sent to ${data.email as string}`);
+        setMessage(`Invite sent to ${result.email}`);
         setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(result.message);
       }
-    } catch {
-      setStatus("error");
-      setMessage("Network error — please try again.");
-    }
+    });
   }
 
   return (
@@ -86,7 +57,7 @@ export default function InviteForm() {
         />
         <button
           type="submit"
-          disabled={status === "loading"}
+          disabled={isPending}
           style={{
             padding: "10px 20px",
             background: "#111827",
@@ -94,11 +65,11 @@ export default function InviteForm() {
             border: "none",
             borderRadius: 6,
             fontSize: 15,
-            cursor: status === "loading" ? "not-allowed" : "pointer",
-            opacity: status === "loading" ? 0.7 : 1,
+            cursor: isPending ? "not-allowed" : "pointer",
+            opacity: isPending ? 0.7 : 1,
           }}
         >
-          {status === "loading" ? "Sending..." : "Send invite"}
+          {isPending ? "Sending..." : "Send invite"}
         </button>
       </form>
       {message && (
