@@ -184,7 +184,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  if (!user.has_demo_access && !isDemoEmailAllowed(user.email)) {
+  if (!user.has_demo_access && !isDemoEmailAllowed(user.email ?? "")) {
     return Response.json(
       {
         ok: false,
