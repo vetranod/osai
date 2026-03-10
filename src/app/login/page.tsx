@@ -18,6 +18,16 @@ function normalizeNextPath(raw: string | null): string {
   return raw;
 }
 
+function buildPostLoginTarget(nextPath: string): string {
+  const needsServerHandoff =
+    nextPath.startsWith("/rollouts/") ||
+    nextPath.startsWith("/generate/success") ||
+    nextPath.startsWith("/demo/generate");
+
+  if (!needsServerHandoff) return nextPath;
+  return `/auth/continue?next=${encodeURIComponent(nextPath)}`;
+}
+
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error("Request timed out. Please try again.")), timeoutMs);
@@ -132,7 +142,7 @@ function LoginPageInner() {
 
         await bridgeBrowserSessionToServer();
         setStatus("Signed in. Redirecting...");
-        window.location.assign(nextPath);
+        window.location.assign(buildPostLoginTarget(nextPath));
         return;
       }
 

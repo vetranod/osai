@@ -3,6 +3,7 @@ import { verifyAuthProof } from "@/lib/auth-proof";
 import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
 import { getAppBaseUrl, getStripePriceId, getStripeServerClient } from "@/lib/stripe-server";
 import { parseCheckoutPayload, toCheckoutMetadata, type CheckoutPayload } from "@/server/checkoutPayload";
+import { findLatestRolloutForUser } from "@/server/rolloutAccess";
 
 export const runtime = "nodejs";
 
@@ -187,6 +188,16 @@ export async function POST(request: Request): Promise<Response> {
       },
       { status: 403 }
     );
+  }
+
+  const existingRollout = await findLatestRolloutForUser(user.id);
+  if (existingRollout) {
+    return Response.json({
+      ok: true,
+      reused_existing_rollout: true,
+      rollout_id: existingRollout.id,
+      dashboard_url: `/rollouts/${existingRollout.id}`,
+    });
   }
 
   try {

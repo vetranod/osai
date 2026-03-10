@@ -315,7 +315,7 @@ async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<R
 
 async function openPacketPage(rolloutId: string): Promise<void> {
   await bridgeBrowserSessionToServer().catch(() => null);
-  window.location.assign(`/rollouts/${rolloutId}/packet`);
+  window.location.assign(`/auth/continue?next=${encodeURIComponent(`/rollouts/${rolloutId}/packet`)}`);
 }
 
 // ---- Artifact Viewer ----

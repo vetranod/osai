@@ -231,6 +231,10 @@ function buildGenerateResumePath(inputs: FormState, identity: FinalizeState): st
   return `/generate?${params.toString()}`;
 }
 
+function buildAuthContinuePath(nextPath: string): string {
+  return `/auth/continue?next=${encodeURIComponent(nextPath)}`;
+}
+
 function hasCompleteIntake(inputs: FormState): boolean {
   return Boolean(
     inputs.primary_goal &&
@@ -719,6 +723,11 @@ function FinalizeStep({
         setError(data.message ?? "Something went wrong. Please try again.");
         return;
       }
+      if (typeof data.dashboard_url === "string") {
+        await bridgeBrowserSessionToServer();
+        window.location.assign(buildAuthContinuePath(data.dashboard_url));
+        return;
+      }
       if (typeof data.checkout_url !== "string") {
         setError("Missing checkout URL.");
         return;
@@ -749,6 +758,11 @@ function FinalizeStep({
       }
       if (!res.ok || !data.ok) {
         setError(data.message ?? "Something went wrong.");
+        return;
+      }
+      if (typeof data.dashboard_url === "string") {
+        await bridgeBrowserSessionToServer();
+        window.location.assign(buildAuthContinuePath(data.dashboard_url));
         return;
       }
       if (typeof data.checkout_url !== "string") {
@@ -803,7 +817,7 @@ function FinalizeStep({
         return;
       }
       void bridgeBrowserSessionToServer();
-      window.location.assign(data.dashboard_url);
+      window.location.assign(buildAuthContinuePath(data.dashboard_url));
     } catch {
       setError("Network error — please try again.");
     } finally {
