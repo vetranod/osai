@@ -115,7 +115,7 @@ function SuccessInner() {
         }
 
         if (res.ok && data.ok && data.rollout_id) {
-          void bridgeBrowserSessionToServer();
+          await bridgeBrowserSessionToServer();
           router.replace(`/rollouts/${data.rollout_id}`);
           return;
         }

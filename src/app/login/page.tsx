@@ -3,6 +3,7 @@
 import { Suspense, FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import { cacheBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
@@ -129,6 +130,7 @@ function LoginPageInner() {
           }
         }
 
+        await bridgeBrowserSessionToServer();
         setStatus("Signed in. Redirecting...");
         window.location.assign(nextPath);
         return;

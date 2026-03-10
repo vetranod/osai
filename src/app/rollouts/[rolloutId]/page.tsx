@@ -313,6 +313,11 @@ async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<R
   });
 }
 
+async function openPacketPage(rolloutId: string): Promise<void> {
+  await bridgeBrowserSessionToServer().catch(() => null);
+  window.location.assign(`/rollouts/${rolloutId}/packet`);
+}
+
 // ---- Artifact Viewer ----
 
 function renderArtifactContent(artifact: Artifact) {
@@ -1315,9 +1320,13 @@ export default function RolloutDashboard() {
         {/* Archive / Restart — top-right corner, low prominence */}
         {rolloutMeta && (isArchived || canArchive) && (
           <div className={styles.archiveCorner}>
-            <Link href={`/rollouts/${rolloutId}/packet`} className={styles.archiveTrigger}>
+            <button
+              type="button"
+              className={styles.archiveTrigger}
+              onClick={() => void openPacketPage(rolloutId)}
+            >
               Open print packet
-            </Link>
+            </button>
             {isArchived ? (
               <Link href={restartHref} className={styles.archiveTrigger}>
                 Restart from this rollout
@@ -1341,9 +1350,13 @@ export default function RolloutDashboard() {
         )}
         {rolloutMeta && !(isArchived || canArchive) && (
           <div className={styles.archiveCorner}>
-            <Link href={`/rollouts/${rolloutId}/packet`} className={styles.archiveTrigger}>
+            <button
+              type="button"
+              className={styles.archiveTrigger}
+              onClick={() => void openPacketPage(rolloutId)}
+            >
               Open print packet
-            </Link>
+            </button>
           </div>
         )}
       </div>
