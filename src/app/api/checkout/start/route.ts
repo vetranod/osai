@@ -203,6 +203,7 @@ export async function POST(request: Request): Promise<Response> {
       cancel_url: buildCancelUrl(baseUrl, parsed.value),
       line_items: [{ price: getStripePriceId(), quantity: 1 }],
       metadata: toCheckoutMetadata(parsed.value, user.id),
+      allow_promotion_codes: true,
     });
 
     return Response.json({
