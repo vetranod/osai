@@ -192,14 +192,13 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const stripe = getStripeServerClient();
     const baseUrl = resolveBaseUrl(request);
-    const successUrl = new URL("/generate/success", baseUrl);
-    successUrl.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
+    const successUrl = `${new URL("/generate/success", baseUrl).toString()}?session_id={CHECKOUT_SESSION_ID}`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       client_reference_id: user.id,
       customer_email: user.email,
-      success_url: successUrl.toString(),
+      success_url: successUrl,
       cancel_url: buildCancelUrl(baseUrl, parsed.value),
       line_items: [{ price: getStripePriceId(), quantity: 1 }],
       metadata: toCheckoutMetadata(parsed.value, user.id),
