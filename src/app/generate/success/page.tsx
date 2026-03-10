@@ -106,6 +106,14 @@ function SuccessInner() {
         if (cancelled) return;
         setStatus(data);
 
+        if (res.status === 401) {
+          const loginUrl = new URL("/login", window.location.origin);
+          loginUrl.searchParams.set("next", `/generate/success?session_id=${encodeURIComponent(sid)}`);
+          loginUrl.searchParams.set("auth_error", "session_required");
+          window.location.assign(loginUrl.toString());
+          return;
+        }
+
         if (res.ok && data.ok && data.rollout_id) {
           void bridgeBrowserSessionToServer();
           router.replace(`/rollouts/${data.rollout_id}`);
