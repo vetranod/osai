@@ -19,24 +19,14 @@ export async function findLatestRolloutForUser(userId: string): Promise<UserRoll
   if (error || !data?.length) return null;
 
   const active = data.find((row) => row.archived_at === null && row.status !== "ARCHIVED");
-  if (active) {
-    return {
-      id: active.id,
-      status: active.status ?? null,
-      archived_at: active.archived_at ?? null,
-      archive_restart_used_at: active.archive_restart_used_at ?? null,
-    };
-  }
+  if (!active) return null;
 
-  const latest = data[0];
-  return latest
-    ? {
-        id: latest.id,
-        status: latest.status ?? null,
-        archived_at: latest.archived_at ?? null,
-        archive_restart_used_at: latest.archive_restart_used_at ?? null,
-      }
-    : null;
+  return {
+    id: active.id,
+    status: active.status ?? null,
+    archived_at: active.archived_at ?? null,
+    archive_restart_used_at: active.archive_restart_used_at ?? null,
+  };
 }
 
 export async function userCanAccessRollout(rolloutId: string, userId: string): Promise<boolean> {

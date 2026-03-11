@@ -816,7 +816,7 @@ function FinalizeStep({
         setError("Missing dashboard URL.");
         return;
       }
-      void bridgeBrowserSessionToServer();
+      await bridgeBrowserSessionToServer();
       window.location.assign(buildAuthContinuePath(data.dashboard_url));
     } catch {
       setError("Network error — please try again.");
