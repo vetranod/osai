@@ -1065,6 +1065,45 @@ function GeneratePageInner() {
     };
   }, []);
 
+  // If the user already has an active paid rollout, skip the wizard entirely
+  // and take them straight to their dashboard.  Demo mode bypasses this check
+  // so prospects can still run through the flow.
+  useEffect(() => {
+    if (demoQueryEnabled) return;
+
+    let cancelled = false;
+
+    async function redirectIfRolloutExists() {
+      const accessToken = await getCheckoutAccessToken();
+      if (!accessToken || cancelled) return;
+
+      try {
+        const res = await fetch("/api/rollouts/mine", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          ok?: boolean;
+          rollout?: { dashboard_url?: string } | null;
+        };
+        if (!cancelled && data.ok && data.rollout?.dashboard_url) {
+          window.location.assign(buildAuthContinuePath(data.rollout.dashboard_url));
+        }
+      } catch {
+        // Non-fatal — if the check fails just show the wizard.
+      }
+    }
+
+    void redirectIfRolloutExists();
+    return () => {
+      cancelled = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoQueryEnabled]);
+
   useEffect(() => {
     let active = true;
 

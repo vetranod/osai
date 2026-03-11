@@ -141,6 +141,38 @@ function LoginPageInner() {
         }
 
         await bridgeBrowserSessionToServer();
+
+        // For returning users, skip the wizard entirely and go straight to
+        // their dashboard.  We only do this when the login was not initiated
+        // from a specific destination (i.e. nextPath is the default /generate).
+        if (nextPath === "/generate") {
+          try {
+            const mineRes = await fetch("/api/rollouts/mine", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: signInBody.access_token
+                ? { Authorization: `Bearer ${signInBody.access_token}` }
+                : {},
+            });
+            if (mineRes.ok) {
+              const mineData = (await mineRes.json()) as {
+                ok?: boolean;
+                rollout?: { dashboard_url?: string } | null;
+              };
+              if (mineData.ok && mineData.rollout?.dashboard_url) {
+                setStatus("Welcome back. Taking you to your dashboard...");
+                window.location.assign(
+                  buildPostLoginTarget(mineData.rollout.dashboard_url)
+                );
+                return;
+              }
+            }
+          } catch {
+            // Non-fatal: fall through to default redirect.
+          }
+        }
+
         setStatus("Signed in. Redirecting...");
         window.location.assign(buildPostLoginTarget(nextPath));
         return;

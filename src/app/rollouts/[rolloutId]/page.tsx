@@ -234,7 +234,22 @@ function Badge({ value, label }: { value: string; label?: string }) {
   );
 }
 
+// Deduplication guard: when the dashboard fires its 4 concurrent API calls they
+// all call getDashboardAccessToken() simultaneously.  Without this guard, each
+// one independently tries to restore the session via setSession(), which can
+// cause a race condition where one call consumes the refresh token and the
+// others fail — ending up without a bearer token and returning 401.
+let _tokenInFlight: Promise<string | null> | null = null;
+
 async function getDashboardAccessToken(): Promise<string | null> {
+  if (_tokenInFlight) return _tokenInFlight;
+  _tokenInFlight = _fetchDashboardAccessToken().finally(() => {
+    _tokenInFlight = null;
+  });
+  return _tokenInFlight;
+}
+
+async function _fetchDashboardAccessToken(): Promise<string | null> {
   const supabase = getSupabaseBrowserClient();
   const { data: refreshed } = await supabase.auth.refreshSession();
   if (refreshed.session?.access_token) {
