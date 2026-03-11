@@ -80,12 +80,20 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   if (user && pathname === "/login") {
-    const next = sanitizeNextPath(request.nextUrl.searchParams.get("next"));
-    const nextUrl = new URL(next, request.nextUrl.origin);
-    const target = request.nextUrl.clone();
-    target.pathname = nextUrl.pathname;
-    target.search = nextUrl.search;
-    return NextResponse.redirect(target);
+    // If the user was redirected here because of a session error (e.g. a stale
+    // SSR cookie that the dashboard rejected), let the login page render so they
+    // can sign in fresh and get new tokens.  Without this guard the proxy would
+    // immediately bounce them back to the failing destination and create an
+    // infinite redirect loop.
+    const authError = request.nextUrl.searchParams.get("auth_error");
+    if (!authError) {
+      const next = sanitizeNextPath(request.nextUrl.searchParams.get("next"));
+      const nextUrl = new URL(next, request.nextUrl.origin);
+      const target = request.nextUrl.clone();
+      target.pathname = nextUrl.pathname;
+      target.search = nextUrl.search;
+      return NextResponse.redirect(target);
+    }
   }
 
   return response;

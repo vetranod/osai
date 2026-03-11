@@ -972,12 +972,29 @@ export default function RolloutDashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      const [mRes, aRes, rRes, rcRes] = await Promise.all([
+      let [mRes, aRes, rRes, rcRes] = await Promise.all([
         fetchDashboardApi(`/api/rollouts/${rolloutId}/milestones`),
         fetchDashboardApi(`/api/rollouts/${rolloutId}/artifacts`),
         fetchDashboardApi(`/api/rollouts/${rolloutId}`),
         fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`),
       ]);
+      // On 401, attempt one session-bridge recovery before redirecting to login.
+      // This handles cases where the browser session exists but SSR cookies haven't
+      // been written yet (e.g. arriving via the Skip path on the finalize step).
+      if (
+        mRes.status === 401 ||
+        aRes.status === 401 ||
+        rRes.status === 401 ||
+        rcRes.status === 401
+      ) {
+        await bridgeBrowserSessionToServer().catch(() => null);
+        [mRes, aRes, rRes, rcRes] = await Promise.all([
+          fetchDashboardApi(`/api/rollouts/${rolloutId}/milestones`),
+          fetchDashboardApi(`/api/rollouts/${rolloutId}/artifacts`),
+          fetchDashboardApi(`/api/rollouts/${rolloutId}`),
+          fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`),
+        ]);
+      }
       if (
         mRes.status === 401 ||
         aRes.status === 401 ||
