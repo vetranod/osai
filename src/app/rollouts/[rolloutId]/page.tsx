@@ -250,51 +250,70 @@ async function getDashboardAccessToken(): Promise<string | null> {
 }
 
 async function _fetchDashboardAccessToken(): Promise<string | null> {
-  const supabase = getSupabaseBrowserClient();
-  const { data: refreshed } = await supabase.auth.refreshSession();
-  if (refreshed.session?.access_token) {
-    cacheBrowserSession(refreshed.session);
-    await bridgeBrowserSessionToServer();
-    return refreshed.session.access_token;
-  }
-
-  const {
-    data: { session: existingSession },
-  } = await supabase.auth.getSession();
-  if (existingSession?.access_token) {
-    cacheBrowserSession(existingSession);
-    await bridgeBrowserSessionToServer();
-    return existingSession.access_token;
-  }
-
-  const cachedSession = getCachedBrowserSession();
-  if (cachedSession) {
-    const { data: restored, error: restoreError } = await supabase.auth.setSession({
-      access_token: cachedSession.access_token,
-      refresh_token: cachedSession.refresh_token,
-    });
-    if (!restoreError && restored.session?.access_token) {
-      cacheBrowserSession(restored.session);
-      await bridgeBrowserSessionToServer();
-      return restored.session.access_token;
-    }
-  }
-
+  // ── 1. SSR session cookies (most reliable: set by bridge during auth flow) ──
+  // Try this first because the auth flow explicitly calls bridge-session to
+  // write SSR cookies, and this path works regardless of browser cookie state.
   try {
-    const res = await fetch("/api/auth/token", {
+    const ssrRes = await fetch("/api/auth/token", {
       method: "GET",
       credentials: "include",
       cache: "no-store",
     });
-    if (res.ok) {
-      const data = await res.json();
-      return typeof data?.access_token === "string" && data.access_token ? data.access_token : null;
+    if (ssrRes.ok) {
+      const d = await ssrRes.json().catch(() => null);
+      if (typeof d?.access_token === "string" && d.access_token) {
+        return d.access_token;
+      }
     }
   } catch {
-    // Fall through to cached session token.
+    // SSR cookie path unavailable; continue to browser session.
   }
 
-  return getCachedBrowserSession()?.access_token ?? null;
+  // ── 2. Browser Supabase session (refresh forces a network round-trip) ──
+  const supabase = getSupabaseBrowserClient();
+  try {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    if (refreshed.session?.access_token) {
+      cacheBrowserSession(refreshed.session);
+      await bridgeBrowserSessionToServer();
+      return refreshed.session.access_token;
+    }
+  } catch { /* silent */ }
+
+  try {
+    const { data: { session: existingSession } } = await supabase.auth.getSession();
+    if (existingSession?.access_token) {
+      cacheBrowserSession(existingSession);
+      await bridgeBrowserSessionToServer();
+      return existingSession.access_token;
+    }
+  } catch { /* silent */ }
+
+  // ── 3. Restore from sessionStorage cache ──
+  const cachedSession = getCachedBrowserSession();
+  if (cachedSession?.access_token) {
+    // Try to restore the full Supabase session (writes browser cookies).
+    try {
+      const { data: restored, error: restoreError } = await supabase.auth.setSession({
+        access_token: cachedSession.access_token,
+        refresh_token: cachedSession.refresh_token,
+      });
+      if (!restoreError && restored.session?.access_token) {
+        cacheBrowserSession(restored.session);
+        await bridgeBrowserSessionToServer();
+        return restored.session.access_token;
+      }
+    } catch { /* silent */ }
+
+    // setSession failed but we still have the raw AT from sign-in.
+    // Return it directly — a non-expired AT is a valid Bearer credential
+    // even without a live browser or SSR session.  Also attempt the bridge
+    // so route handlers can fall back to SSR cookies on the next request.
+    await bridgeBrowserSessionToServer().catch(() => null);
+    return cachedSession.access_token;
+  }
+
+  return null;
 }
 
 async function buildDashboardRequestHeaders(headersInit?: HeadersInit): Promise<Record<string, string>> {
