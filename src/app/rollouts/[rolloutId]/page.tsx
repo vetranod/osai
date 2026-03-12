@@ -250,9 +250,65 @@ async function getDashboardAccessToken(): Promise<string | null> {
 }
 
 async function _fetchDashboardAccessToken(): Promise<string | null> {
-  // ── 1. SSR session cookies (most reliable: set by bridge during auth flow) ──
-  // Try this first because the auth flow explicitly calls bridge-session to
-  // write SSR cookies, and this path works regardless of browser cookie state.
+  const supabase = getSupabaseBrowserClient();
+
+  // ── 1. Browser Supabase session — fast path, no network round-trip ──
+  // This is the most reliable path for the dashboard because:
+  //   (a) The user arrives here after a sign-in that called setSession(), which
+  //       writes persistent Supabase browser cookies.
+  //   (b) After any in-tab page navigation (window.location.assign), browser
+  //       cookies persist and the Supabase client re-hydrates from them.
+  //   (c) Unlike the SSR path, this never calls getUser() or refreshSession()
+  //       implicitly, so there is no risk of a failed server-side token refresh
+  //       silently clearing the session.
+  try {
+    const { data: { session: browserSession } } = await supabase.auth.getSession();
+    if (browserSession?.access_token) {
+      cacheBrowserSession(browserSession);
+      await bridgeBrowserSessionToServer().catch(() => null);
+      return browserSession.access_token;
+    }
+  } catch { /* silent */ }
+
+  // ── 2. Force browser token refresh ──
+  // The AT may have expired (>1 h old) but the RT is still valid.  refreshSession()
+  // issues a new AT+RT pair from Supabase directly via the browser client.
+  try {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    if (refreshed.session?.access_token) {
+      cacheBrowserSession(refreshed.session);
+      await bridgeBrowserSessionToServer().catch(() => null);
+      return refreshed.session.access_token;
+    }
+  } catch { /* silent */ }
+
+  // ── 3. Restore from sessionStorage cache ──
+  // If the browser Supabase cookies were cleared (e.g. cross-origin redirect,
+  // privacy settings) sessionStorage still holds the AT+RT from sign-in.
+  const cachedSession = getCachedBrowserSession();
+  if (cachedSession?.access_token) {
+    try {
+      const { data: restored, error: restoreError } = await supabase.auth.setSession({
+        access_token: cachedSession.access_token,
+        refresh_token: cachedSession.refresh_token,
+      });
+      if (!restoreError && restored.session?.access_token) {
+        cacheBrowserSession(restored.session);
+        await bridgeBrowserSessionToServer().catch(() => null);
+        return restored.session.access_token;
+      }
+    } catch { /* silent */ }
+
+    // setSession failed but we still have the raw AT from sign-in.
+    // A non-expired AT is a valid self-contained Bearer credential — return it
+    // directly so the API calls can proceed even without a live session object.
+    await bridgeBrowserSessionToServer().catch(() => null);
+    return cachedSession.access_token;
+  }
+
+  // ── 4. SSR fallback — last resort ──
+  // If all browser paths failed (e.g. arriving from a cross-origin redirect with
+  // no sessionStorage), try the SSR cookie set by bridge during the auth flow.
   try {
     const ssrRes = await fetch("/api/auth/token", {
       method: "GET",
@@ -265,53 +321,7 @@ async function _fetchDashboardAccessToken(): Promise<string | null> {
         return d.access_token;
       }
     }
-  } catch {
-    // SSR cookie path unavailable; continue to browser session.
-  }
-
-  // ── 2. Browser Supabase session (refresh forces a network round-trip) ──
-  const supabase = getSupabaseBrowserClient();
-  try {
-    const { data: refreshed } = await supabase.auth.refreshSession();
-    if (refreshed.session?.access_token) {
-      cacheBrowserSession(refreshed.session);
-      await bridgeBrowserSessionToServer();
-      return refreshed.session.access_token;
-    }
   } catch { /* silent */ }
-
-  try {
-    const { data: { session: existingSession } } = await supabase.auth.getSession();
-    if (existingSession?.access_token) {
-      cacheBrowserSession(existingSession);
-      await bridgeBrowserSessionToServer();
-      return existingSession.access_token;
-    }
-  } catch { /* silent */ }
-
-  // ── 3. Restore from sessionStorage cache ──
-  const cachedSession = getCachedBrowserSession();
-  if (cachedSession?.access_token) {
-    // Try to restore the full Supabase session (writes browser cookies).
-    try {
-      const { data: restored, error: restoreError } = await supabase.auth.setSession({
-        access_token: cachedSession.access_token,
-        refresh_token: cachedSession.refresh_token,
-      });
-      if (!restoreError && restored.session?.access_token) {
-        cacheBrowserSession(restored.session);
-        await bridgeBrowserSessionToServer();
-        return restored.session.access_token;
-      }
-    } catch { /* silent */ }
-
-    // setSession failed but we still have the raw AT from sign-in.
-    // Return it directly — a non-expired AT is a valid Bearer credential
-    // even without a live browser or SSR session.  Also attempt the bridge
-    // so route handlers can fall back to SSR cookies on the next request.
-    await bridgeBrowserSessionToServer().catch(() => null);
-    return cachedSession.access_token;
-  }
 
   return null;
 }
@@ -1012,15 +1022,23 @@ export default function RolloutDashboard() {
         fetchDashboardApi(`/api/rollouts/${rolloutId}`),
         fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`),
       ]);
-      // On 401, attempt one session-bridge recovery before redirecting to login.
-      // This handles cases where the browser session exists but SSR cookies haven't
-      // been written yet (e.g. arriving via the Skip path on the finalize step).
+      // On 401, attempt one full session recovery before redirecting to login.
       if (
         mRes.status === 401 ||
         aRes.status === 401 ||
         rRes.status === 401 ||
         rcRes.status === 401
       ) {
+        // Force a browser token refresh first — stale/expired AT is the most
+        // common 401 cause.  refreshSession() exchanges the RT for a new AT+RT
+        // pair directly, then we bridge so SSR cookies are also up to date.
+        try {
+          const supabase = getSupabaseBrowserClient();
+          const { data: refreshed } = await supabase.auth.refreshSession();
+          if (refreshed.session?.access_token) {
+            cacheBrowserSession(refreshed.session);
+          }
+        } catch { /* silent */ }
         await bridgeBrowserSessionToServer().catch(() => null);
         [mRes, aRes, rRes, rcRes] = await Promise.all([
           fetchDashboardApi(`/api/rollouts/${rolloutId}/milestones`),
