@@ -44,46 +44,35 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     request,
   });
 
-  // Only call getUser() when we actually need the result.  Calling it
-  // unconditionally on every matched route (including page routes like
-  // /rollouts/:path*) is dangerous: @supabase/ssr's setAll callback fires on
-  // any token-refresh attempt, and a failed refresh writes empty Set-Cookie
-  // headers that WIPE the SSR auth cookies before the page handler runs.
-  //
-  // We only need to know the user for:
-  //   (a) protected API paths that don't carry their own bearer token — to
-  //       return 401 before hitting the route handler
-  //   (b) the login page — to redirect an already-authenticated user away
-  //
-  // All other routes (page routes, API routes with bearer auth) handle their
-  // own auth checks without needing the middleware to validate cookies.
-  const needsUserCheck = (isProtectedApiPath(pathname) && !hasBearerAuth) || pathname === "/login";
-
+  // Always call getUser() — this is the standard @supabase/ssr middleware pattern.
+  // It refreshes the session when the AT is expired (exchanging the RT for a new
+  // AT+RT pair) and writes the updated tokens to both the request (so downstream
+  // route handlers see them) and the response (so the browser cookie is updated).
+  // Skipping this on page routes was the root cause of stale SSR cookies reaching
+  // the dashboard API calls.
   let user: { id: string } | null = null;
-  if (needsUserCheck) {
-    try {
-      const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-            response = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-          },
+  try {
+    const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
         },
-      });
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        },
+      },
+    });
 
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-      user = currentUser ? { id: currentUser.id } : null;
-    } catch {
-      user = null;
-    }
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+    user = currentUser ? { id: currentUser.id } : null;
+  } catch {
+    user = null;
   }
 
   if (!user && isProtectedApiPath(pathname)) {

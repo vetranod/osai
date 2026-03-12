@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
-import { cacheBrowserSession, getCachedBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./dashboard.module.css";
 
@@ -234,139 +233,38 @@ function Badge({ value, label }: { value: string; label?: string }) {
   );
 }
 
-// Deduplication guard: when the dashboard fires its 4 concurrent API calls they
-// all call getDashboardAccessToken() simultaneously.  Without this guard, each
-// one independently tries to restore the session via setSession(), which can
-// cause a race condition where one call consumes the refresh token and the
-// others fail — ending up without a bearer token and returning 401.
-let _tokenInFlight: Promise<string | null> | null = null;
+// Deduplication guard: prevents concurrent refreshes from racing and consuming
+// the single-use refresh token when 4 API calls fire simultaneously on mount.
+let _refreshInFlight: Promise<boolean> | null = null;
 
-async function getDashboardAccessToken(): Promise<string | null> {
-  if (_tokenInFlight) return _tokenInFlight;
-  _tokenInFlight = _fetchDashboardAccessToken().finally(() => {
-    _tokenInFlight = null;
-  });
-  return _tokenInFlight;
-}
-
-async function _fetchDashboardAccessToken(): Promise<string | null> {
-  const supabase = getSupabaseBrowserClient();
-
-  // ── 1. Browser Supabase session — fast path, no network round-trip ──
-  // getSession() reads the stored browser cookie WITHOUT validating expiry —
-  // it returns the cached AT as-is, even if it has already expired.  We check
-  // expires_at ourselves so we don't hand a stale AT to the API calls.  If the
-  // AT is within 30 s of expiry we fall straight through to refreshSession()
-  // which exchanges the RT for a fresh pair.
-  //
-  // IMPORTANT: bridge is fired as fire-and-forget (void, not await).  The API
-  // calls use Bearer auth and succeed without SSR cookies.  Awaiting bridge here
-  // blocks the token return AND can corrupt browser cookies: the bridge-session
-  // response includes Set-Cookie headers that overwrite the browser's Supabase
-  // auth chunks — if the server-side chunk count differs from the browser's,
-  // subsequent getSession() calls read malformed cookies and return null, which
-  // causes the next loadData() to redirect to login.
-  try {
-    const { data: { session: browserSession } } = await supabase.auth.getSession();
-    if (browserSession?.access_token) {
-      const notExpired =
-        !browserSession.expires_at ||
-        browserSession.expires_at > Math.floor(Date.now() / 1000) + 30;
-      if (notExpired) {
-        cacheBrowserSession(browserSession);
-        void bridgeBrowserSessionToServer().catch(() => null);
-        return browserSession.access_token;
-      }
-      // AT is expired or within the 30-s safety window — fall through to refresh.
-    }
-  } catch { /* silent */ }
-
-  // ── 2. Force browser token refresh ──
-  // The AT has expired (>1 h old) but the RT should still be valid.
-  // refreshSession() exchanges the RT for a new AT+RT pair via the Supabase API.
-  try {
-    const { data: refreshed } = await supabase.auth.refreshSession();
-    if (refreshed.session?.access_token) {
-      cacheBrowserSession(refreshed.session);
-      void bridgeBrowserSessionToServer().catch(() => null);
-      return refreshed.session.access_token;
-    }
-  } catch { /* silent */ }
-
-  // ── 3. Restore from sessionStorage cache ──
-  // If the browser Supabase cookies were cleared (e.g. cross-origin redirect,
-  // privacy settings) sessionStorage still holds the AT+RT from sign-in.
-  const cachedSession = getCachedBrowserSession();
-  if (cachedSession?.access_token) {
+async function refreshAndBridge(): Promise<boolean> {
+  if (_refreshInFlight) return _refreshInFlight;
+  _refreshInFlight = (async () => {
     try {
-      const { data: restored, error: restoreError } = await supabase.auth.setSession({
-        access_token: cachedSession.access_token,
-        refresh_token: cachedSession.refresh_token,
-      });
-      if (!restoreError && restored.session?.access_token) {
-        cacheBrowserSession(restored.session);
-        void bridgeBrowserSessionToServer().catch(() => null);
-        return restored.session.access_token;
-      }
-    } catch { /* silent */ }
-
-    // setSession failed but we still have the raw AT from sign-in.
-    // A non-expired AT is a valid self-contained Bearer credential — return it
-    // directly so the API calls can proceed even without a live session object.
-    // Skip bridge here: if setSession failed the session is in bad shape and
-    // bridge would just fail too (it validates via getUser first).
-    return cachedSession.access_token;
-  }
-
-  // ── 4. SSR fallback — last resort ──
-  // If all browser paths failed (e.g. arriving from a cross-origin redirect with
-  // no sessionStorage), try the SSR cookie set by bridge during the auth flow.
-  try {
-    const ssrRes = await fetch("/api/auth/token", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (ssrRes.ok) {
-      const d = await ssrRes.json().catch(() => null);
-      if (typeof d?.access_token === "string" && d.access_token) {
-        return d.access_token;
-      }
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.refreshSession();
+      if (!session?.access_token) return false;
+      await bridgeBrowserSessionToServer().catch(() => null);
+      return true;
+    } catch {
+      return false;
     }
-  } catch { /* silent */ }
-
-  return null;
+  })().finally(() => { _refreshInFlight = null; });
+  return _refreshInFlight;
 }
 
-async function buildDashboardRequestHeaders(headersInit?: HeadersInit): Promise<Record<string, string>> {
-  const headers = new Headers(headersInit ?? undefined);
-  const accessToken = await getDashboardAccessToken();
-  if (accessToken && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
-  }
-
-  if (
-    typeof window !== "undefined" &&
-    (window as unknown as { __OSAI_AUTH_PROOF?: unknown }).__OSAI_AUTH_PROOF &&
-    !headers.has("x-osai-auth-proof")
-  ) {
-    headers.set(
-      "x-osai-auth-proof",
-      JSON.stringify((window as unknown as { __OSAI_AUTH_PROOF?: unknown }).__OSAI_AUTH_PROOF)
-    );
-  }
-
-  return Object.fromEntries(headers.entries());
-}
-
+// All dashboard API calls use SSR cookies (set by middleware on every page load).
+// On 401, refresh the browser session + bridge to re-establish SSR cookies, then
+// retry once. A second 401 after retry means the session is truly gone → login.
 async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<Response> {
-  const headers = await buildDashboardRequestHeaders(init.headers);
-  return fetch(url, {
-    credentials: "include",
-    cache: "no-store",
-    ...init,
-    headers,
-  });
+  const res = await fetch(url, { credentials: "include", cache: "no-store", ...init });
+  if (res.status === 401) {
+    const ok = await refreshAndBridge();
+    if (ok) {
+      return fetch(url, { credentials: "include", cache: "no-store", ...init });
+    }
+  }
+  return res;
 }
 
 async function openPacketPage(rolloutId: string): Promise<void> {
@@ -1028,37 +926,14 @@ export default function RolloutDashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      let [mRes, aRes, rRes, rcRes] = await Promise.all([
+      const [mRes, aRes, rRes, rcRes] = await Promise.all([
         fetchDashboardApi(`/api/rollouts/${rolloutId}/milestones`),
         fetchDashboardApi(`/api/rollouts/${rolloutId}/artifacts`),
         fetchDashboardApi(`/api/rollouts/${rolloutId}`),
         fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`),
       ]);
-      // On 401, attempt one full session recovery before redirecting to login.
-      if (
-        mRes.status === 401 ||
-        aRes.status === 401 ||
-        rRes.status === 401 ||
-        rcRes.status === 401
-      ) {
-        // Force a browser token refresh first — stale/expired AT is the most
-        // common 401 cause.  refreshSession() exchanges the RT for a new AT+RT
-        // pair directly, then we bridge so SSR cookies are also up to date.
-        try {
-          const supabase = getSupabaseBrowserClient();
-          const { data: refreshed } = await supabase.auth.refreshSession();
-          if (refreshed.session?.access_token) {
-            cacheBrowserSession(refreshed.session);
-          }
-        } catch { /* silent */ }
-        await bridgeBrowserSessionToServer().catch(() => null);
-        [mRes, aRes, rRes, rcRes] = await Promise.all([
-          fetchDashboardApi(`/api/rollouts/${rolloutId}/milestones`),
-          fetchDashboardApi(`/api/rollouts/${rolloutId}/artifacts`),
-          fetchDashboardApi(`/api/rollouts/${rolloutId}`),
-          fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`),
-        ]);
-      }
+      // fetchDashboardApi already retried once on 401 via refreshAndBridge().
+      // A second 401 here means the session is genuinely gone — send to login.
       if (
         mRes.status === 401 ||
         aRes.status === 401 ||
