@@ -253,31 +253,42 @@ async function _fetchDashboardAccessToken(): Promise<string | null> {
   const supabase = getSupabaseBrowserClient();
 
   // ── 1. Browser Supabase session — fast path, no network round-trip ──
-  // This is the most reliable path for the dashboard because:
-  //   (a) The user arrives here after a sign-in that called setSession(), which
-  //       writes persistent Supabase browser cookies.
-  //   (b) After any in-tab page navigation (window.location.assign), browser
-  //       cookies persist and the Supabase client re-hydrates from them.
-  //   (c) Unlike the SSR path, this never calls getUser() or refreshSession()
-  //       implicitly, so there is no risk of a failed server-side token refresh
-  //       silently clearing the session.
+  // getSession() reads the stored browser cookie WITHOUT validating expiry —
+  // it returns the cached AT as-is, even if it has already expired.  We check
+  // expires_at ourselves so we don't hand a stale AT to the API calls.  If the
+  // AT is within 30 s of expiry we fall straight through to refreshSession()
+  // which exchanges the RT for a fresh pair.
+  //
+  // IMPORTANT: bridge is fired as fire-and-forget (void, not await).  The API
+  // calls use Bearer auth and succeed without SSR cookies.  Awaiting bridge here
+  // blocks the token return AND can corrupt browser cookies: the bridge-session
+  // response includes Set-Cookie headers that overwrite the browser's Supabase
+  // auth chunks — if the server-side chunk count differs from the browser's,
+  // subsequent getSession() calls read malformed cookies and return null, which
+  // causes the next loadData() to redirect to login.
   try {
     const { data: { session: browserSession } } = await supabase.auth.getSession();
     if (browserSession?.access_token) {
-      cacheBrowserSession(browserSession);
-      await bridgeBrowserSessionToServer().catch(() => null);
-      return browserSession.access_token;
+      const notExpired =
+        !browserSession.expires_at ||
+        browserSession.expires_at > Math.floor(Date.now() / 1000) + 30;
+      if (notExpired) {
+        cacheBrowserSession(browserSession);
+        void bridgeBrowserSessionToServer().catch(() => null);
+        return browserSession.access_token;
+      }
+      // AT is expired or within the 30-s safety window — fall through to refresh.
     }
   } catch { /* silent */ }
 
   // ── 2. Force browser token refresh ──
-  // The AT may have expired (>1 h old) but the RT is still valid.  refreshSession()
-  // issues a new AT+RT pair from Supabase directly via the browser client.
+  // The AT has expired (>1 h old) but the RT should still be valid.
+  // refreshSession() exchanges the RT for a new AT+RT pair via the Supabase API.
   try {
     const { data: refreshed } = await supabase.auth.refreshSession();
     if (refreshed.session?.access_token) {
       cacheBrowserSession(refreshed.session);
-      await bridgeBrowserSessionToServer().catch(() => null);
+      void bridgeBrowserSessionToServer().catch(() => null);
       return refreshed.session.access_token;
     }
   } catch { /* silent */ }
@@ -294,7 +305,7 @@ async function _fetchDashboardAccessToken(): Promise<string | null> {
       });
       if (!restoreError && restored.session?.access_token) {
         cacheBrowserSession(restored.session);
-        await bridgeBrowserSessionToServer().catch(() => null);
+        void bridgeBrowserSessionToServer().catch(() => null);
         return restored.session.access_token;
       }
     } catch { /* silent */ }
@@ -302,7 +313,8 @@ async function _fetchDashboardAccessToken(): Promise<string | null> {
     // setSession failed but we still have the raw AT from sign-in.
     // A non-expired AT is a valid self-contained Bearer credential — return it
     // directly so the API calls can proceed even without a live session object.
-    await bridgeBrowserSessionToServer().catch(() => null);
+    // Skip bridge here: if setSession failed the session is in bad shape and
+    // bridge would just fail too (it validates via getUser first).
     return cachedSession.access_token;
   }
 
