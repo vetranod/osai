@@ -74,7 +74,7 @@ function LoginPageInner() {
       return "We couldn't complete sign-in from that email link. Request a new login link.";
     }
     if (code === "session_required") {
-      return "Your session expired. Sign in again to continue to checkout.";
+      return "Your session expired. Please sign in again to continue.";
     }
     return null;
   }, [searchParams]);

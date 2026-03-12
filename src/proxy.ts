@@ -44,29 +44,46 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     request,
   });
 
-  let user: { id: string } | null = null;
-  try {
-    const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    });
+  // Only call getUser() when we actually need the result.  Calling it
+  // unconditionally on every matched route (including page routes like
+  // /rollouts/:path*) is dangerous: @supabase/ssr's setAll callback fires on
+  // any token-refresh attempt, and a failed refresh writes empty Set-Cookie
+  // headers that WIPE the SSR auth cookies before the page handler runs.
+  //
+  // We only need to know the user for:
+  //   (a) protected API paths that don't carry their own bearer token — to
+  //       return 401 before hitting the route handler
+  //   (b) the login page — to redirect an already-authenticated user away
+  //
+  // All other routes (page routes, API routes with bearer auth) handle their
+  // own auth checks without needing the middleware to validate cookies.
+  const needsUserCheck = (isProtectedApiPath(pathname) && !hasBearerAuth) || pathname === "/login";
 
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser();
-    user = currentUser ? { id: currentUser.id } : null;
-  } catch {
-    user = null;
+  let user: { id: string } | null = null;
+  if (needsUserCheck) {
+    try {
+      const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+          },
+        },
+      });
+
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      user = currentUser ? { id: currentUser.id } : null;
+    } catch {
+      user = null;
+    }
   }
 
   if (!user && isProtectedApiPath(pathname)) {
