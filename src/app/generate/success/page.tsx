@@ -18,36 +18,11 @@ type SessionStatus = {
 };
 
 async function getCheckoutStatusAccessToken(): Promise<string | null> {
-  const supabase = getSupabaseBrowserClient();
-  const { data: refreshed } = await supabase.auth.refreshSession();
-  if (refreshed.session?.access_token) {
-    cacheBrowserSession(refreshed.session);
-    await bridgeBrowserSessionToServer();
-    return refreshed.session.access_token;
-  }
-
-  const {
-    data: { session: existingSession },
-  } = await supabase.auth.getSession();
-  if (existingSession?.access_token) {
-    cacheBrowserSession(existingSession);
-    await bridgeBrowserSessionToServer();
-    return existingSession.access_token;
-  }
-
-  const cachedSession = getCachedBrowserSession();
-  if (cachedSession) {
-    const { data: restored, error: restoreError } = await supabase.auth.setSession({
-      access_token: cachedSession.access_token,
-      refresh_token: cachedSession.refresh_token,
-    });
-    if (!restoreError && restored.session?.access_token) {
-      cacheBrowserSession(restored.session);
-      await bridgeBrowserSessionToServer();
-      return restored.session.access_token;
-    }
-  }
-
+  // ── 1. SSR session cookies (most reliable: set by bridge before navigating to Stripe) ──
+  // Try this first — after Stripe redirects back, browser Supabase cookies are often
+  // absent, so browser-side refreshSession/getSession will fail silently. The bridge
+  // call in handleCheckout writes SSR cookies before the Stripe redirect, so this path
+  // is the one most likely to succeed on return.
   try {
     const res = await fetch("/api/auth/token", {
       method: "GET",
@@ -55,14 +30,56 @@ async function getCheckoutStatusAccessToken(): Promise<string | null> {
       cache: "no-store",
     });
     if (res.ok) {
-      const data = await res.json();
-      return typeof data?.access_token === "string" && data.access_token ? data.access_token : null;
+      const data = await res.json().catch(() => null);
+      if (typeof data?.access_token === "string" && data.access_token) {
+        return data.access_token;
+      }
     }
   } catch {
-    // Fall through to cached session token.
+    // SSR cookie path unavailable; continue to browser session.
   }
 
-  return getCachedBrowserSession()?.access_token ?? null;
+  // ── 2. Browser Supabase session ──
+  const supabase = getSupabaseBrowserClient();
+  try {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    if (refreshed.session?.access_token) {
+      cacheBrowserSession(refreshed.session);
+      await bridgeBrowserSessionToServer();
+      return refreshed.session.access_token;
+    }
+  } catch { /* silent */ }
+
+  try {
+    const { data: { session: existingSession } } = await supabase.auth.getSession();
+    if (existingSession?.access_token) {
+      cacheBrowserSession(existingSession);
+      await bridgeBrowserSessionToServer();
+      return existingSession.access_token;
+    }
+  } catch { /* silent */ }
+
+  // ── 3. Restore from sessionStorage cache ──
+  const cachedSession = getCachedBrowserSession();
+  if (cachedSession?.access_token) {
+    try {
+      const { data: restored, error: restoreError } = await supabase.auth.setSession({
+        access_token: cachedSession.access_token,
+        refresh_token: cachedSession.refresh_token,
+      });
+      if (!restoreError && restored.session?.access_token) {
+        cacheBrowserSession(restored.session);
+        await bridgeBrowserSessionToServer();
+        return restored.session.access_token;
+      }
+    } catch { /* silent */ }
+
+    // setSession failed but the raw AT from sign-in is still a valid Bearer credential.
+    await bridgeBrowserSessionToServer().catch(() => null);
+    return cachedSession.access_token;
+  }
+
+  return null;
 }
 
 function SuccessInner() {
