@@ -24,6 +24,28 @@ function AuthContinuePageInner() {
     let cancelled = false;
 
     async function continueToTarget() {
+      // Always restore browser session from cache first, so both browser cookies
+      // AND SSR cookies are in sync before we navigate to a server-guarded route.
+      // Without this, the dashboard loads with SSR cookies only — if anything
+      // clears those cookies (e.g. the proxy triggering a setAll on a stale token),
+      // the dashboard's bearer-token fallback has nothing to fall back to.
+      const supabase = getSupabaseBrowserClient();
+      const cachedSession = getCachedBrowserSession();
+      if (cachedSession?.access_token) {
+        try {
+          const { data: restored, error: restoreError } = await supabase.auth.setSession({
+            access_token: cachedSession.access_token,
+            refresh_token: cachedSession.refresh_token,
+          });
+          if (!restoreError && restored.session?.access_token) {
+            cacheBrowserSession(restored.session);
+          }
+        } catch { /* silent */ }
+        // Re-bridge so SSR cookies are fresh regardless of what path we take below.
+        await bridgeBrowserSessionToServer().catch(() => null);
+      }
+
+      // Check SSR cookies — if valid, navigate immediately.
       try {
         const tokenRes = await fetch("/api/auth/token", {
           method: "GET",
@@ -35,20 +57,10 @@ function AuthContinuePageInner() {
           return;
         }
       } catch {
-        // Fall through to browser-session recovery.
+        // Fall through to bridge-retry recovery.
       }
 
-      const supabase = getSupabaseBrowserClient();
-      const cachedSession = getCachedBrowserSession();
-      if (cachedSession) {
-        const { data: restored, error: restoreError } = await supabase.auth.setSession({
-          access_token: cachedSession.access_token,
-          refresh_token: cachedSession.refresh_token,
-        });
-        if (!restoreError && restored.session?.access_token) {
-          cacheBrowserSession(restored.session);
-        }
-      }
+      // SSR cookies are still absent — retry bridge up to 3 times.
       const {
         data: { session },
       } = await supabase.auth.getSession();
