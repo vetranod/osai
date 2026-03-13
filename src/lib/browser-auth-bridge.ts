@@ -125,7 +125,7 @@ export async function bridgeBrowserSessionToServer(): Promise<BrowserAuthBridgeR
         body = null;
       }
 
-      return {
+      const failure = {
         ok: false,
         status: res.status,
         message:
@@ -137,6 +137,16 @@ export async function bridgeBrowserSessionToServer(): Promise<BrowserAuthBridgeR
         request_host: typeof body?.request_host === "string" ? body.request_host : null,
         app_host: typeof body?.app_host === "string" ? body.app_host : null,
       } satisfies BrowserAuthBridgeResult;
+
+      if (
+        failure.reason === "invalid_access_token" ||
+        failure.reason === "set_session_failed" ||
+        failure.status === 401
+      ) {
+        await clearInvalidBrowserSession();
+      }
+
+      return failure;
     })
     .catch(() => ({
       ok: false,

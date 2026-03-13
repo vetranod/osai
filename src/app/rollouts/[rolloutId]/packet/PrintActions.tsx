@@ -1,21 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ensureServerSession } from "@/lib/browser-auth-client";
 import styles from "./packet.module.css";
 
 export function PrintActions({ rolloutId }: { rolloutId: string }) {
   const router = useRouter();
 
   async function handleBackToDashboard(): Promise<void> {
-    const dashboardPath = `/rollouts/${rolloutId}`;
-    const serverToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
-    if (serverToken) {
-      router.push(dashboardPath);
-      return;
-    }
-
-    router.push(`/auth/continue?next=${encodeURIComponent(dashboardPath)}`);
+    router.push(`/rollouts/${rolloutId}`);
   }
 
   return (

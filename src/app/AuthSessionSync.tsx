@@ -9,7 +9,6 @@ import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 function shouldBridge(event: AuthChangeEvent, session: Session | null): boolean {
   if (!session?.access_token || !session.refresh_token) return false;
   return (
-    event === "INITIAL_SESSION" ||
     event === "SIGNED_IN" ||
     event === "TOKEN_REFRESHED" ||
     event === "USER_UPDATED"

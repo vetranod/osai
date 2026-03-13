@@ -240,7 +240,6 @@ function Badge({ value, label }: { value: string; label?: string }) {
 // On 401, force a browser refresh + bridge and retry once with rebuilt headers.
 async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<Response> {
   const headers = await buildClientAuthHeaders(init.headers, {
-    preferServerToken: true,
     bridgeMode: "background",
   });
   let res = await fetch(url, {
@@ -250,11 +249,9 @@ async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<R
     headers,
   });
   if (res.status === 401) {
-    const serverToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
-    if (serverToken) {
-      const retryHeaders = await buildClientAuthHeaders(init.headers, {
-        preferServerToken: true,
-      });
+    const refreshedToken = await refreshBrowserSessionAndBridge();
+    if (refreshedToken) {
+      const retryHeaders = await buildClientAuthHeaders(init.headers);
       res = await fetch(url, {
         credentials: "include",
         cache: "no-store",
@@ -266,9 +263,11 @@ async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<R
       }
     }
 
-    const refreshedToken = await refreshBrowserSessionAndBridge();
-    if (refreshedToken) {
-      const retryHeaders = await buildClientAuthHeaders(init.headers);
+    const serverToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
+    if (serverToken) {
+      const retryHeaders = await buildClientAuthHeaders(init.headers, {
+        preferServerToken: true,
+      });
       return fetch(url, {
         credentials: "include",
         cache: "no-store",
@@ -1062,7 +1061,6 @@ export default function RolloutDashboardClient({
 
       if (needsBootstrap) {
         setLoading(true);
-        await ensureServerSession({ attempts: 2, pauseMs: 150 }).catch(() => null);
         await loadData();
         return;
       }

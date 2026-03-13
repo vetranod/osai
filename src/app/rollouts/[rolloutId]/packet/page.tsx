@@ -89,7 +89,6 @@ function getResponseMessage(body: unknown, fallback: string): string {
 
 async function fetchPacketApi(url: string, nextPath: string, init: RequestInit = {}): Promise<Response> {
   const headers = await buildClientAuthHeaders(init.headers, {
-    preferServerToken: true,
     bridgeMode: "background",
   });
 
@@ -101,11 +100,9 @@ async function fetchPacketApi(url: string, nextPath: string, init: RequestInit =
   });
 
   if (response.status === 401) {
-    const serverToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
-    if (serverToken) {
-      const retryHeaders = await buildClientAuthHeaders(init.headers, {
-        preferServerToken: true,
-      });
+    const retryToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
+    if (retryToken) {
+      const retryHeaders = await buildClientAuthHeaders(init.headers);
       response = await fetch(url, {
         credentials: "include",
         cache: "no-store",
