@@ -6,7 +6,7 @@ import {
   clearCachedBrowserSession,
   getCachedBrowserSession,
 } from "@/lib/browser-session-cache";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { clearSupabaseBrowserStorage, getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type BridgeMode = "await" | "background";
 
@@ -36,8 +36,7 @@ function applyBridge(mode: BridgeMode): Promise<void> {
 
 async function clearInvalidBrowserSession(): Promise<void> {
   clearCachedBrowserSession();
-  const supabase = getSupabaseBrowserClient();
-  await supabase.auth.signOut({ scope: "local" }).catch(() => null);
+  clearSupabaseBrowserStorage();
 }
 
 export function getAuthProofHeaderValue(): string | null {

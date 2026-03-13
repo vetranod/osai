@@ -5,7 +5,7 @@ import {
   clearCachedBrowserSession,
   getCachedBrowserSession,
 } from "@/lib/browser-session-cache";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { clearSupabaseBrowserStorage, getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export type BrowserAuthBridgeResult =
   | { ok: true }
@@ -27,8 +27,7 @@ function isTokenFresh(expiresAt: number | null | undefined): boolean {
 
 async function clearInvalidBrowserSession(): Promise<void> {
   clearCachedBrowserSession();
-  const supabase = getSupabaseBrowserClient();
-  await supabase.auth.signOut({ scope: "local" }).catch(() => null);
+  clearSupabaseBrowserStorage();
 }
 
 async function getBridgeableBrowserSession(): Promise<{
