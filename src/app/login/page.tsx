@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, FormEvent, useMemo, useState } from "react";
+import { Suspense, FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
@@ -17,16 +17,6 @@ function normalizeNextPath(raw: string | null): string {
   if (!raw.startsWith("/")) return "/generate";
   if (raw.startsWith("//")) return "/generate";
   return raw;
-}
-
-function buildPostLoginTarget(nextPath: string): string {
-  const needsServerHandoff =
-    nextPath.startsWith("/rollouts/") ||
-    nextPath.startsWith("/generate/success") ||
-    nextPath.startsWith("/demo/generate");
-
-  if (!needsServerHandoff) return nextPath;
-  return `/auth/continue?next=${encodeURIComponent(nextPath)}`;
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -79,6 +69,7 @@ function LoginPageInner() {
     }
     return null;
   }, [searchParams]);
+  const sessionRequired = searchParams.get("auth_error") === "session_required";
 
   const [mode, setMode] = useState<AuthMode>("sign_in");
   const [email, setEmail] = useState("");
@@ -86,6 +77,32 @@ function LoginPageInner() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sessionRequired) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function recoverSession() {
+      setStatus("Restoring your session...");
+      const serverToken = await ensureServerSession({ attempts: 4, pauseMs: 250 });
+      if (cancelled) return;
+
+      if (serverToken) {
+        window.location.assign(nextPath);
+        return;
+      }
+
+      setStatus(null);
+    }
+
+    void recoverSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [nextPath, sessionRequired]);
 
   async function handleEmailPassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -141,9 +158,7 @@ function LoginPageInner() {
               };
               if (mineData.ok && mineData.rollout?.dashboard_url) {
                 setStatus("Welcome back. Taking you to your dashboard...");
-                window.location.assign(
-                  buildPostLoginTarget(mineData.rollout.dashboard_url)
-                );
+                window.location.assign(mineData.rollout.dashboard_url);
                 return;
               }
             }
@@ -153,7 +168,7 @@ function LoginPageInner() {
         }
 
         setStatus("Signed in. Redirecting...");
-        window.location.assign(buildPostLoginTarget(nextPath));
+        window.location.assign(nextPath);
         return;
       }
 
