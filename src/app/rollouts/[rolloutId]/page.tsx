@@ -206,7 +206,7 @@ export default async function RolloutDashboardPage({
   } = await auth.auth.getUser();
 
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent(nextPath)}&auth_error=session_required`);
+    redirect(`/auth/continue?next=${encodeURIComponent(nextPath)}`);
   }
 
   const allowed = await userCanAccessRollout(rolloutId, user.id);
