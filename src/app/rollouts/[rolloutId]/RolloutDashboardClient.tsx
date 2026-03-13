@@ -902,7 +902,7 @@ type RolloutDashboardClientProps = {
   rolloutId: string;
   initialMilestones: Milestone[];
   initialArtifacts: Artifact[];
-  initialRolloutMeta: RolloutMeta;
+  initialRolloutMeta: RolloutMeta | null;
   initialReclassifications?: Reclassification[];
 };
 
@@ -1038,6 +1038,17 @@ export default function RolloutDashboardClient({
   // Covers rollouts that progressed before on-unlock generation was introduced.
   useEffect(() => {
     async function initLoad() {
+      const needsBootstrap =
+        !rolloutMeta ||
+        milestones.length === 0 ||
+        artifacts.length === 0;
+
+      if (needsBootstrap) {
+        setLoading(true);
+        await loadData();
+        return;
+      }
+
       try {
         const rcRes = await fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`);
         if (rcRes.ok) {
@@ -1064,7 +1075,7 @@ export default function RolloutDashboardClient({
     }
     void initLoad();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rolloutId, isArchived]);
+  }, [rolloutId, isArchived, rolloutMeta, milestones.length, artifacts.length]);
 
   function handleTransitionClick(milestoneId: number, fromStatus: MilestoneStatus, toStatus: MilestoneStatus) {
     const modal = TRANSITION_MODAL[fromStatus];
