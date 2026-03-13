@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   buildClientAuthHeaders,
-  ensureServerSession,
   refreshBrowserSessionAndBridge,
 } from "@/lib/browser-auth-client";
 import styles from "./dashboard.module.css";
@@ -264,14 +263,7 @@ async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<R
 }
 
 async function openPacketPage(rolloutId: string): Promise<void> {
-  const packetPath = `/rollouts/${rolloutId}/packet`;
-  const serverToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
-  if (serverToken) {
-    window.location.assign(packetPath);
-    return;
-  }
-
-  window.location.assign(`/auth/continue?next=${encodeURIComponent(packetPath)}`);
+  window.location.assign(`/rollouts/${rolloutId}/packet`);
 }
 
 // ---- Artifact Viewer ----
