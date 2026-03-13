@@ -55,6 +55,45 @@ export async function getServerAccessToken(): Promise<string | null> {
   }
 }
 
+export async function ensureServerSession(
+  options: { attempts?: number; pauseMs?: number } = {}
+): Promise<string | null> {
+  const attempts = options.attempts ?? 3;
+  const pauseMs = options.pauseMs ?? 300;
+
+  const initialServerToken = await getServerAccessToken();
+  if (initialServerToken) return initialServerToken;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const bridged = await bridgeBrowserSessionToServer().catch(() => ({
+      ok: false as const,
+      message: "Bridge request failed.",
+    }));
+    if (bridged.ok) {
+      const bridgedServerToken = await getServerAccessToken();
+      if (bridgedServerToken) return bridgedServerToken;
+    }
+
+    const refreshedToken = await refreshBrowserSessionAndBridge({ bridgeMode: "await" });
+    if (refreshedToken) {
+      const refreshedServerToken = await getServerAccessToken();
+      if (refreshedServerToken) return refreshedServerToken;
+    }
+
+    const restoredToken = await restoreBrowserSessionFromCache({ bridgeMode: "await" });
+    if (restoredToken) {
+      const restoredServerToken = await getServerAccessToken();
+      if (restoredServerToken) return restoredServerToken;
+    }
+
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, pauseMs));
+    }
+  }
+
+  return null;
+}
+
 export async function refreshBrowserSessionAndBridge(
   options: { bridgeMode?: BridgeMode } = {}
 ): Promise<string | null> {

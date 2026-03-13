@@ -10,6 +10,16 @@ function isProtectedApiPath(pathname: string): boolean {
   );
 }
 
+function isPageSessionRefreshPath(pathname: string): boolean {
+  return (
+    pathname === "/generate" ||
+    pathname === "/demo/generate" ||
+    pathname === "/auth/confirmed" ||
+    pathname === "/login" ||
+    pathname.startsWith("/rollouts/")
+  );
+}
+
 function sanitizeNextPath(raw: string | null): string {
   if (!raw) return "/generate";
   if (!raw.startsWith("/")) return "/generate";
@@ -45,7 +55,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   });
 
   const needsUserCheck =
-    (isProtectedApiPath(pathname) && !hasBearerAuth && !hasSignedAuthProof) || pathname === "/login";
+    isPageSessionRefreshPath(pathname) ||
+    (isProtectedApiPath(pathname) && !hasBearerAuth && !hasSignedAuthProof);
   let user: { id: string } | null = null;
 
   if (needsUserCheck) {

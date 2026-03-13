@@ -4,6 +4,7 @@ import { Suspense, FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
+import { ensureServerSession } from "@/lib/browser-auth-client";
 import { cacheBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
@@ -110,7 +111,15 @@ function LoginPageInner() {
         }
 
         cacheBrowserSession(data.session);
-        await bridgeBrowserSessionToServer();
+        const bridged = await bridgeBrowserSessionToServer();
+        const protectedTarget =
+          nextPath.startsWith("/rollouts/") ||
+          nextPath.startsWith("/generate/success") ||
+          nextPath.startsWith("/demo/generate");
+
+        if (!bridged.ok || protectedTarget || nextPath === "/generate") {
+          await ensureServerSession({ attempts: 3, pauseMs: 200 });
+        }
 
         // For returning users, skip the wizard entirely and go straight to
         // their dashboard.  We only do this when the login was not initiated

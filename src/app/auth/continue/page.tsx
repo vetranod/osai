@@ -3,12 +3,11 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
+import { cacheBrowserSession } from "@/lib/browser-session-cache";
 import {
-  getServerAccessToken,
-  refreshBrowserSessionAndBridge,
-  restoreBrowserSessionFromCache,
+  ensureServerSession,
 } from "@/lib/browser-auth-client";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "../confirmed/page.module.css";
 
 function sanitizeNextPath(raw: string | null): string {
@@ -16,6 +15,29 @@ function sanitizeNextPath(raw: string | null): string {
   if (!raw.startsWith("/")) return "/generate";
   if (raw.startsWith("//")) return "/generate";
   return raw;
+}
+
+async function applyHashSessionToBrowser(): Promise<boolean> {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash) return false;
+
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  const expiresAt = params.get("expires_at");
+
+  if (!accessToken || !refreshToken) return false;
+
+  const supabase = getSupabaseBrowserClient();
+  const { data, error } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+  if (error || !data.session) return false;
+
+  cacheBrowserSession(data.session);
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  return true;
 }
 
 function AuthContinuePageInner() {
@@ -27,28 +49,19 @@ function AuthContinuePageInner() {
     let cancelled = false;
 
     async function continueToTarget() {
-      await restoreBrowserSessionFromCache().catch(() => null);
+      const restoredFromHash = await applyHashSessionToBrowser().catch(() => false);
+      if (restoredFromHash) {
+        const serverToken = await ensureServerSession({ attempts: 2, pauseMs: 200 });
+        if (serverToken) {
+          window.location.assign(next);
+          return;
+        }
+      }
 
-      const serverToken = await getServerAccessToken();
+      const serverToken = await ensureServerSession();
       if (serverToken) {
         window.location.assign(next);
         return;
-      }
-
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        const refreshedToken = await refreshBrowserSessionAndBridge();
-        if (refreshedToken) {
-          window.location.assign(next);
-          return;
-        }
-
-        const bridged = await bridgeBrowserSessionToServer();
-        if (bridged.ok) {
-          window.location.assign(next);
-          return;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       if (!cancelled) setStatus("Secure session not found. Sending you to sign in.");
