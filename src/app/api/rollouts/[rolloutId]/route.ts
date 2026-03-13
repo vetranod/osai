@@ -18,7 +18,8 @@ export async function GET(
     .from("rollouts")
     .select(
       "id, primary_goal, adoption_state, sensitivity_anchor, leadership_posture, " +
-      "rollout_mode, sensitivity_tier, needs_stabilization, " +
+      "rollout_mode, guardrail_strictness, review_depth, policy_tone, maturity_state, " +
+      "primary_risk_driver, sensitivity_tier, needs_stabilization, " +
       "initiative_lead_name, initiative_lead_title, " +
       "approving_authority_name, approving_authority_title, " +
       "created_at, status, archived_at, archive_restart_used_at"

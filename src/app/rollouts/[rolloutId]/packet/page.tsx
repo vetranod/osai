@@ -1,8 +1,13 @@
-import { notFound, redirect } from "next/navigation";
+"use client";
 
-import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
-import { getServiceRoleSupabase } from "@/lib/supabase-server";
-import { userCanAccessRollout } from "@/server/rolloutAccess";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+
+import {
+  buildClientAuthHeaders,
+  ensureServerSession,
+} from "@/lib/browser-auth-client";
 
 import { PrintActions } from "./PrintActions";
 import styles from "./packet.module.css";
@@ -31,14 +36,13 @@ type RolloutMeta = {
 type ArtifactType = "PROFILE" | "GUARDRAILS" | "REVIEW_MODEL" | "ROLLOUT_PLAN" | "POLICY";
 
 type ArtifactRow = {
-  id: string;
+  id: string | null;
   artifact_type: ArtifactType;
-  version: number;
+  generated: boolean;
+  version: number | null;
   content_json: Record<string, unknown> | null;
   created_at: string | null;
 };
-
-const ARTIFACT_ORDER: ArtifactType[] = ["PROFILE", "GUARDRAILS", "REVIEW_MODEL", "ROLLOUT_PLAN", "POLICY"];
 
 const ARTIFACT_TITLES: Record<ArtifactType, string> = {
   PROFILE: "Governance Profile",
@@ -76,58 +80,46 @@ function personLine(name: string | null, title: string | null, fallback: string)
   return name && title ? `${name}, ${title}` : fallback;
 }
 
-async function loadPacketData(rolloutId: string): Promise<{ rollout: RolloutMeta; artifacts: ArtifactRow[] } | null> {
-  const nextPath = `/rollouts/${rolloutId}/packet`;
-  const auth = await getSupabaseServerAuthClient();
-  const {
-    data: { user },
-  } = await auth.auth.getUser();
+function getResponseMessage(body: unknown, fallback: string): string {
+  if (!body || typeof body !== "object") return fallback;
+  if ("message" in body && typeof body.message === "string") return body.message;
+  if ("error" in body && typeof body.error === "string") return body.error;
+  return fallback;
+}
 
-  if (!user) {
-    redirect(`/auth/continue?next=${encodeURIComponent(nextPath)}`);
-  }
+async function fetchPacketApi(url: string, nextPath: string, init: RequestInit = {}): Promise<Response> {
+  const headers = await buildClientAuthHeaders(init.headers, {
+    preferServerToken: true,
+    bridgeMode: "background",
+  });
 
-  const allowed = await userCanAccessRollout(rolloutId, user.id);
-  if (!allowed) {
-    return null;
-  }
+  let response = await fetch(url, {
+    credentials: "include",
+    cache: "no-store",
+    ...init,
+    headers,
+  });
 
-  const supabase = getServiceRoleSupabase();
-
-  const [{ data: rollout, error: rolloutError }, { data: artifactRows, error: artifactError }] = await Promise.all([
-    supabase
-      .from("rollouts")
-      .select(
-        "id, primary_goal, adoption_state, sensitivity_anchor, leadership_posture, " +
-        "rollout_mode, guardrail_strictness, review_depth, policy_tone, maturity_state, " +
-        "primary_risk_driver, needs_stabilization, sensitivity_tier, " +
-        "initiative_lead_name, initiative_lead_title, approving_authority_name, approving_authority_title, created_at"
-      )
-      .eq("id", rolloutId)
-      .single(),
-    supabase
-      .from("artifacts")
-      .select("id, artifact_type, version, content_json, created_at")
-      .eq("rollout_id", rolloutId)
-      .order("artifact_type", { ascending: true })
-      .order("version", { ascending: false }),
-  ]);
-
-  if (rolloutError || !rollout || artifactError) {
-    return null;
-  }
-
-  const latestByType = new Map<string, ArtifactRow>();
-  for (const row of (artifactRows ?? []) as ArtifactRow[]) {
-    if (!latestByType.has(row.artifact_type)) {
-      latestByType.set(row.artifact_type, row);
+  if (response.status === 401) {
+    const serverToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
+    if (serverToken) {
+      const retryHeaders = await buildClientAuthHeaders(init.headers, {
+        preferServerToken: true,
+      });
+      response = await fetch(url, {
+        credentials: "include",
+        cache: "no-store",
+        ...init,
+        headers: retryHeaders,
+      });
     }
   }
 
-  return {
-    rollout: rollout as unknown as RolloutMeta,
-    artifacts: ARTIFACT_ORDER.map((type) => latestByType.get(type)).filter((row): row is ArtifactRow => Boolean(row)),
-  };
+  if (response.status === 401) {
+    window.location.assign(`/auth/continue?next=${encodeURIComponent(nextPath)}`);
+  }
+
+  return response;
 }
 
 function PacketSection({
@@ -147,7 +139,7 @@ function PacketSection({
           <h2 className={styles.sectionTitle}>{ARTIFACT_TITLES[artifact.artifact_type]}</h2>
         </div>
         <div className={styles.sectionMeta}>
-          <span>v{artifact.version}</span>
+          <span>v{artifact.version ?? "-"}</span>
           <span>{formatDate(artifact.created_at)}</span>
         </div>
       </div>
@@ -286,19 +278,125 @@ function renderArtifactContent(type: ArtifactType, json: Record<string, unknown>
   }
 }
 
-export default async function RolloutPacketPage({
-  params,
-}: {
-  params: Promise<{ rolloutId: string }>;
-}) {
-  const { rolloutId } = await params;
-  const packet = await loadPacketData(rolloutId);
+export default function RolloutPacketPage() {
+  const params = useParams<{ rolloutId: string }>();
+  const rolloutId = useMemo(
+    () => (typeof params?.rolloutId === "string" ? params.rolloutId : ""),
+    [params]
+  );
+  const [rollout, setRollout] = useState<RolloutMeta | null>(null);
+  const [artifacts, setArtifacts] = useState<ArtifactRow[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!packet) {
-    notFound();
+  useEffect(() => {
+    if (!rolloutId) return;
+
+    let cancelled = false;
+
+    async function loadPacket() {
+      setLoading(true);
+      setLoadError(null);
+
+      const nextPath = `/rollouts/${rolloutId}/packet`;
+      const [rolloutRes, artifactsRes] = await Promise.all([
+        fetchPacketApi(`/api/rollouts/${rolloutId}`, nextPath),
+        fetchPacketApi(`/api/rollouts/${rolloutId}/artifacts`, nextPath),
+      ]);
+
+      const rolloutBody = await rolloutRes.json().catch(() => null);
+      const artifactsBody = await artifactsRes.json().catch(() => null);
+
+      if (cancelled) return;
+
+      if (!rolloutRes.ok || !artifactsRes.ok) {
+        if (rolloutRes.status === 404 || artifactsRes.status === 404) {
+          setLoadError("Packet not found.");
+        } else {
+          setLoadError(
+            getResponseMessage(rolloutBody, getResponseMessage(artifactsBody, "Failed to load packet."))
+          );
+        }
+        setLoading(false);
+        return;
+      }
+
+      const rolloutData =
+        rolloutBody &&
+        typeof rolloutBody === "object" &&
+        "ok" in rolloutBody &&
+        rolloutBody.ok === true &&
+        "rollout" in rolloutBody &&
+        rolloutBody.rollout &&
+        typeof rolloutBody.rollout === "object"
+          ? (rolloutBody.rollout as RolloutMeta)
+          : null;
+
+      const artifactData =
+        artifactsBody &&
+        typeof artifactsBody === "object" &&
+        "ok" in artifactsBody &&
+        artifactsBody.ok === true &&
+        "artifacts" in artifactsBody &&
+        Array.isArray(artifactsBody.artifacts)
+          ? (artifactsBody.artifacts as ArtifactRow[])
+          : [];
+
+      if (!rolloutData) {
+        setLoadError("Failed to load packet.");
+        setLoading(false);
+        return;
+      }
+
+      setRollout(rolloutData);
+      setArtifacts(
+        artifactData.filter(
+          (artifact) => artifact.generated && typeof artifact.artifact_type === "string"
+        )
+      );
+      setLoading(false);
+    }
+
+    void loadPacket();
+    return () => {
+      cancelled = true;
+    };
+  }, [rolloutId]);
+
+  if (!rolloutId) {
+    return null;
   }
 
-  const { rollout, artifacts } = packet;
+  if (loading) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.shell}>
+          <section className={styles.cover}>
+            <p className={styles.kicker}>DeploySure</p>
+            <h1 className={styles.title}>AI Governance Framework Packet</h1>
+            <p className={styles.intro}>Loading packet...</p>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  if (loadError || !rollout) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.shell}>
+          <section className={styles.cover}>
+            <p className={styles.kicker}>DeploySure</p>
+            <h1 className={styles.title}>AI Governance Framework Packet</h1>
+            <p className={styles.intro}>{loadError ?? "Packet unavailable."}</p>
+            <Link href={`/rollouts/${rolloutId}`} className={styles.backLink}>
+              Back to dashboard
+            </Link>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={styles.page}>
@@ -354,7 +452,7 @@ export default async function RolloutPacketPage({
           <h2 className={styles.contentsTitle}>Included Documents</h2>
           <div className={styles.contentsList}>
             {artifacts.map((artifact, index) => (
-              <div key={artifact.id} className={styles.contentsItem}>
+              <div key={artifact.id ?? artifact.artifact_type} className={styles.contentsItem}>
                 <span className={styles.contentsIndex}>{String(index + 1).padStart(2, "0")}</span>
                 <div>
                   <div className={styles.contentsItemTitle}>{ARTIFACT_TITLES[artifact.artifact_type]}</div>
@@ -366,7 +464,7 @@ export default async function RolloutPacketPage({
         </section>
 
         {artifacts.map((artifact) => (
-          <PacketSection key={artifact.id} artifact={artifact} rollout={rollout} />
+          <PacketSection key={artifact.id ?? artifact.artifact_type} artifact={artifact} rollout={rollout} />
         ))}
 
         <footer className={styles.footer}>
