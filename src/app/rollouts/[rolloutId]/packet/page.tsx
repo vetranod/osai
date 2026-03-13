@@ -77,13 +77,14 @@ function personLine(name: string | null, title: string | null, fallback: string)
 }
 
 async function loadPacketData(rolloutId: string): Promise<{ rollout: RolloutMeta; artifacts: ArtifactRow[] } | null> {
+  const nextPath = `/rollouts/${rolloutId}/packet`;
   const auth = await getSupabaseServerAuthClient();
   const {
     data: { user },
   } = await auth.auth.getUser();
 
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent(`/rollouts/${rolloutId}/packet`)}`);
+    redirect(`/auth/continue?next=${encodeURIComponent(nextPath)}`);
   }
 
   const allowed = await userCanAccessRollout(rolloutId, user.id);

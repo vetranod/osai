@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import {
   buildClientAuthHeaders,
+  ensureServerSession,
   refreshBrowserSessionAndBridge,
 } from "@/lib/browser-auth-client";
 import styles from "./dashboard.module.css";
@@ -264,8 +264,14 @@ async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<R
 }
 
 async function openPacketPage(rolloutId: string): Promise<void> {
-  await bridgeBrowserSessionToServer().catch(() => null);
-  window.location.assign(`/auth/continue?next=${encodeURIComponent(`/rollouts/${rolloutId}/packet`)}`);
+  const packetPath = `/rollouts/${rolloutId}/packet`;
+  const serverToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
+  if (serverToken) {
+    window.location.assign(packetPath);
+    return;
+  }
+
+  window.location.assign(`/auth/continue?next=${encodeURIComponent(packetPath)}`);
 }
 
 // ---- Artifact Viewer ----
