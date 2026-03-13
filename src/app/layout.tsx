@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { AuthSessionSync } from "@/app/AuthSessionSync";
 import { createAuthProof, type AuthProof } from "@/lib/auth-proof";
 import { buildPageMetadata, SITE_NAME } from "@/app/seo";
 import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
@@ -95,6 +96,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${geistMono.variable}`}>
+        <AuthSessionSync />
         <script
           id="osai-public-env"
           dangerouslySetInnerHTML={{

@@ -96,50 +96,20 @@ function LoginPageInner() {
       const supabase = getSupabaseBrowserClient();
 
       if (mode === "sign_in") {
-        const signInRes = await withTimeout(
-          fetch("/api/auth/sign-in", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
+        const { data, error: signInError } = await withTimeout(
+          supabase.auth.signInWithPassword({
+            email,
+            password,
           }),
           AUTH_TIMEOUT_MS
         );
 
-        const signInBody = (await signInRes.json().catch(() => null)) as
-          | {
-              ok?: boolean;
-              message?: string;
-              access_token?: string;
-              refresh_token?: string;
-            }
-          | null;
-
-        if (!signInRes.ok || !signInBody?.ok) {
-          setError(signInBody?.message ?? "Sign-in failed.");
+        if (signInError || !data.session) {
+          setError(signInError?.message ?? "Sign-in failed.");
           return;
         }
 
-        if (signInBody.access_token && signInBody.refresh_token) {
-          const { data: restored, error: restoreError } = await supabase.auth.setSession({
-            access_token: signInBody.access_token,
-            refresh_token: signInBody.refresh_token,
-          });
-
-          if (!restoreError && restored.session?.access_token && restored.session.refresh_token) {
-            cacheBrowserSession(restored.session);
-          } else {
-            cacheBrowserSession({
-              access_token: signInBody.access_token,
-              refresh_token: signInBody.refresh_token,
-              expires_at: null,
-              user: null,
-            });
-          }
-        }
-
+        cacheBrowserSession(data.session);
         await bridgeBrowserSessionToServer();
 
         // For returning users, skip the wizard entirely and go straight to
@@ -151,8 +121,8 @@ function LoginPageInner() {
               method: "GET",
               credentials: "include",
               cache: "no-store",
-              headers: signInBody.access_token
-                ? { Authorization: `Bearer ${signInBody.access_token}` }
+              headers: data.session.access_token
+                ? { Authorization: `Bearer ${data.session.access_token}` }
                 : {},
             });
             if (mineRes.ok) {
