@@ -6,6 +6,7 @@ import Link from "next/link";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import {
   buildClientAuthHeaders,
+  getClientAccessToken,
   refreshBrowserSessionAndBridge,
 } from "@/lib/browser-auth-client";
 import styles from "./dashboard.module.css";
@@ -239,7 +240,10 @@ function Badge({ value, label }: { value: string; label?: string }) {
 // Dashboard API calls carry both SSR cookies and bearer/proof fallback headers.
 // On 401, force a browser refresh + bridge and retry once with rebuilt headers.
 async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<Response> {
-  const headers = await buildClientAuthHeaders(init.headers, { bridgeMode: "background" });
+  const headers = await buildClientAuthHeaders(init.headers, {
+    preferServerToken: true,
+    bridgeMode: "background",
+  });
   const res = await fetch(url, {
     credentials: "include",
     cache: "no-store",
@@ -1031,6 +1035,7 @@ export default function RolloutDashboard() {
   // Covers rollouts that progressed before on-unlock generation was introduced.
   useEffect(() => {
     async function initLoad() {
+      await getClientAccessToken({ preferServerToken: true }).catch(() => null);
       await loadData();
       if (isArchived) return;
       // Fire-and-forget: if the regenerate endpoint finds nothing missing it's a no-op.
