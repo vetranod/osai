@@ -12,6 +12,7 @@ type BridgeMode = "await" | "background";
 
 type ClientAccessTokenOptions = {
   preferServerToken?: boolean;
+  allowServerTokenFallback?: boolean;
   bridgeMode?: BridgeMode;
   forceRefresh?: boolean;
 };
@@ -201,6 +202,7 @@ export async function getClientAccessToken(
   options: ClientAccessTokenOptions = {}
 ): Promise<string | null> {
   const preferServerToken = options.preferServerToken ?? false;
+  const allowServerTokenFallback = options.allowServerTokenFallback ?? preferServerToken;
   const bridgeMode = options.bridgeMode ?? "await";
   const forceRefresh = options.forceRefresh ?? false;
 
@@ -233,7 +235,7 @@ export async function getClientAccessToken(
   const restoredToken = await restoreBrowserSessionFromCache({ bridgeMode });
   if (restoredToken) return restoredToken;
 
-  if (!preferServerToken) {
+  if (allowServerTokenFallback) {
     return getServerAccessToken();
   }
 

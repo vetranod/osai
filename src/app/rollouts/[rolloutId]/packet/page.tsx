@@ -102,7 +102,9 @@ async function fetchPacketApi(url: string, nextPath: string, init: RequestInit =
   if (response.status === 401) {
     const retryToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
     if (retryToken) {
-      const retryHeaders = await buildClientAuthHeaders(init.headers);
+      const retryHeaders = await buildClientAuthHeaders(init.headers, {
+        preferServerToken: true,
+      });
       response = await fetch(url, {
         credentials: "include",
         cache: "no-store",
