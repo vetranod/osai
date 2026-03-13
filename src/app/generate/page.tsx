@@ -631,11 +631,13 @@ function FinalizeStep({
       (leadPairFilled && !form.approving_authority_name && !form.approving_authority_title) ||
       (!form.initiative_lead_name && !form.initiative_lead_title && authorityPairFilled);
 
-  function redirectToLoginResume(): void {
+  function redirectToLoginResume(options: { sessionExpired?: boolean } = {}): void {
     const next = buildGenerateResumePath(inputs, form);
     const loginUrl = new URL("/login", window.location.origin);
     loginUrl.searchParams.set("next", next);
-    loginUrl.searchParams.set("auth_error", "session_required");
+    if (options.sessionExpired) {
+      loginUrl.searchParams.set("auth_error", "session_required");
+    }
     window.location.assign(loginUrl.toString());
   }
 
@@ -665,7 +667,9 @@ function FinalizeStep({
       }
       const data = await res.json();
       if (res.status === 401) {
-        redirectToLoginResume();
+        redirectToLoginResume({
+          sessionExpired: data?.reason !== "missing_auth",
+        });
         return;
       }
       if (!res.ok || !data.ok) {
@@ -702,7 +706,9 @@ function FinalizeStep({
       }
       const data = await res.json();
       if (res.status === 401) {
-        redirectToLoginResume();
+        redirectToLoginResume({
+          sessionExpired: data?.reason !== "missing_auth",
+        });
         return;
       }
       if (!res.ok || !data.ok) {
@@ -744,7 +750,7 @@ function FinalizeStep({
       const data = await res.json();
       if (res.status === 401) {
         if (data?.reason === "missing_auth") {
-          redirectToLoginResume();
+          redirectToLoginResume({ sessionExpired: false });
           return;
         }
         const detailParts = [
