@@ -51,8 +51,11 @@ function AuthContinuePageInner() {
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
-      if (!cancelled) setStatus("Continuing to your next page.");
-      window.location.assign(next);
+      if (!cancelled) setStatus("Secure session not found. Sending you to sign in.");
+      const loginUrl = new URL("/login", window.location.origin);
+      loginUrl.searchParams.set("next", next);
+      loginUrl.searchParams.set("auth_error", "session_required");
+      window.location.assign(loginUrl.toString());
     }
 
     void continueToTarget();

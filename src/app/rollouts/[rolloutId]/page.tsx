@@ -938,10 +938,7 @@ export default function RolloutDashboard() {
         rRes.status === 401 ||
         rcRes.status === 401
       ) {
-        const loginUrl = new URL("/login", window.location.origin);
-        loginUrl.searchParams.set("next", `/rollouts/${rolloutId}`);
-        loginUrl.searchParams.set("auth_error", "session_required");
-        window.location.assign(loginUrl.toString());
+        window.location.assign(`/auth/continue?next=${encodeURIComponent(`/rollouts/${rolloutId}`)}`);
         return;
       }
       const readApiError = async (res: Response): Promise<string> => {
