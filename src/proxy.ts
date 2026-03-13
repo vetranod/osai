@@ -30,6 +30,7 @@ function getCanonicalHost(): string | null {
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
   const hasBearerAuth = request.headers.get("authorization")?.startsWith("Bearer ") ?? false;
+  const hasSignedAuthProof = Boolean(request.headers.get("x-osai-auth-proof"));
   const canonicalHost = getCanonicalHost();
   const requestHost = request.nextUrl.host;
 
@@ -43,7 +44,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     request,
   });
 
-  const needsUserCheck = (isProtectedApiPath(pathname) && !hasBearerAuth) || pathname === "/login";
+  const needsUserCheck =
+    (isProtectedApiPath(pathname) && !hasBearerAuth && !hasSignedAuthProof) || pathname === "/login";
   let user: { id: string } | null = null;
 
   if (needsUserCheck) {
@@ -73,7 +75,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   if (!user && isProtectedApiPath(pathname)) {
-    if (hasBearerAuth) return response;
+    if (hasBearerAuth || hasSignedAuthProof) return response;
     return NextResponse.json(
       { ok: false, message: "Authentication required." },
       { status: 401 }
