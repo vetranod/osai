@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   buildClientAuthHeaders,
+  ensureServerSession,
   refreshBrowserSessionAndBridge,
 } from "@/lib/browser-auth-client";
 import styles from "./dashboard.module.css";
@@ -242,13 +243,29 @@ async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<R
     preferServerToken: true,
     bridgeMode: "background",
   });
-  const res = await fetch(url, {
+  let res = await fetch(url, {
     credentials: "include",
     cache: "no-store",
     ...init,
     headers,
   });
   if (res.status === 401) {
+    const serverToken = await ensureServerSession({ attempts: 3, pauseMs: 200 });
+    if (serverToken) {
+      const retryHeaders = await buildClientAuthHeaders(init.headers, {
+        preferServerToken: true,
+      });
+      res = await fetch(url, {
+        credentials: "include",
+        cache: "no-store",
+        ...init,
+        headers: retryHeaders,
+      });
+      if (res.status !== 401) {
+        return res;
+      }
+    }
+
     const refreshedToken = await refreshBrowserSessionAndBridge();
     if (refreshedToken) {
       const retryHeaders = await buildClientAuthHeaders(init.headers);
@@ -1045,6 +1062,7 @@ export default function RolloutDashboardClient({
 
       if (needsBootstrap) {
         setLoading(true);
+        await ensureServerSession({ attempts: 2, pauseMs: 150 }).catch(() => null);
         await loadData();
         return;
       }
