@@ -631,12 +631,18 @@ function FinalizeStep({
       (leadPairFilled && !form.approving_authority_name && !form.approving_authority_title) ||
       (!form.initiative_lead_name && !form.initiative_lead_title && authorityPairFilled);
 
-  function redirectToLoginResume(options: { sessionExpired?: boolean } = {}): void {
+  function redirectToLoginResume(
+    options: { sessionExpired?: boolean; promptCreateAccount?: boolean } = {}
+  ): void {
     const next = buildGenerateResumePath(inputs, form);
     const loginUrl = new URL("/login", window.location.origin);
     loginUrl.searchParams.set("next", next);
     if (options.sessionExpired) {
       loginUrl.searchParams.set("auth_error", "session_required");
+    }
+    if (options.promptCreateAccount) {
+      loginUrl.searchParams.set("mode", "sign_up");
+      loginUrl.searchParams.set("intent", "checkout");
     }
     window.location.assign(loginUrl.toString());
   }
@@ -669,6 +675,7 @@ function FinalizeStep({
       if (res.status === 401) {
         redirectToLoginResume({
           sessionExpired: data?.reason !== "missing_auth",
+          promptCreateAccount: data?.reason === "missing_auth",
         });
         return;
       }
@@ -708,6 +715,7 @@ function FinalizeStep({
       if (res.status === 401) {
         redirectToLoginResume({
           sessionExpired: data?.reason !== "missing_auth",
+          promptCreateAccount: data?.reason === "missing_auth",
         });
         return;
       }
@@ -750,7 +758,10 @@ function FinalizeStep({
       const data = await res.json();
       if (res.status === 401) {
         if (data?.reason === "missing_auth") {
-          redirectToLoginResume({ sessionExpired: false });
+          redirectToLoginResume({
+            sessionExpired: false,
+            promptCreateAccount: true,
+          });
           return;
         }
         const detailParts = [
@@ -938,6 +949,9 @@ function FinalizeStep({
               </button>
             )}
           </div>
+          <p className={styles.hint} style={{ marginTop: 8 }}>
+            You&apos;ll sign in or create an account before checkout so your payment and rollout stay tied together.
+          </p>
           {canSkip && (
             <p className={styles.hint} style={{ marginTop: 8 }}>
               You can add names later from the governance dashboard.

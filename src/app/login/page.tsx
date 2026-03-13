@@ -59,6 +59,8 @@ function getAuthRedirectBaseUrl(): string {
 function LoginPageInner() {
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => normalizeNextPath(searchParams.get("next")), [searchParams]);
+  const intent = searchParams.get("intent");
+  const requestedMode = searchParams.get("mode");
   const callbackError = useMemo(() => {
     const code = searchParams.get("auth_error");
     if (code === "exchange_failed") {
@@ -70,13 +72,19 @@ function LoginPageInner() {
     return null;
   }, [searchParams]);
   const sessionRequired = searchParams.get("auth_error") === "session_required";
+  const checkoutIntent = intent === "checkout";
+  const defaultMode: AuthMode = requestedMode === "sign_up" ? "sign_up" : "sign_in";
 
-  const [mode, setMode] = useState<AuthMode>("sign_in");
+  const [mode, setMode] = useState<AuthMode>(defaultMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMode(defaultMode);
+  }, [defaultMode]);
 
   useEffect(() => {
     if (!sessionRequired) {
@@ -236,9 +244,17 @@ function LoginPageInner() {
     <section className={styles.wrap}>
       <div className={styles.card}>
         <p className={styles.eyebrow}>Secure access</p>
-        <h1 className={styles.title}>Sign in to DeploySure</h1>
+        <h1 className={styles.title}>
+          {checkoutIntent && !sessionRequired
+            ? mode === "sign_up"
+              ? "Create your account to continue"
+              : "Sign in to continue"
+            : "Sign in to DeploySure"}
+        </h1>
         <p className={styles.subtitle}>
-          Continue to your framework builder and rollout dashboards.
+          {checkoutIntent && !sessionRequired
+            ? "We need an account before payment so your rollout, purchase, and dashboard stay linked."
+            : "Continue to your framework builder and rollout dashboards."}
         </p>
 
         <div className={styles.modeRow} role="tablist" aria-label="Authentication mode">
@@ -307,6 +323,11 @@ function LoginPageInner() {
         </button>
 
         {callbackError ? <p className={styles.error}>{callbackError}</p> : null}
+        {checkoutIntent && !sessionRequired ? (
+          <p className={styles.status}>
+            New here? Create your account first. Already have one? Switch to Sign in.
+          </p>
+        ) : null}
         {status ? <p className={styles.status}>{status}</p> : null}
         {error ? <p className={styles.error}>{error}</p> : null}
 
