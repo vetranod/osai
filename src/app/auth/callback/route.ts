@@ -15,8 +15,6 @@ export async function GET(request: NextRequest): Promise<Response> {
   const next = sanitizeNextPath(requestUrl.searchParams.get("next"));
 
   if (code) {
-    // PKCE flow: exchange the code for a session and write cookies directly
-    // onto the redirect response so they survive the navigation to `next`.
     const destUrl = new URL(next, requestUrl.origin);
     const response = NextResponse.redirect(destUrl);
 
@@ -44,16 +42,12 @@ export async function GET(request: NextRequest): Promise<Response> {
     }
   }
 
-  // No ?code= present — implicit-flow invite (tokens in URL fragment #access_token=…).
-  // Fragments are browser-only; serve an HTML page whose inline script reads the hash,
-  // seeds sessionStorage, calls bridge-session, then routes through /auth/continue
-  // which has the full session-recovery chain as a fallback.
   const encodedContinue = encodeURIComponent(`/auth/continue?next=${encodeURIComponent(next)}`);
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
-<title>Signing in…</title>
+<title>Signing in...</title>
 <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#94a3b8}</style>
-</head><body><p>Signing you in…</p>
+</head><body><p>Signing you in...</p>
 <script>
 (function(){
   var hash = window.location.hash.replace(/^#/,'');

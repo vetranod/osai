@@ -4,8 +4,11 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
-import { cacheBrowserSession, getCachedBrowserSession } from "@/lib/browser-session-cache";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import {
+  getServerAccessToken,
+  refreshBrowserSessionAndBridge,
+  restoreBrowserSessionFromCache,
+} from "@/lib/browser-auth-client";
 import styles from "../confirmed/page.module.css";
 
 function sanitizeNextPath(raw: string | null): string {
@@ -24,56 +27,28 @@ function AuthContinuePageInner() {
     let cancelled = false;
 
     async function continueToTarget() {
-      // Always restore browser session from cache first, so both browser cookies
-      // AND SSR cookies are in sync before we navigate to a server-guarded route.
-      // Without this, the dashboard loads with SSR cookies only — if anything
-      // clears those cookies (e.g. the proxy triggering a setAll on a stale token),
-      // the dashboard's bearer-token fallback has nothing to fall back to.
-      const supabase = getSupabaseBrowserClient();
-      const cachedSession = getCachedBrowserSession();
-      if (cachedSession?.access_token) {
-        try {
-          const { data: restored, error: restoreError } = await supabase.auth.setSession({
-            access_token: cachedSession.access_token,
-            refresh_token: cachedSession.refresh_token,
-          });
-          if (!restoreError && restored.session?.access_token) {
-            cacheBrowserSession(restored.session);
-          }
-        } catch { /* silent */ }
-        // Re-bridge so SSR cookies are fresh regardless of what path we take below.
-        await bridgeBrowserSessionToServer().catch(() => null);
+      await restoreBrowserSessionFromCache().catch(() => null);
+
+      const serverToken = await getServerAccessToken();
+      if (serverToken) {
+        window.location.assign(next);
+        return;
       }
 
-      // Check SSR cookies — if valid, navigate immediately.
-      try {
-        const tokenRes = await fetch("/api/auth/token", {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        });
-        if (tokenRes.ok) {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const refreshedToken = await refreshBrowserSessionAndBridge();
+        if (refreshedToken) {
           window.location.assign(next);
           return;
         }
-      } catch {
-        // Fall through to bridge-retry recovery.
-      }
 
-      // SSR cookies are still absent — retry bridge up to 3 times.
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.access_token && session.refresh_token) {
-        for (let attempt = 0; attempt < 3; attempt += 1) {
-          const bridged = await bridgeBrowserSessionToServer();
-          if (bridged.ok) {
-            window.location.assign(next);
-            return;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 300));
+        const bridged = await bridgeBrowserSessionToServer();
+        if (bridged.ok) {
+          window.location.assign(next);
+          return;
         }
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       if (!cancelled) setStatus("Continuing to your next page.");

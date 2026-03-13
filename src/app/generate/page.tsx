@@ -3,8 +3,12 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
-import { cacheBrowserSession, getCachedBrowserSession } from "@/lib/browser-session-cache";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { getCachedBrowserSession } from "@/lib/browser-session-cache";
+import {
+  buildClientAuthHeaders,
+  getClientAccessToken,
+  restoreBrowserSessionFromCache,
+} from "@/lib/browser-auth-client";
 import styles from "./page.module.css";
 
 // ---- Options ----
@@ -134,74 +138,11 @@ function loadGenerateDraft(): PrefillData | null {
   }
 }
 
-async function getCheckoutAccessToken(): Promise<string | null> {
-  // ── 1. SSR session cookies (most reliable: set by bridge during auth flow) ──
-  try {
-    const res = await fetch("/api/auth/token", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (res.ok) {
-      const data = await res.json().catch(() => null);
-      if (typeof data?.access_token === "string" && data.access_token) {
-        return data.access_token;
-      }
-    }
-  } catch {
-    // SSR cookie path unavailable; continue to browser session.
-  }
-
-  // ── 2. Browser Supabase session ──
-  const supabase = getSupabaseBrowserClient();
-  try {
-    const { data: refreshed } = await supabase.auth.refreshSession();
-    if (refreshed.session?.access_token) {
-      cacheBrowserSession(refreshed.session);
-      await bridgeBrowserSessionToServer();
-      return refreshed.session.access_token;
-    }
-  } catch { /* silent */ }
-
-  try {
-    const { data: { session: existingSession } } = await supabase.auth.getSession();
-    if (existingSession?.access_token) {
-      cacheBrowserSession(existingSession);
-      await bridgeBrowserSessionToServer();
-      return existingSession.access_token;
-    }
-  } catch { /* silent */ }
-
-  // ── 3. Restore from sessionStorage cache ──
-  const cachedSession = getCachedBrowserSession();
-  if (cachedSession?.access_token) {
-    try {
-      const { data: restored, error: restoreError } = await supabase.auth.setSession({
-        access_token: cachedSession.access_token,
-        refresh_token: cachedSession.refresh_token,
-      });
-      if (!restoreError && restored.session?.access_token) {
-        cacheBrowserSession(restored.session);
-        await bridgeBrowserSessionToServer();
-        return restored.session.access_token;
-      }
-    } catch { /* silent */ }
-
-    // setSession failed but the raw AT from sign-in is still a valid Bearer credential.
-    await bridgeBrowserSessionToServer().catch(() => null);
-    return cachedSession.access_token;
-  }
-
-  return null;
-}
-
 async function postCheckoutStart(body: Record<string, string>): Promise<Response> {
-  const accessToken = await getCheckoutAccessToken();
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-  if (typeof window !== "undefined" && window.__OSAI_AUTH_PROOF) {
-    headers["x-osai-auth-proof"] = JSON.stringify(window.__OSAI_AUTH_PROOF);
-  }
+  const headers = await buildClientAuthHeaders(
+    { "Content-Type": "application/json" },
+    { preferServerToken: true }
+  );
 
   return fetch("/api/checkout/start", {
     method: "POST",
@@ -212,12 +153,10 @@ async function postCheckoutStart(body: Record<string, string>): Promise<Response
 }
 
 async function postDemoCheckoutStart(body: Record<string, string>): Promise<Response> {
-  const accessToken = await getCheckoutAccessToken();
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-  if (typeof window !== "undefined" && window.__OSAI_AUTH_PROOF) {
-    headers["x-osai-auth-proof"] = JSON.stringify(window.__OSAI_AUTH_PROOF);
-  }
+  const headers = await buildClientAuthHeaders(
+    { "Content-Type": "application/json" },
+    { preferServerToken: true }
+  );
 
   return fetch("/api/checkout/demo-start", {
     method: "POST",
@@ -1052,21 +991,8 @@ function GeneratePageInner() {
       const cachedSession = getCachedBrowserSession();
       if (!cachedSession) return;
 
-      const supabase = getSupabaseBrowserClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.access_token) return;
-
-      const { data: restored, error } = await supabase.auth.setSession({
-        access_token: cachedSession.access_token,
-        refresh_token: cachedSession.refresh_token,
-      });
-      if (cancelled) return;
-      if (!error && restored.session?.access_token) {
-        cacheBrowserSession(restored.session);
-        void bridgeBrowserSessionToServer();
-      }
+      const restoredToken = await restoreBrowserSessionFromCache({ bridgeMode: "background" });
+      if (cancelled || !restoredToken) return;
     }
 
     void restoreBrowserAuthFromCache();
@@ -1084,7 +1010,7 @@ function GeneratePageInner() {
     let cancelled = false;
 
     async function redirectIfRolloutExists() {
-      const accessToken = await getCheckoutAccessToken();
+      const accessToken = await getClientAccessToken({ preferServerToken: true });
       if (!accessToken || cancelled) return;
 
       try {

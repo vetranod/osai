@@ -4,8 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
-import { cacheBrowserSession, getCachedBrowserSession } from "@/lib/browser-session-cache";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { buildClientAuthHeaders } from "@/lib/browser-auth-client";
 import styles from "./page.module.css";
 
 type SessionStatus = {
@@ -16,71 +15,6 @@ type SessionStatus = {
   rollout_id?: string | null;
   message?: string;
 };
-
-async function getCheckoutStatusAccessToken(): Promise<string | null> {
-  // ── 1. SSR session cookies (most reliable: set by bridge before navigating to Stripe) ──
-  // Try this first — after Stripe redirects back, browser Supabase cookies are often
-  // absent, so browser-side refreshSession/getSession will fail silently. The bridge
-  // call in handleCheckout writes SSR cookies before the Stripe redirect, so this path
-  // is the one most likely to succeed on return.
-  try {
-    const res = await fetch("/api/auth/token", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (res.ok) {
-      const data = await res.json().catch(() => null);
-      if (typeof data?.access_token === "string" && data.access_token) {
-        return data.access_token;
-      }
-    }
-  } catch {
-    // SSR cookie path unavailable; continue to browser session.
-  }
-
-  // ── 2. Browser Supabase session ──
-  const supabase = getSupabaseBrowserClient();
-  try {
-    const { data: refreshed } = await supabase.auth.refreshSession();
-    if (refreshed.session?.access_token) {
-      cacheBrowserSession(refreshed.session);
-      await bridgeBrowserSessionToServer();
-      return refreshed.session.access_token;
-    }
-  } catch { /* silent */ }
-
-  try {
-    const { data: { session: existingSession } } = await supabase.auth.getSession();
-    if (existingSession?.access_token) {
-      cacheBrowserSession(existingSession);
-      await bridgeBrowserSessionToServer();
-      return existingSession.access_token;
-    }
-  } catch { /* silent */ }
-
-  // ── 3. Restore from sessionStorage cache ──
-  const cachedSession = getCachedBrowserSession();
-  if (cachedSession?.access_token) {
-    try {
-      const { data: restored, error: restoreError } = await supabase.auth.setSession({
-        access_token: cachedSession.access_token,
-        refresh_token: cachedSession.refresh_token,
-      });
-      if (!restoreError && restored.session?.access_token) {
-        cacheBrowserSession(restored.session);
-        await bridgeBrowserSessionToServer();
-        return restored.session.access_token;
-      }
-    } catch { /* silent */ }
-
-    // setSession failed but the raw AT from sign-in is still a valid Bearer credential.
-    await bridgeBrowserSessionToServer().catch(() => null);
-    return cachedSession.access_token;
-  }
-
-  return null;
-}
 
 function SuccessInner() {
   const router = useRouter();
@@ -104,15 +38,7 @@ function SuccessInner() {
 
     async function poll() {
       try {
-        const accessToken = await getCheckoutStatusAccessToken();
-        const headers: Record<string, string> = {};
-        if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-        if (typeof window !== "undefined" && (window as unknown as { __OSAI_AUTH_PROOF?: unknown }).__OSAI_AUTH_PROOF) {
-          headers["x-osai-auth-proof"] = JSON.stringify(
-            (window as unknown as { __OSAI_AUTH_PROOF?: unknown }).__OSAI_AUTH_PROOF
-          );
-        }
-
+        const headers = await buildClientAuthHeaders(undefined, { preferServerToken: true });
         const res = await fetch(`/api/checkout/session?session_id=${encodeURIComponent(sid)}`, {
           method: "GET",
           cache: "no-store",
@@ -147,7 +73,7 @@ function SuccessInner() {
       }
     }
 
-    poll();
+    void poll();
     return () => {
       cancelled = true;
     };

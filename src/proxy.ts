@@ -33,7 +33,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const canonicalHost = getCanonicalHost();
   const requestHost = request.nextUrl.host;
 
-  // Prevent split auth sessions between hosts (e.g., apex vs www).
   if (canonicalHost && canonicalHost !== requestHost) {
     const redirect = request.nextUrl.clone();
     redirect.host = canonicalHost;
@@ -44,40 +43,36 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     request,
   });
 
-  // Always call getUser() — this is the standard @supabase/ssr middleware pattern.
-  // It refreshes the session when the AT is expired (exchanging the RT for a new
-  // AT+RT pair) and writes the updated tokens to both the request (so downstream
-  // route handlers see them) and the response (so the browser cookie is updated).
-  // Skipping this on page routes was the root cause of stale SSR cookies reaching
-  // the dashboard API calls.
+  const needsUserCheck = (isProtectedApiPath(pathname) && !hasBearerAuth) || pathname === "/login";
   let user: { id: string } | null = null;
-  try {
-    const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    });
 
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser();
-    user = currentUser ? { id: currentUser.id } : null;
-  } catch {
-    user = null;
+  if (needsUserCheck) {
+    try {
+      const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+          },
+        },
+      });
+
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      user = currentUser ? { id: currentUser.id } : null;
+    } catch {
+      user = null;
+    }
   }
 
   if (!user && isProtectedApiPath(pathname)) {
-    // Allow API routes to proceed when caller provides a bearer token.
-    // Route handlers can validate token directly even if auth cookie is stale/missing.
     if (hasBearerAuth) return response;
     return NextResponse.json(
       { ok: false, message: "Authentication required." },
@@ -86,11 +81,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   if (user && pathname === "/login") {
-    // If the user was redirected here because of a session error (e.g. a stale
-    // SSR cookie that the dashboard rejected), let the login page render so they
-    // can sign in fresh and get new tokens.  Without this guard the proxy would
-    // immediately bounce them back to the failing destination and create an
-    // infinite redirect loop.
     const authError = request.nextUrl.searchParams.get("auth_error");
     if (!authError) {
       const next = sanitizeNextPath(request.nextUrl.searchParams.get("next"));

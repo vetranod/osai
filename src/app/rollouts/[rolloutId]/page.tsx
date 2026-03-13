@@ -4,7 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import {
+  buildClientAuthHeaders,
+  refreshBrowserSessionAndBridge,
+} from "@/lib/browser-auth-client";
 import styles from "./dashboard.module.css";
 
 // ---- Types ----
@@ -233,35 +236,26 @@ function Badge({ value, label }: { value: string; label?: string }) {
   );
 }
 
-// Deduplication guard: prevents concurrent refreshes from racing and consuming
-// the single-use refresh token when 4 API calls fire simultaneously on mount.
-let _refreshInFlight: Promise<boolean> | null = null;
-
-async function refreshAndBridge(): Promise<boolean> {
-  if (_refreshInFlight) return _refreshInFlight;
-  _refreshInFlight = (async () => {
-    try {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.refreshSession();
-      if (!session?.access_token) return false;
-      await bridgeBrowserSessionToServer().catch(() => null);
-      return true;
-    } catch {
-      return false;
-    }
-  })().finally(() => { _refreshInFlight = null; });
-  return _refreshInFlight;
-}
-
-// All dashboard API calls use SSR cookies (set by middleware on every page load).
-// On 401, refresh the browser session + bridge to re-establish SSR cookies, then
-// retry once. A second 401 after retry means the session is truly gone → login.
+// Dashboard API calls carry both SSR cookies and bearer/proof fallback headers.
+// On 401, force a browser refresh + bridge and retry once with rebuilt headers.
 async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<Response> {
-  const res = await fetch(url, { credentials: "include", cache: "no-store", ...init });
+  const headers = await buildClientAuthHeaders(init.headers, { bridgeMode: "background" });
+  const res = await fetch(url, {
+    credentials: "include",
+    cache: "no-store",
+    ...init,
+    headers,
+  });
   if (res.status === 401) {
-    const ok = await refreshAndBridge();
-    if (ok) {
-      return fetch(url, { credentials: "include", cache: "no-store", ...init });
+    const refreshedToken = await refreshBrowserSessionAndBridge();
+    if (refreshedToken) {
+      const retryHeaders = await buildClientAuthHeaders(init.headers);
+      return fetch(url, {
+        credentials: "include",
+        cache: "no-store",
+        ...init,
+        headers: retryHeaders,
+      });
     }
   }
   return res;
@@ -932,7 +926,7 @@ export default function RolloutDashboard() {
         fetchDashboardApi(`/api/rollouts/${rolloutId}`),
         fetchDashboardApi(`/api/rollouts/${rolloutId}/reclassifications`),
       ]);
-      // fetchDashboardApi already retried once on 401 via refreshAndBridge().
+      // fetchDashboardApi already retried once on 401 with a forced session refresh.
       // A second 401 here means the session is genuinely gone — send to login.
       if (
         mRes.status === 401 ||
@@ -1602,3 +1596,4 @@ export default function RolloutDashboard() {
     </div>
   );
 }
+
