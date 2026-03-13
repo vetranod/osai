@@ -3,8 +3,10 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
-import { buildClientAuthHeaders } from "@/lib/browser-auth-client";
+import {
+  buildClientAuthHeaders,
+  ensureServerSession,
+} from "@/lib/browser-auth-client";
 import styles from "./page.module.css";
 
 type SessionStatus = {
@@ -38,28 +40,47 @@ function SuccessInner() {
 
     async function poll() {
       try {
-        const headers = await buildClientAuthHeaders(undefined, { preferServerToken: true });
-        const res = await fetch(`/api/checkout/session?session_id=${encodeURIComponent(sid)}`, {
-          method: "GET",
-          cache: "no-store",
-          credentials: "include",
-          headers,
-        });
-        const data = (await res.json()) as SessionStatus;
+        const readStatus = async (): Promise<{ res: Response; data: SessionStatus }> => {
+          const headers = await buildClientAuthHeaders(undefined, { preferServerToken: true });
+          const res = await fetch(`/api/checkout/session?session_id=${encodeURIComponent(sid)}`, {
+            method: "GET",
+            cache: "no-store",
+            credentials: "include",
+            headers,
+          });
+          const data = (await res.json()) as SessionStatus;
+          return { res, data };
+        };
+
+        let { res, data } = await readStatus();
         if (cancelled) return;
         setStatus(data);
 
         if (res.status === 401) {
-          const loginUrl = new URL("/login", window.location.origin);
-          loginUrl.searchParams.set("next", `/generate/success?session_id=${encodeURIComponent(sid)}`);
-          loginUrl.searchParams.set("auth_error", "session_required");
-          window.location.assign(loginUrl.toString());
+          const serverToken = await ensureServerSession({ attempts: 4, pauseMs: 250 });
+          if (serverToken) {
+            ({ res, data } = await readStatus());
+            if (cancelled) return;
+            setStatus(data);
+          }
+        }
+
+        if (res.status === 401) {
+          router.replace(
+            `/auth/continue?next=${encodeURIComponent(`/generate/success?session_id=${encodeURIComponent(sid)}`)}`
+          );
           return;
         }
 
         if (res.ok && data.ok && data.rollout_id) {
-          await bridgeBrowserSessionToServer();
-          router.replace(`/auth/continue?next=${encodeURIComponent(`/rollouts/${data.rollout_id}`)}`);
+          const dashboardPath = `/rollouts/${data.rollout_id}`;
+          const serverToken = await ensureServerSession({ attempts: 2, pauseMs: 200 });
+          if (serverToken) {
+            router.replace(dashboardPath);
+            return;
+          }
+
+          router.replace(`/auth/continue?next=${encodeURIComponent(dashboardPath)}`);
           return;
         }
       } catch {
