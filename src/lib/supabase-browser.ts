@@ -1,6 +1,6 @@
 "use client";
 
-import { createBrowserClient, type CookieOptions } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 declare global {
@@ -33,12 +33,13 @@ export function getSupabaseBrowserClient(): SupabaseClient {
   if (browserClient) return browserClient;
 
   const { url, anonKey } = resolveBrowserEnv();
-  browserClient = createBrowserClient(url, anonKey, {
-    cookieOptions: {
-      sameSite: "lax",
-    } satisfies CookieOptions,
+  browserClient = createClient(url, anonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
   });
 
   return browserClient;
 }
-
