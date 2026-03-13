@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   buildClientAuthHeaders,
   refreshBrowserSessionAndBridge,
@@ -260,10 +261,6 @@ async function fetchDashboardApi(url: string, init: RequestInit = {}): Promise<R
     }
   }
   return res;
-}
-
-async function openPacketPage(rolloutId: string): Promise<void> {
-  window.location.assign(`/rollouts/${rolloutId}/packet`);
 }
 
 // ---- Artifact Viewer ----
@@ -916,6 +913,7 @@ export default function RolloutDashboardClient({
   initialRolloutMeta,
   initialReclassifications = [],
 }: RolloutDashboardClientProps) {
+  const router = useRouter();
 
   const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones);
   const [artifacts, setArtifacts] = useState<Artifact[]>(initialArtifacts);
@@ -1290,10 +1288,10 @@ export default function RolloutDashboardClient({
         {/* Archive / Restart — top-right corner, low prominence */}
         {rolloutMeta && (isArchived || canArchive) && (
           <div className={styles.archiveCorner}>
-            <button
+              <button
               type="button"
               className={styles.archiveTrigger}
-              onClick={() => void openPacketPage(rolloutId)}
+              onClick={() => router.push(`/rollouts/${rolloutId}/packet`)}
             >
               Open print packet
             </button>
@@ -1323,7 +1321,7 @@ export default function RolloutDashboardClient({
             <button
               type="button"
               className={styles.archiveTrigger}
-              onClick={() => void openPacketPage(rolloutId)}
+              onClick={() => router.push(`/rollouts/${rolloutId}/packet`)}
             >
               Open print packet
             </button>
