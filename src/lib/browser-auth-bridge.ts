@@ -1,6 +1,10 @@
 "use client";
 
-import { getCachedBrowserSession } from "@/lib/browser-session-cache";
+import {
+  cacheBrowserSession,
+  clearCachedBrowserSession,
+  getCachedBrowserSession,
+} from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export type BrowserAuthBridgeResult =
@@ -17,14 +21,77 @@ export type BrowserAuthBridgeResult =
 
 let bridgeInFlight: Promise<BrowserAuthBridgeResult> | null = null;
 
-export async function bridgeBrowserSessionToServer(): Promise<BrowserAuthBridgeResult> {
+function isTokenFresh(expiresAt: number | null | undefined): boolean {
+  return !expiresAt || expiresAt > Math.floor(Date.now() / 1000) + 30;
+}
+
+async function clearInvalidBrowserSession(): Promise<void> {
+  clearCachedBrowserSession();
   const supabase = getSupabaseBrowserClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  await supabase.auth.signOut({ scope: "local" }).catch(() => null);
+}
+
+async function getBridgeableBrowserSession(): Promise<{
+  accessToken: string;
+  refreshToken: string;
+} | null> {
+  const supabase = getSupabaseBrowserClient();
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.access_token && session.refresh_token && isTokenFresh(session.expires_at)) {
+      cacheBrowserSession(session);
+      return {
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+      };
+    }
+
+    if (session?.refresh_token) {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (!error && data.session?.access_token && data.session.refresh_token) {
+        cacheBrowserSession(data.session);
+        return {
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+        };
+      }
+    }
+  } catch {
+    // Fall through to cached-session recovery.
+  }
+
   const cachedSession = getCachedBrowserSession();
-  const accessToken = session?.access_token || cachedSession?.access_token || "";
-  const refreshToken = session?.refresh_token || cachedSession?.refresh_token || "";
+  if (cachedSession?.access_token && cachedSession.refresh_token) {
+    try {
+      const { data, error } = await supabase.auth.setSession({
+        access_token: cachedSession.access_token,
+        refresh_token: cachedSession.refresh_token,
+      });
+
+      if (!error && data.session?.access_token && data.session.refresh_token) {
+        cacheBrowserSession(data.session);
+        return {
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+        };
+      }
+    } catch {
+      // Fall through to clearing invalid local auth state.
+    }
+  }
+
+  await clearInvalidBrowserSession();
+  return null;
+}
+
+export async function bridgeBrowserSessionToServer(): Promise<BrowserAuthBridgeResult> {
+  const browserSession = await getBridgeableBrowserSession();
+  const accessToken = browserSession?.accessToken ?? "";
+  const refreshToken = browserSession?.refreshToken ?? "";
 
   if (!accessToken || !refreshToken) {
     return {

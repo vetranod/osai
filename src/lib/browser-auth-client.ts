@@ -1,7 +1,11 @@
 "use client";
 
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
-import { cacheBrowserSession, getCachedBrowserSession } from "@/lib/browser-session-cache";
+import {
+  cacheBrowserSession,
+  clearCachedBrowserSession,
+  getCachedBrowserSession,
+} from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type BridgeMode = "await" | "background";
@@ -13,6 +17,8 @@ type ClientAccessTokenOptions = {
 };
 
 let refreshInFlight: Promise<string | null> | null = null;
+let ensureServerSessionInFlight: Promise<string | null> | null = null;
+let serverAccessTokenInFlight: Promise<string | null> | null = null;
 
 function isTokenFresh(expiresAt: number | null | undefined): boolean {
   return !expiresAt || expiresAt > Math.floor(Date.now() / 1000) + 30;
@@ -25,6 +31,12 @@ function applyBridge(mode: BridgeMode): Promise<void> {
   }
 
   return bridgeBrowserSessionToServer().then(() => undefined).catch(() => undefined);
+}
+
+async function clearInvalidBrowserSession(): Promise<void> {
+  clearCachedBrowserSession();
+  const supabase = getSupabaseBrowserClient();
+  await supabase.auth.signOut({ scope: "local" }).catch(() => null);
 }
 
 export function getAuthProofHeaderValue(): string | null {
@@ -40,58 +52,74 @@ export function getAuthProofHeaderValue(): string | null {
 }
 
 export async function getServerAccessToken(): Promise<string | null> {
-  try {
-    const res = await fetch("/api/auth/token", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
+  if (serverAccessTokenInFlight) return serverAccessTokenInFlight;
 
-    const data = await res.json().catch(() => null);
-    return typeof data?.access_token === "string" && data.access_token ? data.access_token : null;
-  } catch {
-    return null;
-  }
+  serverAccessTokenInFlight = (async () => {
+    try {
+      const res = await fetch("/api/auth/token", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!res.ok) return null;
+
+      const data = await res.json().catch(() => null);
+      return typeof data?.access_token === "string" && data.access_token ? data.access_token : null;
+    } catch {
+      return null;
+    }
+  })().finally(() => {
+    serverAccessTokenInFlight = null;
+  });
+
+  return serverAccessTokenInFlight;
 }
 
 export async function ensureServerSession(
   options: { attempts?: number; pauseMs?: number } = {}
 ): Promise<string | null> {
+  if (ensureServerSessionInFlight) return ensureServerSessionInFlight;
+
   const attempts = options.attempts ?? 3;
   const pauseMs = options.pauseMs ?? 300;
 
-  const initialServerToken = await getServerAccessToken();
-  if (initialServerToken) return initialServerToken;
+  ensureServerSessionInFlight = (async () => {
+    const initialServerToken = await getServerAccessToken();
+    if (initialServerToken) return initialServerToken;
 
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const bridged = await bridgeBrowserSessionToServer().catch(() => ({
-      ok: false as const,
-      message: "Bridge request failed.",
-    }));
-    if (bridged.ok) {
-      const bridgedServerToken = await getServerAccessToken();
-      if (bridgedServerToken) return bridgedServerToken;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const bridged = await bridgeBrowserSessionToServer().catch(() => ({
+        ok: false as const,
+        message: "Bridge request failed.",
+      }));
+      if (bridged.ok) {
+        const bridgedServerToken = await getServerAccessToken();
+        if (bridgedServerToken) return bridgedServerToken;
+      }
+
+      const refreshedToken = await refreshBrowserSessionAndBridge({ bridgeMode: "await" });
+      if (refreshedToken) {
+        const refreshedServerToken = await getServerAccessToken();
+        if (refreshedServerToken) return refreshedServerToken;
+      }
+
+      const restoredToken = await restoreBrowserSessionFromCache({ bridgeMode: "await" });
+      if (restoredToken) {
+        const restoredServerToken = await getServerAccessToken();
+        if (restoredServerToken) return restoredServerToken;
+      }
+
+      if (attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, pauseMs));
+      }
     }
 
-    const refreshedToken = await refreshBrowserSessionAndBridge({ bridgeMode: "await" });
-    if (refreshedToken) {
-      const refreshedServerToken = await getServerAccessToken();
-      if (refreshedServerToken) return refreshedServerToken;
-    }
+    return null;
+  })().finally(() => {
+    ensureServerSessionInFlight = null;
+  });
 
-    const restoredToken = await restoreBrowserSessionFromCache({ bridgeMode: "await" });
-    if (restoredToken) {
-      const restoredServerToken = await getServerAccessToken();
-      if (restoredServerToken) return restoredServerToken;
-    }
-
-    if (attempt < attempts - 1) {
-      await new Promise((resolve) => setTimeout(resolve, pauseMs));
-    }
-  }
-
-  return null;
+  return ensureServerSessionInFlight;
 }
 
 export async function refreshBrowserSessionAndBridge(
@@ -103,14 +131,18 @@ export async function refreshBrowserSessionAndBridge(
   refreshInFlight = (async () => {
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data } = await supabase.auth.refreshSession();
+      const { data, error } = await supabase.auth.refreshSession();
       const session = data.session;
-      if (!session?.access_token || !session.refresh_token) return null;
+      if (error || !session?.access_token || !session.refresh_token) {
+        await clearInvalidBrowserSession();
+        return null;
+      }
 
       cacheBrowserSession(session);
       await applyBridge(bridgeMode);
       return session.access_token;
     } catch {
+      await clearInvalidBrowserSession();
       return null;
     }
   })().finally(() => {
@@ -140,14 +172,29 @@ export async function restoreBrowserSessionFromCache(
       return data.session.access_token;
     }
   } catch {
-    // Fall through to raw cached token if it still appears usable.
+    // Fall through to clearing invalid local auth state.
   }
 
-  if (isTokenFresh(cachedSession.expires_at)) {
-    return cachedSession.access_token;
-  }
-
+  await clearInvalidBrowserSession();
   return null;
+}
+
+export async function hasRecoverableBrowserSession(): Promise<boolean> {
+  try {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.access_token && session.refresh_token) {
+      return true;
+    }
+  } catch {
+    // Fall through to cached-session hint.
+  }
+
+  const cachedSession = getCachedBrowserSession();
+  return Boolean(cachedSession?.access_token && cachedSession.refresh_token);
 }
 
 export async function getClientAccessToken(

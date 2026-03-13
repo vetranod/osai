@@ -4,7 +4,7 @@ import { Suspense, FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
-import { ensureServerSession } from "@/lib/browser-auth-client";
+import { ensureServerSession, hasRecoverableBrowserSession } from "@/lib/browser-auth-client";
 import { cacheBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import styles from "./page.module.css";
@@ -86,6 +86,12 @@ function LoginPageInner() {
     let cancelled = false;
 
     async function recoverSession() {
+      const recoverable = await hasRecoverableBrowserSession();
+      if (cancelled || !recoverable) {
+        setStatus(null);
+        return;
+      }
+
       setStatus("Restoring your session...");
       const serverToken = await ensureServerSession({ attempts: 4, pauseMs: 250 });
       if (cancelled) return;
