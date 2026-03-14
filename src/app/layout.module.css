@@ -38,7 +38,6 @@
   display: block;
   flex-shrink: 0;
   object-fit: contain;
-  filter: drop-shadow(0 6px 14px rgb(39 120 214 / 0.14));
 }
 
 .brandMark {

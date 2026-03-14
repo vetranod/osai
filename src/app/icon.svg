@@ -21,15 +21,10 @@
       <stop offset="0" stop-color="#43E2F1"/>
       <stop offset="1" stop-color="#1588D8"/>
     </linearGradient>
-    <filter id="glow" x="20" y="30" width="216" height="198" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="11" result="blur"/>
-      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.145 0 0 0 0 0.623 0 0 0 0 1 0 0 0 0.24 0"/>
-      <feBlend in="SourceGraphic" mode="screen"/>
-    </filter>
   </defs>
 
   <rect width="256" height="256" rx="44" fill="#061126"/>
-  <g filter="url(#glow)" transform="translate(0 4) scale(1.06)">
+  <g transform="translate(0 4) scale(1.06)">
     <path d="M128 42L204 84L128 126L52 84L128 42Z" fill="url(#topGrad)"/>
     <path d="M52 84L128 126V212L66 176L52 84Z" fill="url(#leftGrad)"/>
     <path d="M204 84L128 126V212L190 176L204 84Z" fill="url(#rightGrad)"/>
