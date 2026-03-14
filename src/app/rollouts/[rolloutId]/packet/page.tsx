@@ -124,9 +124,11 @@ async function fetchPacketApi(url: string, nextPath: string, init: RequestInit =
 function PacketSection({
   artifact,
   rollout,
+  sectionNumber,
 }: {
   artifact: ArtifactRow;
   rollout: RolloutMeta;
+  sectionNumber: string;
 }) {
   const json = artifact.content_json ?? {};
 
@@ -134,12 +136,12 @@ function PacketSection({
     <section className={styles.packetSection}>
       <div className={styles.sectionHeader}>
         <div>
-          <p className={styles.sectionEyebrow}>Document</p>
+          <p className={styles.sectionEyebrow}>Document {sectionNumber}</p>
           <h2 className={styles.sectionTitle}>{ARTIFACT_TITLES[artifact.artifact_type]}</h2>
         </div>
         <div className={styles.sectionMeta}>
-          <span>v{artifact.version ?? "-"}</span>
-          <span>{formatDate(artifact.created_at)}</span>
+          <span>Revision {artifact.version ?? "-"}</span>
+          <span>Issued {formatDate(artifact.created_at)}</span>
         </div>
       </div>
       <p className={styles.sectionSummary}>{ARTIFACT_SUMMARIES[artifact.artifact_type]}</p>
@@ -408,7 +410,7 @@ export default function RolloutPacketPage() {
               <p className={styles.kicker}>DeploySure</p>
               <h1 className={styles.title}>AI Governance Framework Packet</h1>
             </div>
-            <div className={styles.coverBadge}>{formatEnumDisplay(rollout.rollout_mode)}</div>
+            <div className={styles.coverBadge}>{formatEnumDisplay(rollout.rollout_mode)} Rollout</div>
           </div>
 
           <p className={styles.intro}>
@@ -462,8 +464,13 @@ export default function RolloutPacketPage() {
           </div>
         </section>
 
-        {artifacts.map((artifact) => (
-          <PacketSection key={artifact.id ?? artifact.artifact_type} artifact={artifact} rollout={rollout} />
+        {artifacts.map((artifact, index) => (
+          <PacketSection
+            key={artifact.id ?? artifact.artifact_type}
+            artifact={artifact}
+            rollout={rollout}
+            sectionNumber={String(index + 1).padStart(2, "0")}
+          />
         ))}
 
         <footer className={styles.footer}>
