@@ -55,6 +55,30 @@ function renderListHtml(items: Array<{ label?: string; value?: unknown }>): stri
   `;
 }
 
+function renderZoneTableHtml(items: Array<{ label: string; zone: string }>): string {
+  return `
+    <table class="policy-table">
+      <thead>
+        <tr>
+          <th>Classification</th>
+          <th>Activity</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items
+          .map(
+            (item) => `
+              <tr>
+                <td class="policy-table-zone zone-${escapeHtml(item.zone)}">${escapeHtml(formatEnumDisplay(item.zone))}</td>
+                <td>${escapeHtml(item.label)}</td>
+              </tr>`
+          )
+          .join("")}
+      </tbody>
+    </table>
+  `;
+}
+
 function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, rollout: RolloutMeta): string {
   switch (type) {
     case "PROFILE":
@@ -92,19 +116,7 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
             (section) => `
               <div class="subsection">
                 <h3 class="subsection-title">${escapeHtml(section.title)}</h3>
-                <div class="zone-list">
-                  ${section.items
-                    .map(
-                      (item) => `
-                        <div class="zone-row">
-                          <span class="zone-badge zone-${escapeHtml(item.zone)}">${escapeHtml(
-                            formatEnumDisplay(item.zone)
-                          )}</span>
-                          <span class="zone-text">${escapeHtml(item.label)}</span>
-                        </div>`
-                    )
-                    .join("")}
-                </div>
+                ${renderZoneTableHtml(section.items)}
               </div>`
           )
           .join("")}
@@ -204,52 +216,54 @@ const PRINT_CSS = `
   @page { size: Letter portrait; margin: 14mm 14mm 16mm; }
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #fff; color: #112744; font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #18263a; font-family: "Inter", "Segoe UI", Arial, sans-serif; }
   body { -webkit-font-smoothing: antialiased; }
   .document { width: 100%; }
-  .cover, .contents, .packet-section { background: #fff; border: 1px solid #d6dde7; page-break-inside: avoid; }
-  .cover { padding: 36px 38px 34px; border-top: 4px solid #17355f; page-break-after: always; }
-  .cover-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 20px; }
-  .kicker, .section-eyebrow { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #567cae; }
-  .title, .section-title, .contents-title { margin: 0; font-family: Georgia, "Times New Roman", serif; color: #112744; }
-  .title { font-size: 40px; line-height: 1; letter-spacing: -0.03em; max-width: 520px; }
-  .cover-badge { flex-shrink: 0; padding: 10px 14px; border-radius: 8px; background: #f3f6fa; border: 1px solid #d6dde7; color: #234d86; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-  .intro { margin: 0 0 22px; max-width: 720px; font-size: 15px; line-height: 1.75; color: #334b71; }
+  .cover, .contents, .packet-section { background: #fff; page-break-inside: avoid; }
+  .cover { padding: 28px 0 26px; border-top: 5px solid #17355f; border-bottom: 1px solid #cfd7e2; page-break-after: always; }
+  .cover-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 18px; }
+  .kicker, .section-eyebrow { margin: 0 0 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #57708f; }
+  .title, .section-title, .contents-title { margin: 0; font-family: Georgia, "Times New Roman", serif; color: #18263a; }
+  .title { font-size: 38px; line-height: 1.02; letter-spacing: -0.025em; max-width: 560px; }
+  .cover-badge { flex-shrink: 0; padding: 8px 12px; border-radius: 0; background: transparent; border: 1px solid #b8c5d4; color: #23415f; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
+  .intro { margin: 0 0 20px; max-width: 720px; font-size: 14px; line-height: 1.75; color: #40556f; }
   .meta-grid, .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
   .meta-grid { margin-bottom: 14px; }
-  .meta-row, .field-row { padding: 12px 0 14px; border-top: 1px solid #e2e7ef; }
-  .field-label { margin-bottom: 5px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #3f587f; }
-  .field-value, .meta-value { font-size: 15px; line-height: 1.55; color: #102345; }
-  .meta-value code { font-size: 12px; color: #334b71; }
-  .contents { padding: 28px 32px; margin-top: 16px; page-break-after: always; }
-  .contents-title { font-size: 22px; margin-bottom: 16px; }
-  .contents-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
-  .contents-item { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: start; padding-bottom: 12px; border-bottom: 1px solid #e2e7ef; }
-  .contents-index { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 28px; border-radius: 6px; background: #17355f; color: #f8fbff; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
-  .contents-item-title { margin-bottom: 4px; font-size: 14px; font-weight: 700; color: #102345; }
-  .contents-item-body { font-size: 13px; line-height: 1.55; color: #334b71; }
-  .packet-section { padding: 30px 34px; margin-top: 16px; page-break-before: always; }
+  .meta-row, .field-row { padding: 10px 0 12px; border-top: 1px solid #e1e6ed; }
+  .field-label { margin-bottom: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #516984; }
+  .field-value, .meta-value { font-size: 14px; line-height: 1.55; color: #18263a; }
+  .meta-value code { font-size: 11px; color: #40556f; }
+  .contents { padding: 20px 0 8px; margin-top: 16px; page-break-after: always; }
+  .contents-title { font-size: 20px; margin-bottom: 14px; }
+  .contents-list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .contents-item { display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: start; padding-bottom: 10px; border-bottom: 1px solid #e1e6ed; }
+  .contents-index { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 24px; border-radius: 0; background: #17355f; color: #f8fbff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+  .contents-item-title { margin-bottom: 3px; font-size: 13px; font-weight: 700; color: #18263a; }
+  .contents-item-body { font-size: 12px; line-height: 1.55; color: #40556f; }
+  .packet-section { padding: 16px 0 0; margin-top: 14px; page-break-before: always; }
   .section-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 10px; }
-  .section-title { font-size: 28px; letter-spacing: -0.03em; }
-  .section-meta { display: flex; gap: 12px; flex-wrap: wrap; color: #3f587f; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-  .section-summary { margin: 0 0 20px; font-size: 14px; line-height: 1.65; color: #334b71; }
-  .subsection { margin-top: 22px; }
-  .subsection-title { margin: 0 0 12px; padding-top: 10px; border-top: 1px solid #e2e7ef; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #3f587f; }
-  .callout, .narrative-block { margin-top: 16px; padding: 14px 0 0 16px; border-left: 3px solid #c3d3e8; }
-  .callout, .long-value { font-size: 14px; line-height: 1.7; color: #102345; }
-  .rule-list, .zone-list, .phase-list { display: flex; flex-direction: column; gap: 10px; padding: 0; margin: 0; list-style: none; }
-  .rule-item { display: flex; gap: 12px; font-size: 14px; line-height: 1.65; color: #102345; }
-  .rule-bullet { width: 8px; height: 8px; margin-top: 8px; flex-shrink: 0; border-radius: 50%; background: #2f5fa1; }
-  .zone-row, .phase-card { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 8px; border: 1px solid #dfe6ef; background: #fbfcfe; }
-  .zone-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 106px; padding: 6px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border: 1px solid transparent; }
-  .zone-SAFE { background: #eff8f2; color: #0f6b43; border-color: #b8dcc8; }
-  .zone-RESTRICTED { background: #fff6e5; color: #9a630c; border-color: #ecd4a6; }
-  .zone-HUMAN-ONLY { background: #fcecec; color: #a13c3c; border-color: #e6baba; }
-  .zone-text { font-size: 14px; line-height: 1.55; color: #102345; }
-  .phase-number { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 6px; background: #17355f; color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-  .phase-title { margin-bottom: 4px; font-size: 15px; font-weight: 700; color: #102345; }
-  .phase-body { margin: 0; font-size: 13px; line-height: 1.6; color: #334b71; }
-  .footer { margin-top: 18px; padding-top: 18px; border-top: 1px solid #dce3ec; font-size: 12px; line-height: 1.6; color: #526684; }
+  .section-title { font-size: 26px; letter-spacing: -0.02em; }
+  .section-meta { display: flex; gap: 12px; flex-wrap: wrap; color: #516984; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
+  .section-summary { margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid #d7dee8; font-size: 13px; line-height: 1.7; color: #40556f; }
+  .subsection { margin-top: 18px; }
+  .subsection-title { margin: 0 0 10px; padding-top: 8px; border-top: 1px solid #e1e6ed; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #516984; }
+  .callout, .narrative-block { margin-top: 14px; padding: 10px 0 0 14px; border-left: 2px solid #c6d3e2; }
+  .callout, .long-value { font-size: 13px; line-height: 1.7; color: #18263a; }
+  .rule-list, .phase-list { display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 0; list-style: none; }
+  .rule-item { display: flex; gap: 10px; font-size: 13px; line-height: 1.65; color: #18263a; }
+  .rule-bullet { width: 6px; height: 6px; margin-top: 7px; flex-shrink: 0; border-radius: 50%; background: #4f6987; }
+  .policy-table { width: 100%; border-collapse: collapse; border-top: 1px solid #d7dee8; border-bottom: 1px solid #d7dee8; }
+  .policy-table thead th { padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #516984; border-bottom: 1px solid #d7dee8; }
+  .policy-table tbody td { padding: 10px 10px; vertical-align: top; font-size: 13px; line-height: 1.55; color: #18263a; border-top: 1px solid #eef2f6; }
+  .policy-table tbody tr:first-child td { border-top: none; }
+  .policy-table-zone { width: 120px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #40556f; }
+  .zone-SAFE, .zone-RESTRICTED, .zone-HUMAN-ONLY { background: transparent; border: 0; }
+  .phase-card { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: start; padding: 10px 0; border-top: 1px solid #e1e6ed; }
+  .phase-card:first-child { border-top: 0; }
+  .phase-number { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 24px; border-radius: 0; background: #17355f; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+  .phase-title { margin-bottom: 4px; font-size: 14px; font-weight: 700; color: #18263a; }
+  .phase-body { margin: 0; font-size: 12px; line-height: 1.65; color: #40556f; }
+  .footer { margin-top: 18px; padding-top: 18px; border-top: 1px solid #dce3ec; font-size: 11px; line-height: 1.7; color: #526684; }
 `;
 
 export function buildPacketPrintHtml(rollout: RolloutMeta, artifacts: ArtifactRow[]): string {
@@ -281,13 +295,10 @@ export function buildPacketPrintHtml(rollout: RolloutMeta, artifacts: ArtifactRo
           <div>
             <p class="kicker">DeploySure</p>
             <h1 class="title">AI Governance Framework Packet</h1>
+            <p class="intro">Controlled internal reference for AI rollout governance, review, and usage boundaries.</p>
           </div>
           <div class="cover-badge">${escapeHtml(formatEnumDisplay(rollout.rollout_mode))} Rollout</div>
         </div>
-
-        <p class="intro">
-          This packet records the current governance position for the rollout and consolidates the generated framework documents into a formal reference document.
-        </p>
 
         <div class="meta-grid">
           <div class="meta-row">
