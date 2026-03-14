@@ -38,17 +38,17 @@
   display: block;
   flex-shrink: 0;
   object-fit: contain;
-  filter: drop-shadow(0 8px 18px rgb(39 120 214 / 0.18));
+  filter: drop-shadow(0 6px 14px rgb(39 120 214 / 0.14));
 }
 
 .brandMark {
-  width: 58px;
-  height: 58px;
+  width: 64px;
+  height: 64px;
 }
 
 .brandMarkCompact {
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
 }
 
 .logoWordmark {
