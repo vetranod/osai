@@ -1,0 +1,43 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="topGrad" x1="52" y1="90" x2="204" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F2B63"/>
+      <stop offset="1" stop-color="#2878D6"/>
+    </linearGradient>
+    <linearGradient id="leftGrad" x1="66" y1="110" x2="136" y2="212" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#123977"/>
+      <stop offset="1" stop-color="#081B42"/>
+    </linearGradient>
+    <linearGradient id="rightGrad" x1="128" y1="110" x2="194" y2="206" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2CA6F0"/>
+      <stop offset="1" stop-color="#123D82"/>
+    </linearGradient>
+    <linearGradient id="bandGrad" x1="74" y1="118" x2="188" y2="164" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2586E2"/>
+      <stop offset="0.55" stop-color="#46D3F0"/>
+      <stop offset="1" stop-color="#2493EF"/>
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="128" y1="84" x2="128" y2="148" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#43E2F1"/>
+      <stop offset="1" stop-color="#1588D8"/>
+    </linearGradient>
+    <filter id="glow" x="12" y="28" width="232" height="210" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.145 0 0 0 0 0.623 0 0 0 0 1 0 0 0 0.34 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#glow)">
+    <path d="M128 42L204 84L128 126L52 84L128 42Z" fill="url(#topGrad)"/>
+    <path d="M52 84L128 126V212L66 176L52 84Z" fill="url(#leftGrad)"/>
+    <path d="M204 84L128 126V212L190 176L204 84Z" fill="url(#rightGrad)"/>
+
+    <path d="M66 116L108 138L190 96L184 126L128 158L74 134L66 116Z" fill="url(#bandGrad)"/>
+    <path d="M74 134L128 158V188L82 164L74 134Z" fill="#0A2C62" fill-opacity="0.55"/>
+    <path d="M190 96L184 126L128 158V188L182 160L190 96Z" fill="#08306F" fill-opacity="0.38"/>
+
+    <path d="M128 72L168 108H146V154L128 166L110 154V108H88L128 72Z" fill="url(#arrowGrad)"/>
+    <path d="M128 92L150 112H136V144L128 150L120 144V112H106L128 92Z" fill="#B0F7FF" fill-opacity="0.22"/>
+  </g>
+</svg>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
 import { AuthSessionSync } from "@/app/AuthSessionSync";
 import { createAuthProof, type AuthProof } from "@/lib/auth-proof";
@@ -25,12 +26,15 @@ const geistMono = Geist_Mono({
 
 function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <span className={compact ? styles.brandMarkCompact : styles.brandMark} aria-hidden="true">
-      <span className={styles.brandBarTop} />
-      <span className={styles.brandBarMid} />
-      <span className={styles.brandBarBottom} />
-      <span className={styles.brandCurve} />
-    </span>
+    <Image
+      src="/deploysure-mark.svg"
+      alt=""
+      aria-hidden="true"
+      width={compact ? 52 : 58}
+      height={compact ? 52 : 58}
+      className={compact ? styles.brandMarkCompact : styles.brandMark}
+      priority
+    />
   );
 }
 

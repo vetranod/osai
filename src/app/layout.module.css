@@ -35,62 +35,20 @@
 
 .brandMark,
 .brandMarkCompact {
-  position: relative;
-  display: inline-block;
+  display: block;
   flex-shrink: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 18px rgb(39 120 214 / 0.18));
 }
 
 .brandMark {
-  width: 62px;
-  height: 46px;
+  width: 58px;
+  height: 58px;
 }
 
 .brandMarkCompact {
-  width: 54px;
-  height: 40px;
-}
-
-.brandBarTop,
-.brandBarMid,
-.brandBarBottom,
-.brandCurve {
-  position: absolute;
-  display: block;
-  border-radius: 999px;
-}
-
-.brandBarTop {
-  top: 0;
-  left: 22px;
-  width: 40px;
-  height: 9px;
-  background: linear-gradient(90deg, #29528e 0%, #3f7fc1 100%);
-}
-
-.brandBarMid {
-  top: 14px;
-  left: 10px;
-  width: 44px;
-  height: 9px;
-  background: linear-gradient(90deg, #13294d 0%, #224a82 100%);
-}
-
-.brandBarBottom {
-  top: 28px;
-  left: 0;
-  width: 54px;
-  height: 9px;
-  background: linear-gradient(90deg, #21477e 0%, #6ba5a0 100%);
-}
-
-.brandCurve {
-  right: 0;
-  bottom: 1px;
-  width: 32px;
-  height: 28px;
-  border-right: 7px solid #1d3f74;
-  border-bottom: 7px solid #1d3f74;
-  border-radius: 0 0 18px 0;
+  width: 52px;
+  height: 52px;
 }
 
 .logoWordmark {
