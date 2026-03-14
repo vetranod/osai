@@ -52,10 +52,10 @@
     --foreground: #ecf3ff;
     --foreground-muted: #a8b8cd;
     --foreground-subtle: #b8c7da;
-    --surface-title: #ecf3ff;
-    --surface-body: #c5d3e5;
-    --surface-body-strong: #dde7f5;
-    --surface-label: #aec0d7;
+    --surface-title: #102345;
+    --surface-body: #334b71;
+    --surface-body-strong: #243a60;
+    --surface-label: #3f587f;
 
     --accent: #5b8fcc;
     --accent-hover: #79a8df;
