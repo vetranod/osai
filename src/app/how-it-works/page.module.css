@@ -276,6 +276,24 @@
   border-radius: 999px;
 }
 
+@media (prefers-color-scheme: dark) {
+  .card,
+  .principle {
+    background: linear-gradient(180deg, rgb(18 29 45 / 0.94), rgb(13 23 37 / 0.98));
+    border-color: rgb(127 176 227 / 0.2);
+    box-shadow: none;
+    color: #e7effb;
+  }
+
+  .cardTitle {
+    color: #e7effb;
+  }
+
+  .cardText {
+    color: #c4d3e5;
+  }
+}
+
 @media (max-width: 780px) {
   .cards {
     grid-template-columns: repeat(2, 1fr);

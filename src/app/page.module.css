@@ -616,6 +616,45 @@
   color: #fff;
 }
 
+@media (prefers-color-scheme: dark) {
+  .diagramBlock,
+  .frameworkIncludes,
+  .forItem,
+  .guideCard,
+  .resourceCard {
+    background: linear-gradient(180deg, rgb(18 29 45 / 0.94), rgb(13 23 37 / 0.98));
+    border-color: rgb(127 176 227 / 0.2);
+    box-shadow: none;
+  }
+
+  .diagramBlockAccent {
+    background: linear-gradient(180deg, rgb(20 39 65 / 0.96), rgb(14 28 47 / 0.98));
+    border-color: rgb(91 143 204 / 0.34);
+  }
+
+  .diagramBlockLabel,
+  .frameworkIncludesTitle,
+  .guideCardTitle,
+  .resourceCardTitle,
+  .forItem {
+    color: #e7effb;
+  }
+
+  .diagramBlockSub,
+  .diagramList li,
+  .frameworkList li,
+  .guideCardText,
+  .resourceCardText {
+    color: #c4d3e5;
+  }
+
+  .guideCard:hover,
+  .resourceCard:hover {
+    background: linear-gradient(180deg, rgb(21 34 52 / 0.96), rgb(15 26 41 / 0.99));
+    box-shadow: none;
+  }
+}
+
 @media (max-width: 900px) {
   .hero,
   .frameworkSection {
