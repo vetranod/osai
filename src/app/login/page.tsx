@@ -257,9 +257,10 @@ function LoginPageInner() {
             : "Continue to your framework builder and rollout dashboards."}
         </p>
 
-        <div className={styles.modeRow} role="tablist" aria-label="Authentication mode">
+        <div className={styles.modeRow} role="group" aria-label="Authentication mode">
           <button
             type="button"
+            aria-pressed={mode === "sign_in"}
             className={mode === "sign_in" ? styles.modeActive : styles.modeButton}
             onClick={() => setMode("sign_in")}
           >
@@ -267,6 +268,7 @@ function LoginPageInner() {
           </button>
           <button
             type="button"
+            aria-pressed={mode === "sign_up"}
             className={mode === "sign_up" ? styles.modeActive : styles.modeButton}
             onClick={() => setMode("sign_up")}
           >

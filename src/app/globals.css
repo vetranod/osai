@@ -6,7 +6,7 @@
   --border-strong: #a8b8cf;
   --foreground: #102345;
   --foreground-muted: #526684;
-  --foreground-subtle: #7f8ea3;
+  --foreground-subtle: #526684;
   --surface-title: #102345;
   --surface-body: #334b71;
   --surface-body-strong: #243a60;
@@ -51,11 +51,11 @@
     --border-strong: #3d516f;
     --foreground: #ecf3ff;
     --foreground-muted: #a8b8cd;
-    --foreground-subtle: #7b8da9;
-    --surface-title: #102345;
-    --surface-body: #334b71;
-    --surface-body-strong: #243a60;
-    --surface-label: #3f587f;
+    --foreground-subtle: #b8c7da;
+    --surface-title: #ecf3ff;
+    --surface-body: #c5d3e5;
+    --surface-body-strong: #dde7f5;
+    --surface-label: #aec0d7;
 
     --accent: #5b8fcc;
     --accent-hover: #79a8df;
@@ -131,6 +131,15 @@ pre {
   font-family: var(--font-mono);
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--accent-secondary);
+  outline-offset: 3px;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
@@ -140,5 +149,16 @@ pre {
     background:
       radial-gradient(circle at top, rgb(91 143 204 / 0.16), transparent 30%),
       linear-gradient(180deg, #0c1320 0%, var(--background) 58%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
