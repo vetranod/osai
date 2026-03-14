@@ -327,7 +327,7 @@
 
 .frameworkText {
   font-size: 16px;
-  color: var(--surface-body);
+  color: var(--foreground-muted);
   line-height: 1.75;
 }
 
@@ -373,7 +373,7 @@
 
 .frameworkCredibility {
   font-size: 13px;
-  color: var(--surface-label);
+  color: var(--foreground-subtle);
   line-height: 1.7;
   padding-left: 14px;
   border-left: 2px solid rgb(61 115 177 / 0.3);
@@ -407,7 +407,7 @@
 .forNote {
   max-width: 720px;
   font-size: 14px;
-  color: var(--surface-label);
+  color: var(--foreground-subtle);
   line-height: 1.7;
   padding-left: 14px;
   border-left: 2px solid rgb(61 115 177 / 0.26);
