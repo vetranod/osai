@@ -2,35 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { absoluteUrl, buildPageMetadata, SITE_NAME } from "./seo";
 import { articles } from "./_content/articles";
+import { guideLinks } from "./_marketing/guides";
 import styles from "./page.module.css";
-
-const GUIDE_LINKS = [
-  {
-    href: "/ai-governance-for-law-firms",
-    title: "AI Governance for Law Firms",
-    text: "Clarify rollout boundaries and review expectations for confidentiality-heavy legal work.",
-  },
-  {
-    href: "/ai-governance-for-consulting-firms",
-    title: "AI Governance for Consulting Firms",
-    text: "Balance delivery speed with stronger guardrails for client-facing consulting teams.",
-  },
-  {
-    href: "/ai-policy-for-small-business",
-    title: "AI Policy for Small Business",
-    text: "Give smaller teams a practical AI operating position before ad hoc usage becomes the norm.",
-  },
-  {
-    href: "/ai-governance-framework-vs-ai-policy",
-    title: "AI Governance Framework vs AI Policy",
-    text: "Understand why a rules document alone is not the same thing as a rollout framework.",
-  },
-] as const;
 
 export const metadata: Metadata = buildPageMetadata({
   title: "AI Governance Framework for Small Teams | DeploySure",
   description:
-    "Generate a structured AI governance framework with rollout pacing, review controls, usage guardrails, and a polished governance packet for your firm.",
+    "Generate a structured AI governance framework for your small professional team in under a minute with rollout pacing, guardrails, and a polished governance packet.",
   path: "/",
   keywords: [
     "AI governance framework",
@@ -41,6 +19,17 @@ export const metadata: Metadata = buildPageMetadata({
     "AI guardrail policy",
   ],
 });
+
+function StructureMotif({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={compact ? styles.structureMotifCompact : styles.structureMotif} aria-hidden="true">
+      <span className={styles.structureCell} />
+      <span className={styles.structureCell} />
+      <span className={`${styles.structureCell} ${styles.structureCellAccent}`} />
+      <span className={styles.structureCell} />
+    </div>
+  );
+}
 
 function PacketPreview({ compact = false }: { compact?: boolean }) {
   return (
@@ -113,23 +102,32 @@ export default function LandingPage() {
           <span className={styles.heroKicker}>DeploySure</span>
           <h1 className={styles.heroHeadline}>Deploy AI without losing control.</h1>
           <p className={styles.heroSubheadline}>
-            Generate a structured AI governance framework for your firm in under a minute.
+            Generate a structured AI governance framework for your small team in under a minute.
           </p>
           <p className={styles.heroDefinition}>
-            Built for professional teams adopting AI tools without a clear rollout plan.
+            Built for small professional teams adopting AI tools without a clear rollout plan.
           </p>
           <div className={styles.heroActions}>
             <Link href="/generate" className={styles.ctaPrimary}>
-              Generate your framework
+              Create your framework
             </Link>
-            <Link href="/how-it-works" className={styles.ctaSecondary}>
-              How it works
-            </Link>
+            <p className={styles.heroCtaNote}>No AI-written policy text.</p>
           </div>
+          <p className={styles.heroProof}>
+            Designed with small professional teams in mind, from engineering firms to law practices and agencies.
+          </p>
         </div>
 
         <div className={styles.heroVisual}>
-          <PacketPreview compact />
+          <div className={styles.heroVisualFrame}>
+            <div className={styles.heroVisualLead}>
+              <StructureMotif compact />
+              <span className={styles.heroVisualCaption}>
+                Structured rollout logic for small-team adoption.
+              </span>
+            </div>
+            <PacketPreview compact />
+          </div>
         </div>
       </section>
 
@@ -138,17 +136,30 @@ export default function LandingPage() {
         <h2 className={styles.sectionHeading}>Why AI adoption becomes chaotic</h2>
         <div className={styles.prose}>
           <p>
-            AI adoption often begins informally. Someone discovers a tool that saves
-            time. A colleague begins using it as well. Soon the tool spreads across
-            the team.
-          </p>
-          <p>
-            By the time leadership notices, the technology may already be embedded
-            in critical workflows. Organizations then attempt to add structure after
-            the technology is already operational. The system provides a way to
-            introduce structure before AI adoption becomes unmanaged operational risk.
+            AI adoption usually follows the same pattern when there is no rollout structure.
           </p>
         </div>
+        <div className={styles.problemList}>
+          <div className={styles.problemItem}>
+            <span className={styles.problemItemTitle}>Discovery</span>
+            <span className={styles.problemItemText}>Someone finds a tool that saves time.</span>
+          </div>
+          <div className={styles.problemItem}>
+            <span className={styles.problemItemTitle}>Spread</span>
+            <span className={styles.problemItemText}>A colleague starts using it too, and the behavior becomes normal.</span>
+          </div>
+          <div className={styles.problemItem}>
+            <span className={styles.problemItemTitle}>Dependence</span>
+            <span className={styles.problemItemText}>The tool reaches real workflows before anyone defines the rules.</span>
+          </div>
+          <div className={styles.problemItem}>
+            <span className={styles.problemItemTitle}>Late control</span>
+            <span className={styles.problemItemText}>Leadership tries to add structure only after AI use is already operational.</span>
+          </div>
+        </div>
+        <p className={styles.problemOutro}>
+          DeploySure gives small teams a way to introduce structure before AI use becomes unmanaged operational risk.
+        </p>
       </section>
 
       <section className={styles.section}>
@@ -158,10 +169,10 @@ export default function LandingPage() {
           <div className={styles.diagramBlock}>
             <p className={styles.diagramBlockLabel}>Inputs</p>
             <ul className={styles.diagramList}>
-              <li>Goal</li>
-              <li>Adoption level</li>
-              <li>Data sensitivity</li>
-              <li>Leadership posture</li>
+              <li>Goal: what AI should achieve</li>
+              <li>Adoption level: how widely tools are already used</li>
+              <li>Data sensitivity: what information is in play</li>
+              <li>Leadership posture: how tightly rollout should be controlled</li>
             </ul>
           </div>
           <div className={styles.diagramArrow}>
@@ -171,7 +182,7 @@ export default function LandingPage() {
           <div className={`${styles.diagramBlock} ${styles.diagramBlockAccent}`}>
             <p className={styles.diagramBlockLabel}>Decision Engine</p>
             <p className={styles.diagramBlockSub}>
-              Deterministic model evaluates inputs and determines rollout posture
+              Deterministic model turns those inputs into rollout posture, guardrails, and review expectations.
             </p>
           </div>
           <div className={styles.diagramArrow}>
@@ -181,9 +192,15 @@ export default function LandingPage() {
           <div className={styles.diagramBlock}>
             <p className={styles.diagramBlockLabel}>AI Governance Framework</p>
             <p className={styles.diagramBlockSub}>
-              Rollout structure, guardrails, and governance documentation
+              A ready-to-use framework with rollout guidance, policy boundaries, and milestone checkpoints.
             </p>
           </div>
+        </div>
+        <div className={styles.sectionSupportRow}>
+          <StructureMotif compact />
+          <p className={styles.sectionSupport}>
+            Small teams answer a few questions and get a clear, ready-to-use rollout framework instead of a blank page.
+          </p>
         </div>
       </section>
 
@@ -194,28 +211,43 @@ export default function LandingPage() {
           <PacketPreview />
           <div className={styles.frameworkContent}>
             <p className={styles.frameworkText}>
-              The system generates a structured AI Governance Packet that defines
-              how AI tools should be introduced and governed within the organization.
-            </p>
-            <p className={styles.frameworkText}>
-              This packet becomes the operational framework for rollout. It is
-              built from pre-written, locked content and is not generated by AI.
+              The packet gives a small team one clear operating position instead of scattered decisions across people and workflows.
             </p>
 
             <div className={styles.frameworkIncludes}>
               <p className={styles.frameworkIncludesTitle}>Your framework includes:</p>
-              <ul className={styles.frameworkList}>
-                <li>rollout pacing guidance</li>
-                <li>guardrail policy recommendations</li>
-                <li>operational usage guidelines</li>
-                <li>milestone-based adoption structure</li>
-              </ul>
+              <div className={styles.frameworkFeature}>
+                <p className={styles.frameworkFeatureTitle}>Rollout Profile</p>
+                <p className={styles.frameworkFeatureText}>
+                  Helps leadership decide how quickly AI should expand and where controls should tighten first.
+                </p>
+              </div>
+              <div className={styles.frameworkFeature}>
+                <p className={styles.frameworkFeatureTitle}>Guardrail Policy</p>
+                <p className={styles.frameworkFeatureText}>
+                  Clarifies what work can use AI, what needs review, and what should stay restricted.
+                </p>
+              </div>
+              <div className={styles.frameworkFeature}>
+                <p className={styles.frameworkFeatureTitle}>Operational Guidelines</p>
+                <p className={styles.frameworkFeatureText}>
+                  Gives the team a practical standard for everyday use instead of relying on individual judgment.
+                </p>
+              </div>
+              <div className={styles.frameworkFeature}>
+                <p className={styles.frameworkFeatureTitle}>Milestone Rollout Plan</p>
+                <p className={styles.frameworkFeatureText}>
+                  Shows how to expand adoption in stages instead of letting tool use spread by drift.
+                </p>
+              </div>
             </div>
 
-            <p className={styles.frameworkCredibility}>
-              No AI-generated policy text. Every packet is produced by the same
-              deterministic process. Inputs change the output. The process does not.
-            </p>
+            <div className={styles.frameworkCallout}>
+              <StructureMotif compact />
+              <p className={styles.frameworkCredibility}>
+                No AI-generated policy text. Every packet is produced by the same deterministic process. Inputs change the output. The process does not.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -224,8 +256,7 @@ export default function LandingPage() {
         <p className={styles.sectionLabel}>Audience</p>
         <h2 className={styles.sectionHeading}>Designed for small teams</h2>
         <p className={styles.forIntro}>
-          The system is intended for organizations that want the productivity
-          benefits of AI while maintaining operational control.
+          Built for small professional firms and small businesses that want AI productivity without losing operational control.
         </p>
         <div className={styles.forGrid}>
           <div className={styles.forItem}>Engineering firms</div>
@@ -236,9 +267,7 @@ export default function LandingPage() {
           <div className={styles.forItem}>Professional agencies</div>
         </div>
         <p className={styles.forNote}>
-          These firms often adopt AI organically without a formal rollout plan.
-          DeploySure is best suited to teams with fewer than 25 employees and
-          other small businesses that need rollout planning and governance structure.
+          Best suited to teams with fewer than 25 employees and other small businesses that need rollout planning and governance structure.
         </p>
       </section>
 
@@ -246,14 +275,14 @@ export default function LandingPage() {
         <p className={styles.sectionLabel}>Guides</p>
         <h2 className={styles.sectionHeading}>Explore AI governance by use case</h2>
         <p className={styles.guidesIntro}>
-          These public guides are designed to answer narrower search intent and help teams
-          understand where a governance framework fits before they enter the builder.
+          These guides help small teams understand where a governance framework fits before they enter the builder.
         </p>
         <div className={styles.guideGrid}>
-          {GUIDE_LINKS.map((guide) => (
+          {guideLinks.map((guide) => (
             <Link key={guide.href} href={guide.href} className={styles.guideCard}>
               <h3 className={styles.guideCardTitle}>{guide.title}</h3>
               <p className={styles.guideCardText}>{guide.text}</p>
+              <span className={styles.guideMeta}>{guide.readMinutes} min guide</span>
             </Link>
           ))}
         </div>
@@ -287,14 +316,14 @@ export default function LandingPage() {
           Define how AI operates in your firm before it defines itself.
         </p>
         <h2 className={styles.bottomCtaHeadline}>
-          Create your AI governance framework in under a minute.
+          Create your framework in under a minute.
         </h2>
         <p className={styles.bottomCtaBody}>
-          A clear operational framework for organizations that want to adopt AI responsibly.
+          Generate a structured AI governance framework for your small team before AI use becomes unmanaged operational risk.
         </p>
         <div className={styles.bottomCtaActions}>
           <Link href="/generate" className={styles.ctaPrimaryInverted}>
-            Start framework builder
+            Create your framework
           </Link>
           <Link href="/how-it-works" className={styles.ctaSecondaryInverted}>
             How DeploySure Works

@@ -39,6 +39,45 @@
   line-height: 1.8;
 }
 
+.problemList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.problemItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 18px 18px 20px;
+  border-left: 2px solid rgb(61 115 177 / 0.36);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.06), transparent);
+}
+
+.problemItemTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-secondary);
+}
+
+.problemItemText {
+  font-size: 15px;
+  color: var(--foreground-muted);
+  line-height: 1.7;
+}
+
+.problemOutro {
+  max-width: 760px;
+  margin-top: 22px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.7;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
@@ -50,6 +89,37 @@
 
 .heroCopy {
   max-width: 640px;
+}
+
+.structureMotif,
+.structureMotifCompact {
+  display: inline-grid;
+  grid-template-columns: repeat(4, 12px);
+  gap: 6px;
+}
+
+.structureMotifCompact {
+  grid-template-columns: repeat(4, 10px);
+  gap: 5px;
+}
+
+.structureCell {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgb(61 115 177 / 0.22);
+  background: rgb(255 255 255 / 0.46);
+}
+
+.structureMotifCompact .structureCell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.structureCellAccent {
+  background: linear-gradient(135deg, rgb(61 115 177 / 0.96), rgb(110 167 159 / 0.9));
+  border-color: rgb(61 115 177 / 0.48);
 }
 
 .heroKicker {
@@ -88,20 +158,52 @@
   color: var(--foreground-subtle);
   line-height: 1.7;
   max-width: 540px;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
   padding-left: 16px;
   border-left: 2px solid rgb(61 115 177 / 0.3);
 }
 
 .heroActions {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .heroVisual {
   position: relative;
+}
+
+.heroVisualFrame {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.heroVisualLead {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--foreground-subtle);
+}
+
+.heroVisualCaption {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.heroCtaNote {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-secondary);
+}
+
+.heroProof {
+  max-width: 560px;
+  font-size: 14px;
+  color: var(--foreground-muted);
+  line-height: 1.75;
 }
 
 .ctaPrimary {
@@ -312,6 +414,20 @@
   margin-left: -1px;
 }
 
+.sectionSupportRow {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.sectionSupport {
+  max-width: 720px;
+  font-size: 15px;
+  color: var(--foreground-muted);
+  line-height: 1.8;
+}
+
 .frameworkSection {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
@@ -343,41 +459,51 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--surface-body-strong);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
-.frameworkList {
-  list-style: none;
+.frameworkFeature {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
+  padding: 14px 0;
+  border-top: 1px solid rgb(61 115 177 / 0.12);
 }
 
-.frameworkList li {
-  position: relative;
-  padding-left: 18px;
+.frameworkFeature:first-of-type {
+  padding-top: 0;
+  border-top: none;
+}
+
+.frameworkFeatureTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-secondary);
+}
+
+.frameworkFeatureText {
   font-size: 15px;
   color: var(--surface-body);
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
-.frameworkList li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 9px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2f5fa1 0%, #6ea79f 100%);
+.frameworkCallout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 18px 18px 20px;
+  background: linear-gradient(180deg, rgb(232 239 248 / 0.8), rgb(244 248 253 / 0.92));
+  border: 1px solid rgb(61 115 177 / 0.22);
+  border-radius: 16px;
 }
 
 .frameworkCredibility {
-  font-size: 13px;
-  color: var(--foreground-subtle);
-  line-height: 1.7;
-  padding-left: 14px;
-  border-left: 2px solid rgb(61 115 177 / 0.3);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--surface-body-strong);
+  line-height: 1.75;
 }
 
 .forIntro {
@@ -456,6 +582,17 @@
   font-size: 14px;
   color: var(--surface-body);
   line-height: 1.75;
+  margin-bottom: 12px;
+}
+
+.guideMeta {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-secondary);
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Resources section */
@@ -617,6 +754,33 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  .structureCell {
+    background: rgb(255 255 255 / 0.04);
+    border-color: rgb(127 176 227 / 0.18);
+  }
+
+  .heroVisualCaption,
+  .heroCtaNote,
+  .frameworkFeatureTitle,
+  .guideMeta {
+    color: #8eb7e8;
+  }
+
+  .heroProof,
+  .sectionSupport,
+  .problemItemText {
+    color: #c4d3e5;
+  }
+
+  .problemItem {
+    background: linear-gradient(180deg, rgb(18 29 45 / 0.4), transparent);
+    border-left-color: rgb(91 143 204 / 0.52);
+  }
+
+  .problemOutro {
+    color: #ecf3ff;
+  }
+
   .diagramBlock,
   .frameworkIncludes,
   .forItem,
@@ -642,10 +806,23 @@
 
   .diagramBlockSub,
   .diagramList li,
-  .frameworkList li,
   .guideCardText,
   .resourceCardText {
     color: #c4d3e5;
+  }
+
+  .frameworkFeatureText,
+  .frameworkCredibility {
+    color: #d6e1f0;
+  }
+
+  .frameworkFeature {
+    border-top-color: rgb(127 176 227 / 0.12);
+  }
+
+  .frameworkCallout {
+    background: linear-gradient(180deg, rgb(20 39 65 / 0.96), rgb(14 28 47 / 0.98));
+    border-color: rgb(91 143 204 / 0.34);
   }
 
   .guideCard:hover,
@@ -657,7 +834,8 @@
 
 @media (max-width: 900px) {
   .hero,
-  .frameworkSection {
+  .frameworkSection,
+  .problemList {
     grid-template-columns: 1fr;
   }
 
