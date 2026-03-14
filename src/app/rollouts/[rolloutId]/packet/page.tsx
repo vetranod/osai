@@ -10,7 +10,6 @@ import {
 } from "@/lib/browser-auth-client";
 
 import { PrintActions } from "./PrintActions";
-import { buildPacketPrintHtml } from "./printDocument";
 import {
   ARTIFACT_SUMMARIES,
   ARTIFACT_TITLES,
@@ -311,11 +310,6 @@ export default function RolloutPacketPage() {
     return null;
   }
 
-  const printHtml =
-    rollout && artifacts.length > 0
-      ? buildPacketPrintHtml(rollout, artifacts)
-      : null;
-
   if (loading) {
     return (
       <main className={styles.page}>
@@ -350,7 +344,7 @@ export default function RolloutPacketPage() {
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
-        <PrintActions rolloutId={rolloutId} printHtml={printHtml} />
+        <PrintActions rolloutId={rolloutId} />
 
         <section className={styles.cover}>
           <div className={styles.coverHeader}>

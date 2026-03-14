@@ -266,7 +266,12 @@ const PRINT_CSS = `
   .footer { margin-top: 18px; padding-top: 18px; border-top: 1px solid #dce3ec; font-size: 11px; line-height: 1.7; color: #526684; }
 `;
 
-export function buildPacketPrintHtml(rollout: RolloutMeta, artifacts: ArtifactRow[]): string {
+export function buildPacketDocumentHtml(
+  rollout: RolloutMeta,
+  artifacts: ArtifactRow[],
+  options?: { autoPrint?: boolean }
+): string {
+  const autoPrint = options?.autoPrint ?? false;
   const contentsHtml = artifacts
     .map(
       (artifact, index) => `
@@ -344,13 +349,17 @@ export function buildPacketPrintHtml(rollout: RolloutMeta, artifacts: ArtifactRo
         This document records the current governance stance for this rollout. It is intended as an internal operating packet and should be reviewed alongside existing firm obligations and controls.
       </footer>
     </main>
-    <script>
+    ${
+      autoPrint
+        ? `<script>
       window.addEventListener("load", () => {
         setTimeout(() => {
           window.print();
         }, 150);
       });
-    </script>
+    </script>`
+        : ""
+    }
   </body>
 </html>`;
 }
