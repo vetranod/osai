@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   buildClientAuthHeaders,
   ensureServerSession,
+  refreshBrowserSessionAndBridge,
 } from "@/lib/browser-auth-client";
 import styles from "./page.module.css";
 
@@ -41,13 +42,45 @@ function SuccessInner() {
     async function poll() {
       try {
         const readStatus = async (): Promise<{ res: Response; data: SessionStatus }> => {
-          const headers = await buildClientAuthHeaders(undefined, { preferServerToken: true });
-          const res = await fetch(`/api/checkout/session?session_id=${encodeURIComponent(sid)}`, {
+          const requestUrl = `/api/checkout/session?session_id=${encodeURIComponent(sid)}`;
+          const headers = await buildClientAuthHeaders(undefined, {
+            bridgeMode: "background",
+          });
+          let res = await fetch(requestUrl, {
             method: "GET",
             cache: "no-store",
             credentials: "include",
             headers,
           });
+
+          if (res.status === 401) {
+            const refreshedToken = await refreshBrowserSessionAndBridge();
+            if (refreshedToken) {
+              const retryHeaders = await buildClientAuthHeaders();
+              res = await fetch(requestUrl, {
+                method: "GET",
+                cache: "no-store",
+                credentials: "include",
+                headers: retryHeaders,
+              });
+            }
+          }
+
+          if (res.status === 401) {
+            const serverToken = await ensureServerSession({ attempts: 4, pauseMs: 250 });
+            if (serverToken) {
+              const retryHeaders = await buildClientAuthHeaders(undefined, {
+                preferServerToken: true,
+              });
+              res = await fetch(requestUrl, {
+                method: "GET",
+                cache: "no-store",
+                credentials: "include",
+                headers: retryHeaders,
+              });
+            }
+          }
+
           const data = (await res.json()) as SessionStatus;
           return { res, data };
         };
@@ -55,15 +88,6 @@ function SuccessInner() {
         let { res, data } = await readStatus();
         if (cancelled) return;
         setStatus(data);
-
-        if (res.status === 401) {
-          const serverToken = await ensureServerSession({ attempts: 4, pauseMs: 250 });
-          if (serverToken) {
-            ({ res, data } = await readStatus());
-            if (cancelled) return;
-            setStatus(data);
-          }
-        }
 
         if (res.status === 401) {
           router.replace(
@@ -74,13 +98,7 @@ function SuccessInner() {
 
         if (res.ok && data.ok && data.rollout_id) {
           const dashboardPath = `/rollouts/${data.rollout_id}`;
-          const serverToken = await ensureServerSession({ attempts: 2, pauseMs: 200 });
-          if (serverToken) {
-            router.replace(dashboardPath);
-            return;
-          }
-
-          router.replace(`/auth/continue?next=${encodeURIComponent(dashboardPath)}`);
+          router.replace(dashboardPath);
           return;
         }
       } catch {
