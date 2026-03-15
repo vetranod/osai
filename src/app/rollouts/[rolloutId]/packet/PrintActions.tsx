@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   buildClientAuthHeaders,
   ensureServerSession,
+  getClientAccessToken,
 } from "@/lib/browser-auth-client";
 
 import styles from "./packet.module.css";
@@ -20,9 +21,27 @@ function getErrorMessage(body: unknown, fallback: string): string {
 export function PrintActions({ rolloutId }: { rolloutId: string }) {
   const router = useRouter();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
 
   async function handleBackToDashboard(): Promise<void> {
-    router.push(`/rollouts/${rolloutId}`);
+    if (isReturning) return;
+
+    const nextPath = `/rollouts/${rolloutId}`;
+    setIsReturning(true);
+
+    try {
+      const clientToken = await getClientAccessToken({ bridgeMode: "await" });
+      const serverToken = await ensureServerSession({ attempts: 2, pauseMs: 150 });
+
+      if (!clientToken && !serverToken) {
+        window.location.assign(`/auth/continue?next=${encodeURIComponent(nextPath)}`);
+        return;
+      }
+
+      router.push(nextPath);
+    } finally {
+      setIsReturning(false);
+    }
   }
 
   async function handleOpenPdf(): Promise<void> {
@@ -75,6 +94,22 @@ export function PrintActions({ rolloutId }: { rolloutId: string }) {
         throw new Error(getErrorMessage(body, "Failed to generate packet PDF."));
       }
 
+      const contentType = response.headers.get("content-type") ?? "";
+      if (contentType.includes("text/html")) {
+        const html = await response.text();
+        if (pdfWindow) {
+          pdfWindow.document.open();
+          pdfWindow.document.write(html);
+          pdfWindow.document.close();
+        } else {
+          const htmlBlob = new Blob([html], { type: "text/html" });
+          const htmlUrl = URL.createObjectURL(htmlBlob);
+          window.location.assign(htmlUrl);
+          window.setTimeout(() => URL.revokeObjectURL(htmlUrl), 60_000);
+        }
+        return;
+      }
+
       const pdfBlob = await response.blob();
       const pdfUrl = URL.createObjectURL(pdfBlob);
 
@@ -103,8 +138,13 @@ export function PrintActions({ rolloutId }: { rolloutId: string }) {
       >
         {isGeneratingPdf ? "Generating PDF..." : "Open PDF"}
       </button>
-      <button type="button" className={styles.backLink} onClick={() => void handleBackToDashboard()}>
-        Back to dashboard
+      <button
+        type="button"
+        className={styles.backLink}
+        onClick={() => void handleBackToDashboard()}
+        disabled={isReturning}
+      >
+        {isReturning ? "Returning..." : "Back to dashboard"}
       </button>
     </div>
   );

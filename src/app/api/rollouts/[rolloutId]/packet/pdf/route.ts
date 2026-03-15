@@ -131,12 +131,12 @@ async function getPacketExportData(rolloutId: string): Promise<PacketExportData 
   };
 }
 
-async function renderPacketPdfBuffer(rollout: RolloutMeta, artifacts: ArtifactRow[]): Promise<Buffer> {
+async function renderPacketPdfBuffer(documentHtml: string): Promise<Buffer> {
   const browser = await launchPacketPdfBrowser();
 
   try {
     const page = await browser.newPage();
-    await page.setContent(buildPacketDocumentHtml(rollout, artifacts), {
+    await page.setContent(documentHtml, {
       waitUntil: "networkidle0",
     });
 
@@ -176,18 +176,35 @@ export async function GET(
       return Response.json({ ok: false, message: "Packet is not ready for export yet." }, { status: 409 });
     }
 
-    const pdfBuffer = await renderPacketPdfBuffer(packetData.rollout, packetData.artifacts);
-
-    return new Response(new Uint8Array(pdfBuffer), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="deploysure-packet-${rolloutId}.pdf"`,
-        "Cache-Control": "no-store",
-      },
+    const packetHtml = buildPacketDocumentHtml(packetData.rollout, packetData.artifacts, {
+      autoPrint: true,
     });
+
+    try {
+      const pdfBuffer = await renderPacketPdfBuffer(packetHtml);
+
+      return new Response(new Uint8Array(pdfBuffer), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="deploysure-packet-${rolloutId}.pdf"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    } catch (error) {
+      console.error("Failed to render packet PDF; serving print-ready HTML fallback instead.", error);
+      return new Response(packetHtml, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Disposition": `inline; filename="deploysure-packet-${rolloutId}.html"`,
+          "Cache-Control": "no-store",
+          "X-DeploySure-Export-Format": "html-fallback",
+        },
+      });
+    }
   } catch (error) {
-    console.error("Failed to render packet PDF", error);
-    return Response.json({ ok: false, message: "Failed to generate packet PDF." }, { status: 500 });
+    console.error("Failed to prepare packet export", error);
+    return Response.json({ ok: false, message: "Failed to generate packet." }, { status: 500 });
   }
 }

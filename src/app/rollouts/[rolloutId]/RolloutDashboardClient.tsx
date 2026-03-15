@@ -1315,12 +1315,12 @@ export default function RolloutDashboardClient({
         {/* Archive / Restart — top-right corner, low prominence */}
         {rolloutMeta && (isArchived || canArchive) && (
           <div className={styles.archiveCorner}>
-              <button
+            <button
               type="button"
-              className={styles.archiveTrigger}
+              className={styles.packetTrigger}
               onClick={() => router.push(`/rollouts/${rolloutId}/packet`)}
             >
-              Open print packet
+              Open governance packet
             </button>
             {isArchived ? (
               <Link href={restartHref} className={styles.archiveTrigger}>
@@ -1347,10 +1347,10 @@ export default function RolloutDashboardClient({
           <div className={styles.archiveCorner}>
             <button
               type="button"
-              className={styles.archiveTrigger}
+              className={styles.packetTrigger}
               onClick={() => router.push(`/rollouts/${rolloutId}/packet`)}
             >
-              Open print packet
+              Open governance packet
             </button>
           </div>
         )}
