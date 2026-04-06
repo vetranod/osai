@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fulcral Favicon — 32x32, simplified for legibility at small sizes -->
+  <!-- Background -->
+  <rect width="32" height="32" rx="7" fill="#102345"/>
+  <!-- Spine -->
+  <path d="M11 4 L11 28" stroke="#3D73B1" stroke-width="3" stroke-linecap="round"/>
+  <!-- Top arm -->
+  <path d="M11 4 L24 4" stroke="#3D73B1" stroke-width="3" stroke-linecap="round"/>
+  <!-- Pivot ring -->
+  <circle cx="11" cy="16" r="4.5" fill="#102345" stroke="#3D73B1" stroke-width="2.5"/>
+  <!-- Pivot dot — teal -->
+  <circle cx="11" cy="16" r="1.8" fill="#6EA79F"/>
+</svg>

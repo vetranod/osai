@@ -1,0 +1,157 @@
+/* ============================================
+   FULCRAL BRAND TOKENS
+   Drop into globals.css or a dedicated
+   tokens.css imported at the root level.
+   ============================================ */
+
+:root {
+
+  /* ---- Colour Palette ---- */
+
+  /* Primary brand navy */
+  --color-navy:           #17355F;
+  /* Deep text navy — headlines, high contrast */
+  --color-navy-deep:      #102345;
+  /* Secondary blue — CTAs, links, active states */
+  --color-blue:           #3D73B1;
+  /* Tertiary teal — accent, pivot dot, highlights */
+  --color-teal:           #6EA79F;
+
+  /* Surface / background neutrals */
+  --color-surface-1:      #FBFCFE;   /* page background */
+  --color-surface-2:      #EFF3F8;   /* card / section background */
+  --color-surface-3:      #D7DFEB;   /* border / divider */
+
+  /* Muted copy */
+  --color-muted:          #526684;
+
+  /* ---- Semantic aliases ---- */
+  --color-bg:             var(--color-surface-1);
+  --color-text-primary:   var(--color-navy-deep);
+  --color-text-secondary: var(--color-muted);
+  --color-text-inverse:   #FBFCFE;
+  --color-border:         var(--color-surface-3);
+  --color-cta:            var(--color-blue);
+  --color-cta-hover:      #2f5d96;
+  --color-accent:         var(--color-teal);
+
+  /* ---- Typography ---- */
+
+  /* Display / Hero headings */
+  --font-display:         Georgia, 'Times New Roman', serif;
+  /* UI / Body / Buttons */
+  --font-sans:            'Inter', Arial, Helvetica, sans-serif;
+  /* Labels / Tags / Technical UI / Code */
+  --font-mono:            'Geist Mono', 'Courier New', monospace;
+
+  /* ---- Type scale ---- */
+  --text-xs:              11px;
+  --text-sm:              13px;
+  --text-base:            15px;
+  --text-md:              17px;
+  --text-lg:              22px;
+  --text-xl:              28px;
+  --text-2xl:             36px;
+  --text-3xl:             48px;
+
+  /* ---- Spacing ---- */
+  --space-1:              4px;
+  --space-2:              8px;
+  --space-3:              12px;
+  --space-4:              16px;
+  --space-5:              24px;
+  --space-6:              32px;
+  --space-7:              48px;
+  --space-8:              64px;
+
+  /* ---- Border radius ---- */
+  --radius-sm:            6px;
+  --radius-md:            8px;
+  --radius-lg:            12px;
+  --radius-xl:            16px;
+
+  /* ---- Shadows ---- */
+  --shadow-sm:            0 1px 3px rgba(16, 35, 69, 0.08);
+  --shadow-md:            0 4px 16px rgba(16, 35, 69, 0.1);
+  --shadow-lg:            0 8px 32px rgba(16, 35, 69, 0.12);
+
+}
+
+/* ============================================
+   DARK SURFACE OVERRIDES
+   Apply .surface-dark to any section that
+   uses the deep navy background.
+   ============================================ */
+
+.surface-dark {
+  background-color: var(--color-navy-deep);
+  --color-text-primary:   #FBFCFE;
+  --color-text-secondary: var(--color-muted);
+  --color-border:         var(--color-navy);
+}
+
+/* ============================================
+   BASE TYPE STYLES
+   ============================================ */
+
+.type-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+}
+
+.type-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.type-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* ============================================
+   BUTTON TOKENS
+   ============================================ */
+
+.btn-primary {
+  background: var(--color-cta);
+  color: #FBFCFE;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  padding: 8px 20px;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.btn-primary:hover {
+  background: var(--color-cta-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  border-radius: var(--radius-md);
+  padding: 8px 20px;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--color-navy);
+  color: var(--color-navy);
+}

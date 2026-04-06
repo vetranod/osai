@@ -1,0 +1,13 @@
+<svg width="180" height="40" viewBox="0 0 180 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fulcral Horizontal Wordmark Lockup — Dark background -->
+
+  <!-- Mark -->
+  <path d="M9 3 L9 37" stroke="#3D73B1" stroke-width="3" stroke-linecap="round"/>
+  <path d="M9 3 L24 3" stroke="#3D73B1" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="9" cy="20" r="5" fill="#102345" stroke="#3D73B1" stroke-width="2.5"/>
+  <circle cx="9" cy="20" r="2" fill="#6EA79F"/>
+  <path d="M14 20 L20 20" stroke="#3D73B1" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+
+  <!-- Wordmark — "Fulcral" in Georgia-equivalent path approximation using text -->
+  <text x="34" y="28" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700" letter-spacing="-0.5" fill="#FBFCFE">Fulcral</text>
+</svg>

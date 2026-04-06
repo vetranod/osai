@@ -1,0 +1,13 @@
+<svg width="52" height="56" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fulcral Mark — Dark background version -->
+  <!-- Spine -->
+  <path d="M18 6 L18 50" stroke="#3D73B1" stroke-width="4" stroke-linecap="round"/>
+  <!-- Top arm -->
+  <path d="M18 6 L38 6" stroke="#3D73B1" stroke-width="4" stroke-linecap="round"/>
+  <!-- Pivot ring -->
+  <circle cx="18" cy="28" r="7" fill="#102345" stroke="#3D73B1" stroke-width="3"/>
+  <!-- Pivot dot — teal accent -->
+  <circle cx="18" cy="28" r="2.8" fill="#6EA79F"/>
+  <!-- Arm echo -->
+  <path d="M25 28 L34 28" stroke="#3D73B1" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+</svg>
