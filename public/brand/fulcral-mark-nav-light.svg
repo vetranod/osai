@@ -1,0 +1,7 @@
+<svg width="52" height="56" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fulcral Mark — Nav bar size, light background -->
+  <path d="M18 6 L18 50" stroke="#17355F" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M18 6 L38 6" stroke="#17355F" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="18" cy="28" r="7" fill="#FBFCFE" stroke="#17355F" stroke-width="3.5"/>
+  <circle cx="18" cy="28" r="2.8" fill="#6EA79F"/>
+</svg>
