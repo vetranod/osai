@@ -1,3 +1,5 @@
+@import './fulcral-tokens.css';
+
 :root {
   --background: #eff3f8;
   --surface: #fbfcfe;
