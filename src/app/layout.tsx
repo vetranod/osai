@@ -27,7 +27,7 @@ const geistMono = Geist_Mono({
 function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <Image
-      src="/deploysure-mark.svg"
+      src={compact ? "/brand/fulcral-mark-nav-light.svg" : "/brand/fulcral-mark-light.svg"}
       alt=""
       aria-hidden="true"
       width={compact ? 52 : 58}
@@ -119,7 +119,7 @@ export default async function RootLayout({
               <BrandMark />
               <span className={styles.logoLockup}>
                 <span className={styles.logoWordmark}>
-                  Deploy<span className={styles.logoWordmarkAccent}>Sure</span>
+                  Fulcral
                 </span>
                 <span className={styles.logoDescriptor}>{PRODUCT_DESCRIPTOR}</span>
               </span>
@@ -127,7 +127,7 @@ export default async function RootLayout({
             <nav className={styles.nav}>
               <Link href="/how-it-works" className={styles.navLink}>How it works</Link>
               <Link href="/resources" className={styles.navLink}>Resources</Link>
-              <Link href="mailto:info@deploysure.com" className={styles.navLink}>Contact</Link>
+              <Link href="mailto:info@fulcral.org" className={styles.navLink}>Contact</Link>
               {user ? (
                 <Link href="/auth/signout" className={styles.navLink}>Sign out</Link>
               ) : (
@@ -145,7 +145,7 @@ export default async function RootLayout({
                 <BrandMark />
                 <div className={styles.logoLockup}>
                   <span className={styles.logoWordmark}>
-                    Deploy<span className={styles.logoWordmarkAccent}>Sure</span>
+                    Fulcral
                   </span>
                   <span className={styles.logoDescriptor}>{PRODUCT_DESCRIPTOR}</span>
                 </div>
@@ -154,7 +154,7 @@ export default async function RootLayout({
             <div className={styles.footerColCenter}>
               <Link href="/how-it-works" className={styles.footerLink}>How it works</Link>
               <Link href="/resources" className={styles.footerLink}>Resources</Link>
-              <Link href="mailto:info@deploysure.com" className={styles.footerLink}>Contact</Link>
+              <Link href="mailto:info@fulcral.org" className={styles.footerLink}>Contact</Link>
             </div>
             <div className={styles.footerColRight}>
               <p className={styles.footerLegal}>
