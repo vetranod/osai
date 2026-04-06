@@ -106,7 +106,7 @@ export default function AiPolicyForSmallBusinessPage() {
         },
       ]}
       ctaTitle="Give your team a practical AI operating model before habits set in."
-      ctaBody="DeploySure helps small businesses move beyond a generic template and define an AI policy with rollout guardrails, ownership, and review standards."
+      ctaBody="Fulcral helps small businesses move beyond a generic template and define an AI policy with rollout guardrails, ownership, and review standards."
       relatedLinks={getRelatedGuides(path)}
     />
   );

@@ -23,10 +23,10 @@ export default function HowItWorksPage() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "What inputs does DeploySure use?",
+        name: "What inputs does Fulcral use?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "DeploySure evaluates the primary goal, current adoption level, data sensitivity, and leadership posture for the rollout.",
+          text: "Fulcral evaluates the primary goal, current adoption level, data sensitivity, and leadership posture for the rollout.",
         },
       },
       {
@@ -39,10 +39,10 @@ export default function HowItWorksPage() {
       },
       {
         "@type": "Question",
-        name: "Who is DeploySure for?",
+        name: "Who is Fulcral for?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "DeploySure is designed for professional teams and small organizations that want to adopt AI without losing operational control.",
+          text: "Fulcral is designed for professional teams and small organizations that want to adopt AI without losing operational control.",
         },
       },
     ],
@@ -51,10 +51,10 @@ export default function HowItWorksPage() {
   const aboutJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "How DeploySure Works",
+    name: "How Fulcral Works",
     url: absoluteUrl("/how-it-works"),
     description:
-      "Overview of DeploySure's deterministic AI governance framework generation process.",
+      "Overview of Fulcral's deterministic AI governance framework generation process.",
   };
 
   return (
@@ -68,10 +68,10 @@ export default function HowItWorksPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutJsonLd) }}
       />
       <section className={styles.hero}>
-        <p className={styles.heroLabel}>How DeploySure Works</p>
+        <p className={styles.heroLabel}>How Fulcral Works</p>
         <h1 className={styles.heroTitle}>The methodology behind the framework.</h1>
         <p className={styles.heroBody}>
-          DeploySure provides a structured system for organizations introducing
+          Fulcral provides a structured system for organizations introducing
           AI tools into real workflows.
         </p>
       </section>

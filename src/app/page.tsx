@@ -37,7 +37,7 @@ function PacketPreview({ compact = false }: { compact?: boolean }) {
       <div className={styles.packetHeader}>
         <div>
           <div className={styles.packetTitle}>AI Governance Framework</div>
-          <div className={styles.packetMeta}>DeploySure - Confidential</div>
+          <div className={styles.packetMeta}>Fulcral — Confidential</div>
         </div>
         <div className={styles.packetBadge}>Structured Rollout</div>
       </div>
@@ -81,7 +81,7 @@ export default function LandingPage() {
     operatingSystem: "Web",
     url: absoluteUrl("/"),
     description:
-      "DeploySure helps professional teams generate a structured AI governance framework with rollout guardrails, review controls, and implementation milestones.",
+      "Fulcral helps professional teams generate a structured AI governance framework with rollout guardrails, review controls, and implementation milestones.",
     offers: {
       "@type": "Offer",
       priceCurrency: "USD",
@@ -99,7 +99,7 @@ export default function LandingPage() {
       />
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <span className={styles.heroKicker}>DeploySure</span>
+          <span className={styles.heroKicker}>Fulcral</span>
           <h1 className={styles.heroHeadline}>Deploy AI without losing control.</h1>
           <p className={styles.heroSubheadline}>
             Generate a structured AI governance framework for your small team in under a minute.
@@ -158,7 +158,7 @@ export default function LandingPage() {
           </div>
         </div>
         <p className={styles.problemOutro}>
-          DeploySure gives small teams a way to introduce structure before AI use becomes unmanaged operational risk.
+          Fulcral gives small teams a way to introduce structure before AI use becomes unmanaged operational risk.
         </p>
       </section>
 
@@ -326,7 +326,7 @@ export default function LandingPage() {
             Create your framework
           </Link>
           <Link href="/how-it-works" className={styles.ctaSecondaryInverted}>
-            How DeploySure Works
+            How Fulcral Works
           </Link>
         </div>
       </section>

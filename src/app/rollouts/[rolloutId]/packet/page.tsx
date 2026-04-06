@@ -315,7 +315,7 @@ export default function RolloutPacketPage() {
       <main className={styles.page}>
         <div className={styles.shell}>
           <section className={styles.cover}>
-            <p className={styles.kicker}>DeploySure</p>
+            <p className={styles.kicker}>Fulcral</p>
             <h1 className={styles.title}>AI Governance Framework Packet</h1>
             <p className={styles.intro}>Loading packet...</p>
           </section>
@@ -329,7 +329,7 @@ export default function RolloutPacketPage() {
       <main className={styles.page}>
         <div className={styles.shell}>
           <section className={styles.cover}>
-            <p className={styles.kicker}>DeploySure</p>
+            <p className={styles.kicker}>Fulcral</p>
             <h1 className={styles.title}>AI Governance Framework Packet</h1>
             <p className={styles.intro}>{loadError ?? "Packet unavailable."}</p>
             <Link href={`/rollouts/${rolloutId}`} className={styles.backLink}>
@@ -349,7 +349,7 @@ export default function RolloutPacketPage() {
         <section className={styles.cover}>
           <div className={styles.coverHeader}>
             <div>
-              <p className={styles.kicker}>DeploySure</p>
+              <p className={styles.kicker}>Fulcral</p>
               <h1 className={styles.title}>AI Governance Framework Packet</h1>
             </div>
             <div className={styles.coverBadge}>{formatEnumDisplay(rollout.rollout_mode)} Rollout</div>

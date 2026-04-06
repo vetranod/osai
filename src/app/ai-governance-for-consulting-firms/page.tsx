@@ -106,7 +106,7 @@ export default function AiGovernanceForConsultingFirmsPage() {
         },
       ]}
       ctaTitle="Give fast-moving consulting teams a clearer AI operating model."
-      ctaBody="DeploySure helps consulting firms define rollout pacing, guardrails, and review structure without collapsing everything into a vague generic AI policy."
+      ctaBody="Fulcral helps consulting firms define rollout pacing, guardrails, and review structure without collapsing everything into a vague generic AI policy."
       relatedLinks={getRelatedGuides(path)}
     />
   );

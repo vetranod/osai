@@ -187,7 +187,7 @@ export async function GET(
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `inline; filename="deploysure-packet-${rolloutId}.pdf"`,
+          "Content-Disposition": `inline; filename="fulcral-packet-${rolloutId}.pdf"`,
           "Cache-Control": "no-store",
         },
       });
@@ -197,7 +197,7 @@ export async function GET(
         status: 200,
         headers: {
           "Content-Type": "text/html; charset=utf-8",
-          "Content-Disposition": `inline; filename="deploysure-packet-${rolloutId}.html"`,
+          "Content-Disposition": `inline; filename="fulcral-packet-${rolloutId}.html"`,
           "Cache-Control": "no-store",
           "X-DeploySure-Export-Format": "html-fallback",
         },

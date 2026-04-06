@@ -249,7 +249,7 @@ function LoginPageInner() {
             ? mode === "sign_up"
               ? "Create your account to continue"
               : "Sign in to continue"
-            : "Sign in to DeploySure"}
+            : "Sign in to Fulcral"}
         </h1>
         <p className={styles.subtitle}>
           {checkoutIntent && !sessionRequired
@@ -334,7 +334,7 @@ function LoginPageInner() {
         {error ? <p className={styles.error}>{error}</p> : null}
 
         <p className={styles.note}>
-          By continuing, you agree to use DeploySure for internal governance planning.
+          By continuing, you agree to use Fulcral for internal governance planning.
           <Link href="/" className={styles.noteLink}>
             Back to home
           </Link>

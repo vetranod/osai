@@ -100,13 +100,13 @@ export default function AiGovernanceFrameworkVsAiPolicyPage() {
             "It is broader, not necessarily harder. The framework is the operating model that explains how the policy should be implemented and expanded.",
         },
         {
-          question: "Why does DeploySure emphasize a packet instead of one document?",
+          question: "Why does Fulcral emphasize a packet instead of one document?",
           answer:
             "Because most teams need multiple governance components working together: rollout posture, guardrails, review expectations, milestone planning, and policy language.",
         },
       ]}
       ctaTitle="Move beyond a document-only view of AI governance."
-      ctaBody="DeploySure helps teams turn AI policy questions into a broader governance framework with rollout logic, guardrails, and milestone-based control."
+      ctaBody="Fulcral helps teams turn AI policy questions into a broader governance framework with rollout logic, guardrails, and milestone-based control."
       relatedLinks={getRelatedGuides(path)}
     />
   );

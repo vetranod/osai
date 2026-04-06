@@ -106,7 +106,7 @@ export default function AiGovernanceForLawFirmsPage() {
         },
       ]}
       ctaTitle="Define the firm’s AI operating position before tool use defines it for you."
-      ctaBody="DeploySure helps law firms turn AI rollout questions into a structured governance framework with usage guardrails, review expectations, and milestone-based adoption."
+      ctaBody="Fulcral helps law firms turn AI rollout questions into a structured governance framework with usage guardrails, review expectations, and milestone-based adoption."
       relatedLinks={getRelatedGuides(path)}
     />
   );

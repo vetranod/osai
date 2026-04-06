@@ -103,7 +103,7 @@ export default function InviteForm({ adminProof }: { adminProof: string }) {
           <strong>{sentEmail}</strong> already has an account — demo access has been granted.
           Ask them to sign in and visit{" "}
           <a href="/demo/generate" style={{ color: "#92400e" }}>
-            deploysure.com/demo/generate
+            fulcral.org/demo/generate
           </a>
           .
         </div>

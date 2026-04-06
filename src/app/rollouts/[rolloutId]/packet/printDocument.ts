@@ -298,7 +298,7 @@ export function buildPacketDocumentHtml(
       <section class="cover">
         <div class="cover-header">
           <div>
-            <p class="kicker">DeploySure</p>
+            <p class="kicker">Fulcral</p>
             <h1 class="title">AI Governance Framework Packet</h1>
             <p class="intro">Controlled internal reference for AI rollout governance, review, and usage boundaries.</p>
           </div>
