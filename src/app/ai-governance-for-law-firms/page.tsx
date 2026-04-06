@@ -6,7 +6,7 @@ import { buildPageMetadata } from "@/app/seo";
 const path = "/ai-governance-for-law-firms";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "AI Governance for Law Firms | DeploySure",
+  title: "AI Governance for Law Firms | Fulcral",
   description:
     "See how law firms can introduce AI with clearer guardrails, review structure, and rollout checkpoints before client-sensitive workflows drift out of control.",
   path,

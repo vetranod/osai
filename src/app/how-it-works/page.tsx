@@ -4,9 +4,9 @@ import { absoluteUrl, buildPageMetadata } from "../seo";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "How AI Governance Framework Generation Works | DeploySure",
+  title: "How AI Governance Framework Generation Works | Fulcral",
   description:
-    "See how DeploySure evaluates AI rollout inputs, assigns governance posture, and produces a structured governance packet for professional teams.",
+    "See how Fulcral evaluates AI rollout inputs, assigns governance posture, and produces a structured governance packet for professional teams.",
   path: "/how-it-works",
   keywords: [
     "how AI governance works",

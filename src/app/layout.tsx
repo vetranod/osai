@@ -10,7 +10,7 @@ import "./globals.css";
 import styles from "./layout.module.css";
 
 // ---- Product identity — swap this one constant when the name is decided ----
-const PRODUCT_NAME = "DeploySure";
+const PRODUCT_NAME = "Fulcral";
 const PRODUCT_DESCRIPTOR = "Deploy AI without losing control.";
 
 const inter = Inter({
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   ...buildPageMetadata({
     title: `${PRODUCT_NAME} | AI Governance Platform`,
     description:
-      "DeploySure gives professional teams a structured AI governance framework with rollout guardrails, review controls, and a client-ready policy packet.",
+      "Fulcral gives professional teams a structured AI governance framework with rollout guardrails, review controls, and a client-ready policy packet.",
     path: "/",
     keywords: [
       "AI governance",

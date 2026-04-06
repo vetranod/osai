@@ -5,7 +5,7 @@ import { buildPageMetadata, absoluteUrl, SITE_NAME } from "@/app/seo";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "AI Governance Resources | DeploySure",
+  title: "AI Governance Resources | Fulcral",
   description:
     "Practical guides on AI governance, policy, risk classification, and rollout planning for professional teams adopting AI tools.",
   path: "/resources",

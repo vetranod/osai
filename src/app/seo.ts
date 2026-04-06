@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-const FALLBACK_SITE_URL = "https://deploysure.com";
-export const SITE_NAME = "DeploySure";
+const FALLBACK_SITE_URL = "https://fulcral.org";
+export const SITE_NAME = "Fulcral";
 export const DEFAULT_OG_TYPE = "website";
 
 function normalizeUrl(value: string): string {

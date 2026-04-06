@@ -18,7 +18,7 @@ export async function generateMetadata({
   if (!article) return {};
 
   return buildPageMetadata({
-    title: `${article.title} | DeploySure`,
+    title: `${article.title} | Fulcral`,
     description: article.description,
     path: `/resources/${article.slug}`,
     keywords: article.keywords,

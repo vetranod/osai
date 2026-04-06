@@ -6,7 +6,7 @@ import { guideLinks } from "./_marketing/guides";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "AI Governance Framework for Small Teams | DeploySure",
+  title: "AI Governance Framework for Small Teams | Fulcral",
   description:
     "Generate a structured AI governance framework for your small professional team in under a minute with rollout pacing, guardrails, and a polished governance packet.",
   path: "/",

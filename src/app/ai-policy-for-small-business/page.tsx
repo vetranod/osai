@@ -6,7 +6,7 @@ import { buildPageMetadata } from "@/app/seo";
 const path = "/ai-policy-for-small-business";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "AI Policy for Small Business | DeploySure",
+  title: "AI Policy for Small Business | Fulcral",
   description:
     "A practical look at what small businesses actually need from an AI policy, and why many teams need a broader governance framework instead of a document alone.",
   path,

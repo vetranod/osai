@@ -6,7 +6,7 @@ import { buildPageMetadata } from "@/app/seo";
 const path = "/ai-governance-framework-vs-ai-policy";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "AI Governance Framework vs AI Policy | DeploySure",
+  title: "AI Governance Framework vs AI Policy | Fulcral",
   description:
     "Understand the difference between an AI policy and a broader AI governance framework, and why many teams need both to control rollout safely.",
   path,

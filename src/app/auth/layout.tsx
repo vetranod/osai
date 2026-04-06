@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/app/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Authentication | DeploySure",
-  description: "Secure authentication flow for DeploySure accounts.",
+  title: "Authentication | Fulcral",
+  description: "Secure authentication flow for Fulcral accounts.",
   path: "/auth",
   noIndex: true,
 });

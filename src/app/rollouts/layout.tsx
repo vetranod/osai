@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/app/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Rollout Dashboard | DeploySure",
+  title: "Rollout Dashboard | Fulcral",
   description: "Authenticated rollout dashboards and governance packets.",
   path: "/rollouts",
   noIndex: true,
