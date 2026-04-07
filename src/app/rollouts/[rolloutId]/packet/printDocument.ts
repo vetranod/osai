@@ -313,53 +313,58 @@ export function buildPacketDocumentHtml(
   </head>
   <body>
     <main class="document">
-      <section class="cover" style="padding: 36px 0 0; background: #fff; page-break-after: always;">
+      <section style="display: flex; flex-direction: column; min-height: 242mm; background: #fff; page-break-after: always;">
 
-        <!-- Mark + kicker -->
-        <div style="margin-bottom: 28px;">
-          <svg width="22" height="24" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-            <path d="M18 6 L18 50" stroke="#17355F" stroke-width="4.5" stroke-linecap="round"/>
-            <path d="M18 6 L38 6" stroke="#17355F" stroke-width="4.5" stroke-linecap="round"/>
-            <circle cx="18" cy="28" r="7" fill="#fff" stroke="#17355F" stroke-width="3.5"/>
-            <circle cx="18" cy="28" r="2.8" fill="#526684"/>
-          </svg>
-          <p style="font-size: 10px; font-weight: 700; color: #526684; text-transform: uppercase; letter-spacing: 0.18em; margin: 8px 0 0; padding: 0;">FULCRAL</p>
-        </div>
+        <!-- Main content grows to fill page, pushing footer down -->
+        <div style="flex: 1 0 auto;">
 
-        <!-- Title block -->
-        <div style="margin-bottom: 20px;">
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 12px;">
-            <h1 style="font-family: Georgia, serif; font-size: 42px; line-height: 1.05; color: #102345; letter-spacing: -0.5px; margin: 0; padding: 0; max-width: 520px;">AI Governance Framework Packet</h1>
-            <div style="flex-shrink: 0; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #526684; border: 1px solid #D7DFEB; padding: 8px 12px; white-space: nowrap; margin-top: 6px;">${escapeHtml(formatEnumDisplay(rollout.rollout_mode))} Rollout</div>
+          <!-- Mark + kicker -->
+          <div style="margin-bottom: 52px;">
+            <svg width="20" height="22" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+              <path d="M18 6 L18 50" stroke="#17355F" stroke-width="4.5" stroke-linecap="round"/>
+              <path d="M18 6 L38 6" stroke="#17355F" stroke-width="4.5" stroke-linecap="round"/>
+              <circle cx="18" cy="28" r="7" fill="#fff" stroke="#17355F" stroke-width="3.5"/>
+              <circle cx="18" cy="28" r="2.8" fill="#526684"/>
+            </svg>
+            <p style="font-family: Arial, sans-serif; font-size: 9px; font-weight: 700; color: #526684; text-transform: uppercase; letter-spacing: 0.15em; margin: 6px 0 0; padding: 0;">FULCRAL</p>
           </div>
-          <p style="font-size: 13px; color: #526684; margin: 0 0 20px; padding: 0; line-height: 1.6;">Controlled internal reference for AI rollout governance, review, and usage boundaries.</p>
-          <hr style="border: none; border-top: 1px solid #D7DFEB; margin: 0;" />
-        </div>
 
-        <!-- Meta fields -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; padding: 4px 0 20px;">
-          <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
-            <div style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Prepared For</div>
-            <div style="font-size: 13px; color: #102345;">${escapeHtml(personLine(rollout.initiative_lead_name, rollout.initiative_lead_title, "Initiative Lead"))}</div>
-          </div>
-          <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
-            <div style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Approved By</div>
-            <div style="font-size: 13px; color: #102345;">${escapeHtml(personLine(rollout.approving_authority_name, rollout.approving_authority_title, "Approving Authority"))}</div>
-          </div>
-          <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
-            <div style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Effective Date</div>
-            <div style="font-size: 13px; color: #102345;">${escapeHtml(formatDate(rollout.created_at))}</div>
-          </div>
-          <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
-            <div style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Reference ID</div>
-            <div style="font-size: 13px; color: #102345; font-family: 'Courier New', monospace;">REF-${escapeHtml(rollout.id.slice(0, 8).toUpperCase())}</div>
-          </div>
-        </div>
+          <!-- Title -->
+          <h1 style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: bold; color: #102345; line-height: 1.1; margin: 0 0 14px; padding: 0;">AI Governance Framework Packet</h1>
 
-        <hr style="border: none; border-top: 1px solid #D7DFEB; margin: 0 0 4px;" />
+          <!-- Descriptor -->
+          <p style="font-family: Arial, sans-serif; font-size: 12px; color: #526684; margin: 0; padding: 0; line-height: 1.5;">Controlled internal reference for AI rollout governance, review, and usage boundaries.</p>
 
-        <!-- Summary fields -->
-        <div style="padding: 4px 0 0;">
+          <!-- Rule -->
+          <hr style="border: none; border-top: 1px solid #D7DFEB; margin: 24px 0;" />
+
+          <!-- Rollout mode — plain text, no box -->
+          <p style="font-family: Arial, sans-serif; font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 20px; padding: 0;">${escapeHtml(formatEnumDisplay(rollout.rollout_mode))} Rollout</p>
+
+          <!-- Meta grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px;">
+            <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
+              <div style="font-family: Arial, sans-serif; font-size: 9px; color: #526684; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 5px;">Prepared For</div>
+              <div style="font-family: Arial, sans-serif; font-size: 13px; color: #102345;">${escapeHtml(personLine(rollout.initiative_lead_name, rollout.initiative_lead_title, "Initiative Lead"))}</div>
+            </div>
+            <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
+              <div style="font-family: Arial, sans-serif; font-size: 9px; color: #526684; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 5px;">Approved By</div>
+              <div style="font-family: Arial, sans-serif; font-size: 13px; color: #102345;">${escapeHtml(personLine(rollout.approving_authority_name, rollout.approving_authority_title, "Approving Authority"))}</div>
+            </div>
+            <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
+              <div style="font-family: Arial, sans-serif; font-size: 9px; color: #526684; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 5px;">Effective Date</div>
+              <div style="font-family: Arial, sans-serif; font-size: 13px; color: #102345;">${escapeHtml(formatDate(rollout.created_at))}</div>
+            </div>
+            <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
+              <div style="font-family: Arial, sans-serif; font-size: 9px; color: #526684; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 5px;">Reference ID</div>
+              <div style="font-family: 'Courier New', monospace; font-size: 12px; color: #102345;">REF-${escapeHtml(rollout.id.slice(0, 8).toUpperCase())}</div>
+            </div>
+          </div>
+
+          <!-- Rule -->
+          <hr style="border: none; border-top: 1px solid #D7DFEB; margin: 20px 0;" />
+
+          <!-- Summary grid -->
           ${fieldGridHtml([
             ["Primary Goal", rollout.primary_goal],
             ["Sensitivity Tier", rollout.sensitivity_tier],
@@ -368,6 +373,13 @@ export function buildPacketDocumentHtml(
             ["Maturity State", rollout.maturity_state],
             ["Needs Stabilization", rollout.needs_stabilization],
           ])}
+
+        </div>
+
+        <!-- Cover page footer — pushed to bottom by flex -->
+        <div style="border-top: 1px solid #D7DFEB; padding-top: 10px; display: flex; justify-content: space-between; align-items: baseline; margin-top: 32px;">
+          <span style="font-family: Arial, sans-serif; font-size: 9px; color: #526684;">Fulcral AI Governance Packet</span>
+          <span style="font-family: Arial, sans-serif; font-size: 9px; color: #526684;">fulcral.org</span>
         </div>
 
       </section>
