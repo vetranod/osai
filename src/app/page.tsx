@@ -207,7 +207,6 @@ export default function LandingPage() {
             </p>
 
             <div className={styles.frameworkIncludes}>
-              <p className={styles.frameworkIncludesTitle}>Your framework includes:</p>
               <div className={styles.frameworkFeature}>
                 <p className={styles.frameworkFeatureTitle}>Rollout Profile</p>
                 <p className={styles.frameworkFeatureText}>
@@ -232,13 +231,6 @@ export default function LandingPage() {
                   Shows how to expand adoption in stages instead of letting tool use spread by drift.
                 </p>
               </div>
-            </div>
-
-            <div className={styles.frameworkCallout}>
-              <StructureMotif compact />
-              <p className={styles.frameworkCredibility}>
-                No AI-generated policy text. Every packet is produced by the same deterministic process. Inputs change the output. The process does not.
-              </p>
             </div>
           </div>
         </div>
