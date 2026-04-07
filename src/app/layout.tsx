@@ -117,11 +117,8 @@ export default async function RootLayout({
           <div className={styles.headerInner}>
             <Link href="/" className={styles.logo}>
               <BrandMark />
-              <span className={styles.logoLockup}>
-                <span className={styles.logoWordmark}>
-                  Fulcral
-                </span>
-                <span className={styles.logoDescriptor}>{PRODUCT_DESCRIPTOR}</span>
+              <span className={styles.logoWordmark}>
+                Fulcral
               </span>
             </Link>
             <nav className={styles.nav}>
@@ -143,12 +140,9 @@ export default async function RootLayout({
             <div className={styles.footerCol}>
               <div className={styles.footerBrand}>
                 <BrandMark />
-                <div className={styles.logoLockup}>
-                  <span className={styles.logoWordmark}>
-                    Fulcral
-                  </span>
-                  <span className={styles.logoDescriptor}>{PRODUCT_DESCRIPTOR}</span>
-                </div>
+                <span className={styles.logoWordmark}>
+                  Fulcral
+                </span>
               </div>
             </div>
             <div className={styles.footerColCenter}>

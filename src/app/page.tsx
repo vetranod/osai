@@ -113,12 +113,6 @@ export default function LandingPage() {
 
         <div className={styles.heroVisual}>
           <div className={styles.heroVisualFrame}>
-            <div className={styles.heroVisualLead}>
-              <StructureMotif compact />
-              <span className={styles.heroVisualCaption}>
-                Structured rollout logic for small-team adoption.
-              </span>
-            </div>
             <PacketPreview compact />
           </div>
         </div>
@@ -296,9 +290,6 @@ export default function LandingPage() {
       </section>
 
       <section className={styles.bottomCta}>
-        <p className={styles.bottomCtaKicker}>
-          Define how AI operates in your firm before it defines itself.
-        </p>
         <h2 className={styles.bottomCtaHeadline}>
           Create your framework in under a minute.
         </h2>
