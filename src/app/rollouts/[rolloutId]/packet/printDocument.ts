@@ -362,6 +362,7 @@ export function buildPacketDocumentHtml(
           ["Maturity State", rollout.maturity_state],
           ["Needs Stabilization", rollout.needs_stabilization],
         ])}
+        <p style="margin: 18px 0 0; font-size: 9px; color: #999;">TEST BUILD 001</p>
       </section>
 
       <section class="contents">
