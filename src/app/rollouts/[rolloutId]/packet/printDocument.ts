@@ -197,8 +197,10 @@ function sectionHtml(artifact: ArtifactRow, rollout: RolloutMeta, index: number)
   return `
     <section class="packet-section">
       <div class="section-header">
-        <p class="section-eyebrow">Document ${String(index + 1).padStart(2, "0")}</p>
-        <h2 class="section-title">${escapeHtml(ARTIFACT_TITLES[artifact.artifact_type])}</h2>
+        <div>
+          <p class="section-eyebrow">Document ${String(index + 1).padStart(2, "0")}</p>
+          <h2 class="section-title">${escapeHtml(ARTIFACT_TITLES[artifact.artifact_type])}</h2>
+        </div>
         <div class="section-meta">
           <span>Revision ${escapeHtml(artifact.version ?? "-")}</span>
           <span>Issued ${escapeHtml(formatDate(artifact.created_at))}</span>
@@ -214,90 +216,54 @@ const PRINT_CSS = `
   @page { size: Letter portrait; margin: 14mm 14mm 16mm; }
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #FBFCFE; color: #102345; font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #18263a; font-family: "Inter", "Segoe UI", Arial, sans-serif; }
   body { -webkit-font-smoothing: antialiased; }
   .document { width: 100%; }
-  .cover, .contents, .packet-section { background: #FBFCFE; page-break-inside: avoid; }
-
-  /* ---- Cover ---- */
-  .cover { padding: 32px 0 30px; border-top: 5px solid #17355F; border-bottom: 1px solid #D7DFEB; border-left: 4px solid #3D73B1; padding-left: 20px; page-break-after: always; }
-  .cover-header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 26px; }
-  .kicker { margin: 0 0 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #3D73B1; }
-  .title { margin: 0 0 16px; font-family: Georgia, "Times New Roman", serif; font-size: 42px; line-height: 1.05; letter-spacing: -0.025em; max-width: 560px; color: #102345; }
-  .cover-badge { flex-shrink: 0; padding: 10px 16px; border-radius: 0; background: #17355F; color: #FBFCFE; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
-  .intro { margin: 0 0 26px; max-width: 720px; font-size: 14px; line-height: 1.75; color: #526684; }
-
-  /* ---- Meta grid (Prepared For / Approved By / etc.) ---- */
-  .meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin-bottom: 16px; }
-  .meta-row { padding: 12px 0; border-top: 1px solid #D7DFEB; }
-  .field-label { margin-bottom: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #526684; }
-  .meta-value { font-size: 14px; line-height: 1.55; color: #102345; }
-  .meta-value code { font-size: 11px; color: #526684; }
-
-  /* ---- Field grid (cover summary + content sections) ---- */
-  .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .field-row { padding: 10px 12px; background: #EFF3F8; border: 1px solid #D7DFEB; }
-  .field-value { font-size: 13px; line-height: 1.55; color: #102345; }
-
-  /* Cover summary field values use teal */
-  .cover .field-grid { margin-top: 4px; }
-  .cover .field-row { padding: 12px; }
-  .cover .field-value { color: #6EA79F; font-weight: 600; }
-
-  /* ---- Table of contents ---- */
-  .contents { padding: 30px 0 14px; margin-top: 20px; page-break-after: always; border-left: 4px solid #6EA79F; padding-left: 20px; }
-  .contents-title { margin: 0 0 20px; font-family: Georgia, "Times New Roman", serif; font-size: 22px; color: #102345; }
-  .contents-list { display: grid; grid-template-columns: 1fr; gap: 0; }
-  .contents-item { display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; padding: 12px 0; border-bottom: 1px solid #D7DFEB; }
-  .contents-index { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 26px; border-radius: 0; background: #17355F; color: #FBFCFE; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
-  .contents-item-title { margin-bottom: 4px; font-size: 13px; font-weight: 700; color: #102345; font-family: Georgia, "Times New Roman", serif; }
-  .contents-item-body { font-size: 11px; line-height: 1.55; color: #526684; }
-
-  /* ---- Packet sections ---- */
-  .packet-section { padding: 22px 0 0; margin-top: 18px; page-break-before: always; }
-  .section-header { margin-bottom: 16px; }
-  .section-eyebrow { margin: 0 0 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #3D73B1; }
-  .section-title { margin: 0 0 10px; font-family: Georgia, "Times New Roman", serif; font-size: 26px; letter-spacing: -0.02em; color: #102345; padding-bottom: 10px; border-bottom: 2px solid #17355F; }
-  .section-meta { display: flex; gap: 14px; flex-wrap: wrap; color: #526684; font-size: 11px; font-weight: 600; margin-top: 8px; }
-  .section-summary { margin: 0 0 22px; font-size: 13px; line-height: 1.75; color: #526684; }
-
-  /* ---- Subsection headings ---- */
-  .subsection { margin-top: 24px; }
-  .subsection-title { margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid #D7DFEB; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #3D73B1; }
-
-  /* ---- Callout / narrative block ---- */
-  .callout, .narrative-block { margin-top: 16px; padding: 14px 16px; border-left: 3px solid #6EA79F; background: #EFF3F8; }
-  .callout { font-size: 13px; line-height: 1.7; color: #102345; }
-  .narrative-block .field-label { color: #3D73B1; margin-bottom: 6px; }
-  .long-value { font-size: 13px; line-height: 1.7; color: #102345; }
-
-  /* ---- Guardrail table ---- */
-  .policy-table { width: 100%; border-collapse: collapse; border: 1px solid #D7DFEB; }
-  .policy-table thead th { padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #FBFCFE; background: #17355F; }
-  .policy-table tbody td { padding: 10px 12px; vertical-align: top; font-size: 13px; line-height: 1.55; color: #102345; border-top: 1px solid #D7DFEB; }
-  .policy-table tbody tr:nth-child(even) td { background: #EFF3F8; }
+  .cover, .contents, .packet-section { background: #fff; page-break-inside: avoid; }
+  .cover { padding: 28px 0 26px; border-top: 5px solid #17355f; border-bottom: 1px solid #cfd7e2; page-break-after: always; }
+  .cover-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 18px; }
+  .kicker, .section-eyebrow { margin: 0 0 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #57708f; }
+  .title, .section-title, .contents-title { margin: 0; font-family: Georgia, "Times New Roman", serif; color: #18263a; }
+  .title { font-size: 38px; line-height: 1.02; letter-spacing: -0.025em; max-width: 560px; }
+  .cover-badge { flex-shrink: 0; padding: 8px 12px; border-radius: 0; background: transparent; border: 1px solid #b8c5d4; color: #23415f; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
+  .intro { margin: 0 0 20px; max-width: 720px; font-size: 14px; line-height: 1.75; color: #40556f; }
+  .meta-grid, .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
+  .meta-grid { margin-bottom: 14px; }
+  .meta-row, .field-row { padding: 10px 0 12px; border-top: 1px solid #e1e6ed; }
+  .field-label { margin-bottom: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #516984; }
+  .field-value, .meta-value { font-size: 14px; line-height: 1.55; color: #18263a; }
+  .meta-value code { font-size: 11px; color: #40556f; }
+  .contents { padding: 20px 0 8px; margin-top: 16px; page-break-after: always; }
+  .contents-title { font-size: 20px; margin-bottom: 14px; }
+  .contents-list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .contents-item { display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: start; padding-bottom: 10px; border-bottom: 1px solid #e1e6ed; }
+  .contents-index { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 24px; border-radius: 0; background: #17355f; color: #f8fbff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+  .contents-item-title { margin-bottom: 3px; font-size: 13px; font-weight: 700; color: #18263a; }
+  .contents-item-body { font-size: 12px; line-height: 1.55; color: #40556f; }
+  .packet-section { padding: 16px 0 0; margin-top: 14px; page-break-before: always; }
+  .section-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 10px; }
+  .section-title { font-size: 26px; letter-spacing: -0.02em; }
+  .section-meta { display: flex; gap: 12px; flex-wrap: wrap; color: #516984; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
+  .section-summary { margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid #d7dee8; font-size: 13px; line-height: 1.7; color: #40556f; }
+  .subsection { margin-top: 18px; }
+  .subsection-title { margin: 0 0 10px; padding-top: 8px; border-top: 1px solid #e1e6ed; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #516984; }
+  .callout, .narrative-block { margin-top: 14px; padding: 10px 0 0 14px; border-left: 2px solid #c6d3e2; }
+  .callout, .long-value { font-size: 13px; line-height: 1.7; color: #18263a; }
+  .rule-list, .phase-list { display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 0; list-style: none; }
+  .rule-item { display: flex; gap: 10px; font-size: 13px; line-height: 1.65; color: #18263a; }
+  .rule-bullet { width: 6px; height: 6px; margin-top: 7px; flex-shrink: 0; border-radius: 50%; background: #4f6987; }
+  .policy-table { width: 100%; border-collapse: collapse; border-top: 1px solid #d7dee8; border-bottom: 1px solid #d7dee8; }
+  .policy-table thead th { padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #516984; border-bottom: 1px solid #d7dee8; }
+  .policy-table tbody td { padding: 10px 10px; vertical-align: top; font-size: 13px; line-height: 1.55; color: #18263a; border-top: 1px solid #eef2f6; }
   .policy-table tbody tr:first-child td { border-top: none; }
-  .policy-table-zone { width: 130px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
-  .zone-SAFE { color: #6EA79F; }
-  .zone-RESTRICTED { color: #3D73B1; }
-  .zone-HUMAN-ONLY { color: #526684; }
-
-  /* ---- Bullet lists ---- */
-  .rule-list { display: flex; flex-direction: column; gap: 10px; padding: 0; margin: 0; list-style: none; }
-  .rule-item { display: flex; gap: 12px; font-size: 13px; line-height: 1.65; color: #102345; }
-  .rule-bullet { width: 6px; height: 6px; margin-top: 7px; flex-shrink: 0; border-radius: 50%; background: #526684; }
-  .rule-item strong { color: #17355F; }
-
-  /* ---- Phase cards ---- */
-  .phase-list { display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 0; }
-  .phase-card { display: grid; grid-template-columns: 48px 1fr; gap: 14px; align-items: start; padding: 12px; border: 1px solid #D7DFEB; background: #EFF3F8; }
-  .phase-number { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 26px; border-radius: 0; background: #17355F; color: #FBFCFE; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
-  .phase-title { margin-bottom: 6px; font-size: 15px; font-weight: 700; font-family: Georgia, "Times New Roman", serif; color: #102345; }
-  .phase-body { margin: 0 0 4px; font-size: 11px; line-height: 1.65; color: #526684; }
-
-  /* ---- Footer ---- */
-  .footer { margin-top: 26px; padding-top: 12px; border-top: 1px solid #D7DFEB; font-size: 10px; line-height: 1.7; color: #526684; display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
-  .footer-site { color: #3D73B1; font-weight: 700; flex-shrink: 0; }
+  .policy-table-zone { width: 120px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #40556f; }
+  .zone-SAFE, .zone-RESTRICTED, .zone-HUMAN-ONLY { background: transparent; border: 0; }
+  .phase-card { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: start; padding: 10px 0; border-top: 1px solid #e1e6ed; }
+  .phase-card:first-child { border-top: 0; }
+  .phase-number { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 24px; border-radius: 0; background: #17355f; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+  .phase-title { margin-bottom: 4px; font-size: 14px; font-weight: 700; color: #18263a; }
+  .phase-body { margin: 0; font-size: 12px; line-height: 1.65; color: #40556f; }
+  .footer { margin-top: 18px; padding-top: 18px; border-top: 1px solid #dce3ec; font-size: 11px; line-height: 1.7; color: #526684; }
 `;
 
 export function buildPacketDocumentHtml(
@@ -380,8 +346,7 @@ export function buildPacketDocumentHtml(
       ${artifacts.map((artifact, index) => sectionHtml(artifact, rollout, index)).join("")}
 
       <footer class="footer">
-        <span>This document records the current governance stance for this rollout. It is intended as an internal operating packet and should be reviewed alongside existing firm obligations and controls.</span>
-        <span class="footer-site">fulcral.org</span>
+        This document records the current governance stance for this rollout. It is intended as an internal operating packet and should be reviewed alongside existing firm obligations and controls.
       </footer>
     </main>
     ${
