@@ -24,9 +24,9 @@ function fieldGridHtml(rows: Array<[string, unknown]>): string {
       ${rows
         .map(
           ([label, value]) => `
-            <div class="field-row">
-              <div class="field-label">${escapeHtml(label)}</div>
-              <div class="field-value">${escapeHtml(
+            <div class="field-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
+              <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">${escapeHtml(label)}</div>
+              <div class="field-value" style="font-size: 13px; color: #102345;">${escapeHtml(
                 typeof value === "boolean" ? (value ? "Yes" : "No") : formatEnumDisplay(value)
               )}</div>
             </div>`
@@ -115,7 +115,7 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
           .map(
             (section) => `
               <div class="subsection">
-                <h3 class="subsection-title">${escapeHtml(section.title)}</h3>
+                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px;">${escapeHtml(section.title)}</h3>
                 ${renderZoneTableHtml(section.items)}
               </div>`
           )
@@ -134,7 +134,7 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
           .map(
             (section) => `
               <div class="subsection">
-                <h3 class="subsection-title">${escapeHtml(section.title)}</h3>
+                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px;">${escapeHtml(section.title)}</h3>
                 ${renderListHtml(section.items)}
               </div>`
           )
@@ -161,7 +161,7 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
             if (section.id === "phase_structure") {
               return `
                 <div class="subsection">
-                  <h3 class="subsection-title">${escapeHtml(section.title)}</h3>
+                  <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px;">${escapeHtml(section.title)}</h3>
                   <div class="phase-list">
                     ${(section.phases ?? [])
                       .map(
@@ -182,7 +182,7 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
 
             return `
               <div class="subsection">
-                <h3 class="subsection-title">${escapeHtml(section.title)}</h3>
+                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px;">${escapeHtml(section.title)}</h3>
                 ${renderListHtml(section.items ?? [])}
               </div>`;
           })
@@ -196,10 +196,10 @@ function sectionHtml(artifact: ArtifactRow, rollout: RolloutMeta, index: number)
   const json = artifact.content_json ?? {};
   return `
     <section class="packet-section">
-      <div class="section-header">
+      <div class="section-header" style="border-bottom: 2px solid #102345; padding-bottom: 8px; margin-bottom: 16px;">
         <div>
           <p class="section-eyebrow">Document ${String(index + 1).padStart(2, "0")}</p>
-          <h2 class="section-title">${escapeHtml(ARTIFACT_TITLES[artifact.artifact_type])}</h2>
+          <h2 class="section-title" style="font-family: Georgia, serif; font-size: 24px; color: #102345;">${escapeHtml(ARTIFACT_TITLES[artifact.artifact_type])}</h2>
         </div>
         <div class="section-meta">
           <span>Revision ${escapeHtml(artifact.version ?? "-")}</span>
@@ -325,32 +325,32 @@ export function buildPacketDocumentHtml(
         <div class="cover-header">
           <div>
             <p class="kicker">Fulcral</p>
-            <h1 class="title">AI Governance Framework Packet</h1>
+            <h1 class="title" style="font-family: Georgia, serif; font-size: 38px; color: #102345; letter-spacing: -0.5px;">AI Governance Framework Packet</h1>
             <p class="intro">Controlled internal reference for AI rollout governance, review, and usage boundaries.</p>
           </div>
           <div class="cover-badge">${escapeHtml(formatEnumDisplay(rollout.rollout_mode))} Rollout</div>
         </div>
 
         <div class="meta-grid">
-          <div class="meta-row" style="border-bottom: 3px solid red;">
-            <div class="field-label">Prepared For</div>
-            <div class="meta-value">${escapeHtml(
+          <div class="meta-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
+            <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">Prepared For</div>
+            <div class="meta-value" style="font-size: 13px; color: #102345;">${escapeHtml(
               personLine(rollout.initiative_lead_name, rollout.initiative_lead_title, "Initiative Lead")
             )}</div>
           </div>
-          <div class="meta-row">
-            <div class="field-label">Approved By</div>
-            <div class="meta-value">${escapeHtml(
+          <div class="meta-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
+            <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">Approved By</div>
+            <div class="meta-value" style="font-size: 13px; color: #102345;">${escapeHtml(
               personLine(rollout.approving_authority_name, rollout.approving_authority_title, "Approving Authority")
             )}</div>
           </div>
-          <div class="meta-row">
-            <div class="field-label">Effective Date</div>
-            <div class="meta-value">${escapeHtml(formatDate(rollout.created_at))}</div>
+          <div class="meta-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
+            <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">Effective Date</div>
+            <div class="meta-value" style="font-size: 13px; color: #102345;">${escapeHtml(formatDate(rollout.created_at))}</div>
           </div>
-          <div class="meta-row">
-            <div class="field-label">Reference ID</div>
-            <div class="meta-value"><code>${escapeHtml(rollout.id)}</code></div>
+          <div class="meta-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
+            <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">Reference ID</div>
+            <div class="meta-value" style="font-size: 13px; color: #102345;"><code>${escapeHtml(rollout.id)}</code></div>
           </div>
         </div>
 
@@ -362,7 +362,6 @@ export function buildPacketDocumentHtml(
           ["Maturity State", rollout.maturity_state],
           ["Needs Stabilization", rollout.needs_stabilization],
         ])}
-        <p style="margin: 18px 0 0; font-size: 9px; color: #999;">TEST BUILD 001</p>
       </section>
 
       <section class="contents">
