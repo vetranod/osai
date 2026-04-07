@@ -101,10 +101,7 @@ export default function LandingPage() {
         <div className={styles.heroCopy}>
           <h1 className={styles.heroHeadline}>Define how AI operates in your firm. Before it defines itself.</h1>
           <p className={styles.heroSubheadline}>
-            Generate a structured AI governance framework for your small team in under a minute.
-          </p>
-          <p className={styles.heroDefinition}>
-            Built for small professional teams adopting AI tools without a clear rollout plan.
+            Generate a structured AI governance framework for your small professional team in under a minute.
           </p>
           <div className={styles.heroActions}>
             <Link href="/generate" className={styles.ctaPrimary}>
@@ -112,9 +109,6 @@ export default function LandingPage() {
             </Link>
             <p className={styles.heroCtaNote}>No AI-written policy text.</p>
           </div>
-          <p className={styles.heroProof}>
-            Designed with small professional teams in mind, from engineering firms to law practices and agencies.
-          </p>
         </div>
 
         <div className={styles.heroVisual}>
