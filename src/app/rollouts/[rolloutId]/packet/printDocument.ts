@@ -332,7 +332,7 @@ export function buildPacketDocumentHtml(
         </div>
 
         <div class="meta-grid">
-          <div class="meta-row">
+          <div class="meta-row" style="border-bottom: 3px solid red;">
             <div class="field-label">Prepared For</div>
             <div class="meta-value">${escapeHtml(
               personLine(rollout.initiative_lead_name, rollout.initiative_lead_title, "Initiative Lead")
