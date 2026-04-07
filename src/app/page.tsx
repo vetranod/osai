@@ -99,8 +99,7 @@ export default function LandingPage() {
       />
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <span className={styles.heroKicker}>Fulcral</span>
-          <h1 className={styles.heroHeadline}>Deploy AI without losing control.</h1>
+          <h1 className={styles.heroHeadline}>Define how AI operates in your firm. Before it defines itself.</h1>
           <p className={styles.heroSubheadline}>
             Generate a structured AI governance framework for your small team in under a minute.
           </p>
