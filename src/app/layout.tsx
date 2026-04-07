@@ -55,6 +55,13 @@ export const metadata: Metadata = {
   }),
   applicationName: SITE_NAME,
   category: "business",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32 16x16", type: "image/x-icon" },
+      { url: "/brand/fulcral-favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+  },
 };
 
 export default async function RootLayout({
