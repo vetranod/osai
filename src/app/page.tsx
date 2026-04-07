@@ -201,7 +201,6 @@ export default function LandingPage() {
         <p className={styles.sectionLabel}>What you receive</p>
         <h2 className={styles.sectionHeading}>Your AI Governance Framework</h2>
         <div className={styles.frameworkSection}>
-          <PacketPreview />
           <div className={styles.frameworkContent}>
             <p className={styles.frameworkText}>
               The packet gives a small team one clear operating position instead of scattered decisions across people and workflows.

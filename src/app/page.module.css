@@ -430,7 +430,7 @@
 
 .frameworkSection {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  grid-template-columns: 1fr;
   gap: 38px;
   align-items: start;
 }
