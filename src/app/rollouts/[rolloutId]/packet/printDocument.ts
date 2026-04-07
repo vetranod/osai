@@ -20,12 +20,12 @@ function escapeHtml(value: unknown): string {
 
 function fieldGridHtml(rows: Array<[string, unknown]>): string {
   return `
-    <div class="field-grid">
+    <div class="field-grid" style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px;">
       ${rows
         .map(
           ([label, value]) => `
             <div class="field-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
-              <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">${escapeHtml(label)}</div>
+              <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">${escapeHtml(label)}</div>
               <div class="field-value" style="font-size: 13px; color: #102345;">${escapeHtml(
                 typeof value === "boolean" ? (value ? "Yes" : "No") : formatEnumDisplay(value)
               )}</div>
@@ -38,7 +38,7 @@ function fieldGridHtml(rows: Array<[string, unknown]>): string {
 
 function renderListHtml(items: Array<{ label?: string; value?: unknown }>): string {
   return `
-    <ul class="rule-list">
+    <ul class="rule-list" style="page-break-inside: avoid;">
       ${items
         .flatMap((item) => {
           const values = Array.isArray(item.value) ? item.value : [item.value];
@@ -91,7 +91,7 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
           ["Maturity State", json.maturity_state],
           ["Needs Stabilization", json.needs_stabilization],
         ])}
-        <div class="narrative-block">
+        <div class="narrative-block" style="page-break-inside: avoid;">
           <div class="field-label">Primary Risk Driver</div>
           <div class="long-value">${escapeHtml(json.primary_risk_driver)}</div>
         </div>
@@ -114,8 +114,8 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
         ${sections
           .map(
             (section) => `
-              <div class="subsection">
-                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px;">${escapeHtml(section.title)}</h3>
+              <div class="subsection" style="page-break-inside: avoid;">
+                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px; page-break-after: avoid;">${escapeHtml(section.title)}</h3>
                 ${renderZoneTableHtml(section.items)}
               </div>`
           )
@@ -133,8 +133,8 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
         ${sections
           .map(
             (section) => `
-              <div class="subsection">
-                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px;">${escapeHtml(section.title)}</h3>
+              <div class="subsection" style="page-break-inside: avoid;">
+                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px; page-break-after: avoid;">${escapeHtml(section.title)}</h3>
                 ${renderListHtml(section.items)}
               </div>`
           )
@@ -160,13 +160,13 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
           .map((section) => {
             if (section.id === "phase_structure") {
               return `
-                <div class="subsection">
-                  <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px;">${escapeHtml(section.title)}</h3>
+                <div class="subsection" style="page-break-inside: avoid;">
+                  <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px; page-break-after: avoid;">${escapeHtml(section.title)}</h3>
                   <div class="phase-list">
                     ${(section.phases ?? [])
                       .map(
                         (phase) => `
-                          <div class="phase-card">
+                          <div class="phase-card" style="page-break-inside: avoid;">
                             <div class="phase-number">${phase.phase === 0 ? "S" : escapeHtml(phase.phase)}</div>
                             <div>
                               <div class="phase-title">${escapeHtml(phase.name)}</div>
@@ -181,8 +181,8 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
             }
 
             return `
-              <div class="subsection">
-                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px;">${escapeHtml(section.title)}</h3>
+              <div class="subsection" style="page-break-inside: avoid;">
+                <h3 class="subsection-title" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #D7DFEB; padding-bottom: 6px; margin-bottom: 10px; page-break-after: avoid;">${escapeHtml(section.title)}</h3>
                 ${renderListHtml(section.items ?? [])}
               </div>`;
           })
@@ -313,55 +313,63 @@ export function buildPacketDocumentHtml(
   </head>
   <body>
     <main class="document">
-      <section class="cover">
-        <div class="cover-mark">
-          <svg width="22" height="24" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <section class="cover" style="padding: 36px 0 0; background: #fff; page-break-after: always;">
+
+        <!-- Mark + kicker -->
+        <div style="margin-bottom: 28px;">
+          <svg width="22" height="24" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
             <path d="M18 6 L18 50" stroke="#17355F" stroke-width="4.5" stroke-linecap="round"/>
             <path d="M18 6 L38 6" stroke="#17355F" stroke-width="4.5" stroke-linecap="round"/>
             <circle cx="18" cy="28" r="7" fill="#fff" stroke="#17355F" stroke-width="3.5"/>
             <circle cx="18" cy="28" r="2.8" fill="#526684"/>
           </svg>
-        </div>
-        <div class="cover-header">
-          <div>
-            <p class="kicker">Fulcral</p>
-            <h1 class="title" style="font-family: Georgia, serif; font-size: 38px; color: #102345; letter-spacing: -0.5px;">AI Governance Framework Packet</h1>
-            <p class="intro">Controlled internal reference for AI rollout governance, review, and usage boundaries.</p>
-          </div>
-          <div class="cover-badge">${escapeHtml(formatEnumDisplay(rollout.rollout_mode))} Rollout</div>
+          <p style="font-size: 10px; font-weight: 700; color: #526684; text-transform: uppercase; letter-spacing: 0.18em; margin: 8px 0 0; padding: 0;">FULCRAL</p>
         </div>
 
-        <div class="meta-grid">
-          <div class="meta-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
-            <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">Prepared For</div>
-            <div class="meta-value" style="font-size: 13px; color: #102345;">${escapeHtml(
-              personLine(rollout.initiative_lead_name, rollout.initiative_lead_title, "Initiative Lead")
-            )}</div>
+        <!-- Title block -->
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 12px;">
+            <h1 style="font-family: Georgia, serif; font-size: 42px; line-height: 1.05; color: #102345; letter-spacing: -0.5px; margin: 0; padding: 0; max-width: 520px;">AI Governance Framework Packet</h1>
+            <div style="flex-shrink: 0; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #526684; border: 1px solid #D7DFEB; padding: 8px 12px; white-space: nowrap; margin-top: 6px;">${escapeHtml(formatEnumDisplay(rollout.rollout_mode))} Rollout</div>
           </div>
-          <div class="meta-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
-            <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">Approved By</div>
-            <div class="meta-value" style="font-size: 13px; color: #102345;">${escapeHtml(
-              personLine(rollout.approving_authority_name, rollout.approving_authority_title, "Approving Authority")
-            )}</div>
+          <p style="font-size: 13px; color: #526684; margin: 0 0 20px; padding: 0; line-height: 1.6;">Controlled internal reference for AI rollout governance, review, and usage boundaries.</p>
+          <hr style="border: none; border-top: 1px solid #D7DFEB; margin: 0;" />
+        </div>
+
+        <!-- Meta fields -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; padding: 4px 0 20px;">
+          <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
+            <div style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Prepared For</div>
+            <div style="font-size: 13px; color: #102345;">${escapeHtml(personLine(rollout.initiative_lead_name, rollout.initiative_lead_title, "Initiative Lead"))}</div>
           </div>
-          <div class="meta-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
-            <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">Effective Date</div>
-            <div class="meta-value" style="font-size: 13px; color: #102345;">${escapeHtml(formatDate(rollout.created_at))}</div>
+          <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
+            <div style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Approved By</div>
+            <div style="font-size: 13px; color: #102345;">${escapeHtml(personLine(rollout.approving_authority_name, rollout.approving_authority_title, "Approving Authority"))}</div>
           </div>
-          <div class="meta-row" style="border-bottom: 1px solid #D7DFEB; padding: 10px 0;">
-            <div class="field-label" style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em;">Reference ID</div>
-            <div class="meta-value" style="font-size: 13px; color: #102345;"><code>${escapeHtml(rollout.id)}</code></div>
+          <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
+            <div style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Effective Date</div>
+            <div style="font-size: 13px; color: #102345;">${escapeHtml(formatDate(rollout.created_at))}</div>
+          </div>
+          <div style="border-bottom: 1px solid #D7DFEB; padding: 12px 0;">
+            <div style="font-size: 10px; color: #526684; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Reference ID</div>
+            <div style="font-size: 13px; color: #102345; font-family: 'Courier New', monospace;">REF-${escapeHtml(rollout.id.slice(0, 8).toUpperCase())}</div>
           </div>
         </div>
 
-        ${fieldGridHtml([
-          ["Primary Goal", rollout.primary_goal],
-          ["Sensitivity Tier", rollout.sensitivity_tier],
-          ["Review Depth", rollout.review_depth],
-          ["Policy Tone", rollout.policy_tone],
-          ["Maturity State", rollout.maturity_state],
-          ["Needs Stabilization", rollout.needs_stabilization],
-        ])}
+        <hr style="border: none; border-top: 1px solid #D7DFEB; margin: 0 0 4px;" />
+
+        <!-- Summary fields -->
+        <div style="padding: 4px 0 0;">
+          ${fieldGridHtml([
+            ["Primary Goal", rollout.primary_goal],
+            ["Sensitivity Tier", rollout.sensitivity_tier],
+            ["Review Depth", rollout.review_depth],
+            ["Policy Tone", rollout.policy_tone],
+            ["Maturity State", rollout.maturity_state],
+            ["Needs Stabilization", rollout.needs_stabilization],
+          ])}
+        </div>
+
       </section>
 
       <section class="contents">
