@@ -13,10 +13,10 @@
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   color: var(--accent-teal);
   margin-bottom: 14px;
 }
@@ -389,11 +389,11 @@
 }
 
 .packetRowLabel {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: #4b6487;
+  color: var(--foreground-subtle);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
 }
 
 .packetRowValue {
@@ -541,9 +541,9 @@
 
 .frameworkFeatureTitle {
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent-teal);
 }
@@ -680,9 +680,9 @@
 
 .guideMeta {
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--foreground-subtle);
   display: inline-flex;
