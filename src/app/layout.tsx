@@ -55,6 +55,9 @@ export const metadata: Metadata = {
   }),
   applicationName: SITE_NAME,
   category: "business",
+  other: {
+    "websitelaunches-verification": "0ffdb6c05be9e11034065b24af8c053b",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32 16x16", type: "image/x-icon" },
