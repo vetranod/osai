@@ -411,27 +411,35 @@
 
 .diagramBlock {
   padding: 24px 20px;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(248 251 255 / 0.98));
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 14px;
   box-shadow: var(--shadow-sm);
 }
 
 .diagramBlockAccent {
-  background: linear-gradient(180deg, rgb(232 239 248 / 0.92), rgb(244 248 253 / 0.98));
-  border-color: rgb(61 115 177 / 0.26);
+  border-color: rgba(110, 167, 159, 0.38);
+}
+
+.diagramBlockAccent::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-teal), #a8cdc9);
+  border-radius: 14px 14px 0 0;
+  margin: -24px -20px 16px -20px;
 }
 
 .diagramBlockLabel {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--surface-body-strong);
+  color: var(--foreground);
   margin-bottom: 8px;
 }
 
 .diagramBlockSub {
-  font-size: 14px;
-  color: var(--surface-body);
+  font-size: 13px;
+  color: var(--foreground-muted);
   line-height: 1.7;
 }
 
@@ -445,8 +453,8 @@
 .diagramList li {
   position: relative;
   padding-left: 14px;
-  font-size: 14px;
-  color: var(--surface-body);
+  font-size: 13px;
+  color: var(--foreground-muted);
   line-height: 1.55;
 }
 
