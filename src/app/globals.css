@@ -1,6 +1,61 @@
 @import './fulcral-tokens.css';
 
+/* ── Dark is the brand default ── */
 :root {
+  color-scheme: dark;
+
+  --background: #0d1421;
+  --surface: #111b2b;
+  --surface-raised: #162336;
+  --border: #24344c;
+  --border-strong: #3d516f;
+  --foreground: #ecf3ff;
+  --foreground-muted: #a8b8cd;
+  --foreground-subtle: #8fa5bc;
+  --surface-title: #ecf3ff;
+  --surface-body: #a8b8cd;
+  --surface-body-strong: #d0def4;
+  --surface-label: #7a96b8;
+
+  --accent: #5b8fcc;
+  --accent-hover: #79a8df;
+  --accent-light: #162236;
+  --accent-light-hover: #1c2b43;
+  --accent-secondary: #7fb0e3;
+  --accent-teal: #88c0b6;
+
+  --success: #3aa777;
+  --success-light: #10291f;
+  --warning: #d2933f;
+  --warning-light: #2d1f0c;
+  --danger: #ea6d6d;
+  --danger-light: #321515;
+  --info: #5a9fdd;
+  --info-light: #12243a;
+
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 22px;
+
+  --shadow-sm: 0 10px 24px rgb(0 0 0 / 0.2);
+  --shadow: 0 18px 46px rgb(0 0 0 / 0.28);
+  --shadow-md: 0 24px 60px rgb(0 0 0 / 0.36);
+
+  --font-sans: var(--font-inter, Arial, Helvetica, sans-serif);
+  --font-mono: var(--font-geist-mono, 'Courier New', monospace);
+  --font-display: Georgia, 'Times New Roman', serif;
+
+  --header-height: 72px;
+
+  /* Body background gradient tokens */
+  --bg-gradient-spot: rgb(91 143 204 / 0.16);
+  --bg-gradient-top: #0c1320;
+}
+
+/* ── Light mode override ── */
+[data-theme="light"] {
+  color-scheme: light;
+
   --background: #eff3f8;
   --surface: #fbfcfe;
   --surface-raised: #f2f6fb;
@@ -30,51 +85,12 @@
   --info: #255c91;
   --info-light: #e8f1fa;
 
-  --radius-sm: 6px;
-  --radius: 12px;
-  --radius-lg: 22px;
-
   --shadow-sm: 0 10px 24px rgb(16 35 69 / 0.05);
   --shadow: 0 18px 46px rgb(16 35 69 / 0.08);
   --shadow-md: 0 24px 60px rgb(16 35 69 / 0.12);
 
-  --font-sans: var(--font-inter, Arial, Helvetica, sans-serif);
-  --font-mono: var(--font-geist-mono, "Courier New", monospace);
-
-  --header-height: 72px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0d1421;
-    --surface: #111b2b;
-    --surface-raised: #162336;
-    --border: #24344c;
-    --border-strong: #3d516f;
-    --foreground: #ecf3ff;
-    --foreground-muted: #a8b8cd;
-    --foreground-subtle: #b8c7da;
-    --surface-title: #102345;
-    --surface-body: #334b71;
-    --surface-body-strong: #243a60;
-    --surface-label: #3f587f;
-
-    --accent: #5b8fcc;
-    --accent-hover: #79a8df;
-    --accent-light: #162236;
-    --accent-light-hover: #1c2b43;
-    --accent-secondary: #7fb0e3;
-    --accent-teal: #88c0b6;
-
-    --success: #3aa777;
-    --success-light: #10291f;
-    --warning: #d2933f;
-    --warning-light: #2d1f0c;
-    --danger: #ea6d6d;
-    --danger-light: #321515;
-    --info: #5a9fdd;
-    --info-light: #12243a;
-  }
+  --bg-gradient-spot: rgb(80 125 184 / 0.1);
+  --bg-gradient-top: #f7f9fc;
 }
 
 html,
@@ -86,13 +102,14 @@ body {
 body {
   color: var(--foreground);
   background:
-    radial-gradient(circle at top, rgb(80 125 184 / 0.1), transparent 34%),
-    linear-gradient(180deg, #f7f9fc 0%, var(--background) 58%);
+    radial-gradient(circle at top, var(--bg-gradient-spot), transparent 34%),
+    linear-gradient(180deg, var(--bg-gradient-top) 0%, var(--background) 58%);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 15px;
   line-height: 1.6;
+  transition: background 0.22s ease, color 0.22s ease;
 }
 
 * {
@@ -101,7 +118,13 @@ body {
   margin: 0;
 }
 
-h1,
+h1 {
+  font-family: var(--font-display);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
 h2,
 h3,
 h4,
@@ -140,18 +163,6 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 3px solid var(--accent-secondary);
   outline-offset: 3px;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-
-  body {
-    background:
-      radial-gradient(circle at top, rgb(91 143 204 / 0.16), transparent 30%),
-      linear-gradient(180deg, #0c1320 0%, var(--background) 58%);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

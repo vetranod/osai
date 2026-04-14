@@ -6,6 +6,7 @@ import { AuthSessionSync } from "@/app/AuthSessionSync";
 import { createAuthProof, type AuthProof } from "@/lib/auth-proof";
 import { buildPageMetadata, SITE_NAME } from "@/app/seo";
 import { getSupabaseServerAuthClient } from "@/lib/supabase-server-auth";
+import { ThemeToggle } from "@/app/ThemeToggle";
 import "./globals.css";
 import styles from "./layout.module.css";
 
@@ -25,16 +26,15 @@ const geistMono = Geist_Mono({
 });
 
 function BrandMark({ compact = false }: { compact?: boolean }) {
+  const size = compact ? { w: 52, h: 52 } : { w: 58, h: 58 };
+  const lightSrc = compact ? "/brand/fulcral-mark-nav-light.svg" : "/brand/fulcral-mark-light.svg";
+  const darkSrc  = compact ? "/brand/fulcral-mark-nav-dark.svg"  : "/brand/fulcral-mark-dark.svg";
+  const cls = compact ? styles.brandMarkCompact : styles.brandMark;
   return (
-    <Image
-      src={compact ? "/brand/fulcral-mark-nav-light.svg" : "/brand/fulcral-mark-light.svg"}
-      alt=""
-      aria-hidden="true"
-      width={compact ? 52 : 58}
-      height={compact ? 52 : 58}
-      className={compact ? styles.brandMarkCompact : styles.brandMark}
-      priority
-    />
+    <span className={styles.brandMarkWrapper}>
+      <Image src={lightSrc} alt="" aria-hidden="true" width={size.w} height={size.h} className={`${cls} ${styles.brandMarkLight}`} priority />
+      <Image src={darkSrc}  alt="" aria-hidden="true" width={size.w} height={size.h} className={`${cls} ${styles.brandMarkDark}`}  priority />
+    </span>
   );
 }
 
@@ -108,8 +108,14 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${geistMono.variable}`}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
+      <body className={`${inter.variable} ${geistMono.variable}`} suppressHydrationWarning>
+        {/* Prevent flash of wrong theme — runs before paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('fulcral-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}`,
+          }}
+        />
         <AuthSessionSync />
         <script
           id="osai-public-env"
@@ -140,6 +146,7 @@ export default async function RootLayout({
               ) : (
                 <Link href="/login" className={styles.navLink}>Sign in</Link>
               )}
+              <ThemeToggle />
               <Link href="/generate" className={styles.navCta}>Get started</Link>
             </nav>
           </div>

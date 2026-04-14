@@ -3,10 +3,14 @@
   top: 0;
   z-index: 100;
   backdrop-filter: blur(16px);
-  background:
-    linear-gradient(180deg, rgb(246 248 252 / 0.94), rgb(246 248 252 / 0.88)),
-    var(--surface);
-  border-bottom: 1px solid rgb(152 168 194 / 0.22);
+  background: rgba(13, 22, 40, 0.9);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  transition: background 0.22s ease, border-color 0.22s ease;
+}
+
+:global([data-theme="light"]) .header {
+  background: rgba(246, 248, 252, 0.92);
   box-shadow: 0 10px 30px rgb(11 31 68 / 0.06);
 }
 
@@ -27,16 +31,16 @@
   text-decoration: none;
 }
 
-.logoLockup {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* Brand mark — theme switching via CSS */
+.brandMarkWrapper {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .brandMark,
 .brandMarkCompact {
   display: block;
-  flex-shrink: 0;
   object-fit: contain;
 }
 
@@ -50,78 +54,81 @@
   height: 58px;
 }
 
+/* Show dark mark by default (dark theme default), hide light */
+.brandMarkLight { display: none; }
+.brandMarkDark  { display: block; }
+
+:global([data-theme="light"]) .brandMarkLight { display: block; }
+:global([data-theme="light"]) .brandMarkDark  { display: none; }
+
 .logoWordmark {
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.06em;
-  color: #0f2145;
-  line-height: 0.94;
-}
-
-.logoWordmarkAccent {
-  color: #3974b4;
-}
-
-.logoDescriptor {
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: #3d5379;
-  line-height: 1.2;
-}
-
-.logoMark {
-  color: var(--accent);
-}
-
-.logoText {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--foreground);
+  line-height: 1;
+  transition: color 0.22s ease;
 }
 
 .nav {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
 
 .navLink {
   padding: 8px 14px;
-  border-radius: 999px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #3d5379;
+  color: var(--foreground-muted);
   transition: color 0.18s ease, background 0.18s ease;
 }
 
 .navLink:hover {
-  color: #0f2145;
-  background: rgb(34 74 130 / 0.08);
+  color: var(--foreground);
+  background: var(--accent-light);
 }
 
 .navCta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 122px;
-  height: 38px;
+  min-width: 112px;
+  height: 36px;
   padding: 0 18px;
-  background: linear-gradient(135deg, #16335d 0%, #2f5fa1 100%);
-  color: #f8fbff;
+  background: linear-gradient(160deg, #1e4070 0%, #2f5fa1 100%);
+  color: #f0f7ff;
   font-size: 13px;
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: 8px;
   text-decoration: none;
-  box-shadow: 0 12px 24px rgb(20 49 92 / 0.18);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  box-shadow: 0 3px 0 rgba(10, 22, 48, 0.4), 0 10px 20px rgba(17, 41, 77, 0.22);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
   white-space: nowrap;
   margin-left: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.navCta::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .navCta:hover {
   color: #fff;
   transform: translateY(-1px);
-  box-shadow: 0 16px 28px rgb(20 49 92 / 0.22);
-  filter: saturate(1.08);
+  box-shadow: 0 4px 0 rgba(10, 22, 48, 0.36), 0 14px 24px rgba(17, 41, 77, 0.28);
+  filter: saturate(1.08) brightness(1.05);
+}
+
+.navCta:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(10, 22, 48, 0.4), 0 4px 10px rgba(17, 41, 77, 0.18);
 }
 
 .main {
@@ -130,11 +137,14 @@
 }
 
 .footer {
-  border-top: 1px solid rgb(152 168 194 / 0.2);
-  background:
-    radial-gradient(circle at top left, rgb(73 116 177 / 0.08), transparent 34%),
-    linear-gradient(180deg, #f4f7fb 0%, #eef2f7 100%);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
   padding: 36px 32px 30px;
+  transition: background 0.22s ease, border-color 0.22s ease;
+}
+
+:global([data-theme="light"]) .footer {
+  background: linear-gradient(180deg, #f4f7fb 0%, #eef2f7 100%);
 }
 
 .footerInner {
@@ -171,13 +181,13 @@
 
 .footerLegal {
   font-size: 12px;
-  color: #526684;
+  color: var(--foreground-muted);
   line-height: 1.5;
 }
 
 .footerDisclaimer {
   font-size: 11px;
-  color: #526684;
+  color: var(--foreground-subtle);
   line-height: 1.5;
   margin-top: 2px;
   max-width: 280px;
@@ -185,13 +195,13 @@
 
 .footerLink {
   font-size: 13px;
-  color: #3d5379;
+  color: var(--foreground-muted);
   text-decoration: none;
   transition: color 0.18s ease;
 }
 
 .footerLink:hover {
-  color: #16335d;
+  color: var(--foreground);
 }
 
 @media (max-width: 780px) {
@@ -200,11 +210,7 @@
   }
 
   .logoWordmark {
-    font-size: 22px;
-  }
-
-  .logoDescriptor {
-    font-size: 10px;
+    font-size: 20px;
   }
 
   .navLink {

@@ -128,19 +128,19 @@ export default function LandingPage() {
         </div>
         <div className={styles.problemList}>
           <div className={styles.problemItem}>
-            <span className={styles.problemItemTitle}>Discovery</span>
+            <span className={styles.problemItemTitle} data-step="1">Discovery</span>
             <span className={styles.problemItemText}>Someone finds a tool that saves time.</span>
           </div>
           <div className={styles.problemItem}>
-            <span className={styles.problemItemTitle}>Spread</span>
+            <span className={styles.problemItemTitle} data-step="2">Spread</span>
             <span className={styles.problemItemText}>A colleague starts using it too, and the behavior becomes normal.</span>
           </div>
           <div className={styles.problemItem}>
-            <span className={styles.problemItemTitle}>Dependence</span>
+            <span className={styles.problemItemTitle} data-step="3">Dependence</span>
             <span className={styles.problemItemText}>The tool reaches real workflows before anyone defines the rules.</span>
           </div>
           <div className={styles.problemItem}>
-            <span className={styles.problemItemTitle}>Late control</span>
+            <span className={styles.problemItemTitle} data-step="4">Late control</span>
             <span className={styles.problemItemText}>Leadership tries to add structure only after AI use is already operational.</span>
           </div>
         </div>
