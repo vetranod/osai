@@ -140,6 +140,7 @@ export default async function RootLayout({
             <nav className={styles.nav}>
               <Link href="/how-it-works" className={styles.navLink}>How it works</Link>
               <Link href="/resources" className={styles.navLink}>Resources</Link>
+              <Link href="/services" className={styles.navLink}>Services</Link>
               <Link href="mailto:info@fulcral.org" className={styles.navLink}>Contact</Link>
               {user ? (
                 <Link href="/auth/signout" className={styles.navLink}>Sign out</Link>
@@ -165,6 +166,7 @@ export default async function RootLayout({
             <div className={styles.footerColCenter}>
               <Link href="/how-it-works" className={styles.footerLink}>How it works</Link>
               <Link href="/resources" className={styles.footerLink}>Resources</Link>
+              <Link href="/services" className={styles.footerLink}>Services</Link>
               <Link href="mailto:info@fulcral.org" className={styles.footerLink}>Contact</Link>
             </div>
             <div className={styles.footerColRight}>
