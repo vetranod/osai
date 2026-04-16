@@ -159,6 +159,10 @@ export default function ContactPage() {
         </div>
 
       </div>
+      <p className={styles.fallback}>
+        Form not working?{" "}
+        <a href="mailto:info@fulcral.org">Email us directly at info@fulcral.org</a>
+      </p>
     </div>
   );
 }
