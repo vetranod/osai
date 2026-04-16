@@ -38,6 +38,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.78,
     },
     {
+      url: absoluteUrl("/ai-governance-for-real-estate-firms"),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    },
+    {
       url: absoluteUrl("/ai-governance-for-law-firms"),
       lastModified: now,
       changeFrequency: "monthly",

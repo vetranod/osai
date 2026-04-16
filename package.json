@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
+    "export:decision-matrix": "node ./scripts/export-decision-engine-matrix.js",
+    "export:policy-sourcebook": "node ./scripts/export-policy-content-sourcebook.js",
     "test:watch": "vitest --watch"
   },
   "dependencies": {

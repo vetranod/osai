@@ -1,5 +1,11 @@
 export const guideLinks = [
   {
+    href: "/ai-governance-for-real-estate-firms",
+    title: "AI Governance for Real Estate Firms",
+    text: "How real estate teams can govern AI-generated listing imagery and marketing content before misleading property representations damage trust.",
+    readMinutes: 5,
+  },
+  {
     href: "/ai-governance-for-law-firms",
     title: "AI Governance for Law Firms",
     text: "How firms handling client-sensitive work can set rollout boundaries before informal AI use becomes exposure.",
