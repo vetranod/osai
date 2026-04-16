@@ -63,9 +63,9 @@ export default function ServicesPage() {
               <li>You need infrastructure decisions made, not just documented</li>
               <li>You want guidance that adapts to how your firm actually works</li>
             </ul>
-            <a href="mailto:info@fulcral.org" className={styles.pathCtaAccent}>
+            <Link href="/contact" className={styles.pathCtaAccent}>
               Start a conversation →
-            </a>
+            </Link>
           </div>
         </div>
         <p className={styles.pathsNote}>
@@ -227,9 +227,9 @@ export default function ServicesPage() {
           and what&apos;s worrying you. We&apos;ll figure out the rest together.
         </p>
         <div className={styles.ctaActions}>
-          <a href="mailto:info@fulcral.org" className={styles.ctaPrimary}>
+          <Link href="/contact" className={styles.ctaPrimary}>
             Get in touch
-          </a>
+          </Link>
           <Link href="/generate" className={styles.ctaSecondary}>
             Try the platform first
           </Link>
