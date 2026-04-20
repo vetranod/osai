@@ -9,12 +9,12 @@
 .card {
   width: min(100%, 460px);
   border-radius: 24px;
-  border: 1px solid rgb(126 156 200 / 0.3);
+  border: 1px solid var(--border);
   background:
     radial-gradient(circle at top right, rgb(68 114 179 / 0.14), transparent 40%),
-    linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+    var(--surface);
   padding: 26px;
-  box-shadow: 0 24px 46px rgb(15 46 90 / 0.16);
+  box-shadow: var(--shadow);
 }
 
 .eyebrow {
@@ -22,7 +22,7 @@
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #2b5f9d;
+  color: var(--accent-teal);
 }
 
 .title {
@@ -30,12 +30,12 @@
   font-size: 30px;
   line-height: 1.08;
   letter-spacing: -0.03em;
-  color: #10284e;
+  color: var(--surface-title);
 }
 
 .subtitle {
   margin-top: 10px;
-  color: #2f4e7b;
+  color: var(--surface-body);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -44,7 +44,7 @@
   margin-top: 16px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: rgb(16 46 88 / 0.08);
+  background: var(--border);
   border-radius: 12px;
   padding: 4px;
   gap: 4px;
@@ -57,15 +57,15 @@
   height: 36px;
   font-size: 13px;
   font-weight: 600;
-  color: #1f4376;
+  color: var(--surface-label);
   background: transparent;
   cursor: pointer;
 }
 
 .modeActive {
-  background: #fff;
-  color: #10284e;
-  box-shadow: 0 6px 14px rgb(12 36 76 / 0.15);
+  background: var(--surface-raised);
+  color: var(--surface-title);
+  box-shadow: var(--shadow-sm);
 }
 
 .form {
@@ -79,18 +79,18 @@
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #2d4f82;
+  color: var(--surface-label);
 }
 
 .input {
   width: 100%;
   height: 44px;
   border-radius: 10px;
-  border: 1px solid rgb(96 132 181 / 0.38);
-  background: #fff;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
   padding: 0 12px;
   font-size: 14px;
-  color: #0f2244;
+  color: var(--foreground);
 }
 
 .primaryButton,
@@ -110,8 +110,8 @@
 }
 
 .secondaryButton {
-  background: rgb(20 53 99 / 0.09);
-  color: #12335f;
+  background: var(--surface-raised);
+  color: var(--surface-body);
 }
 
 .magicLinkButton {
@@ -119,7 +119,7 @@
   width: 100%;
   border: 0;
   background: transparent;
-  color: #1f5a96;
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
   font-size: 14px;
@@ -140,7 +140,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #60789b;
+  color: var(--surface-label);
   font-size: 12px;
 }
 
@@ -149,7 +149,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: rgb(99 126 166 / 0.35);
+  background: var(--border);
 }
 
 .status,
@@ -161,25 +161,25 @@
 }
 
 .status {
-  background: rgb(43 150 118 / 0.12);
-  border: 1px solid rgb(43 150 118 / 0.3);
-  color: #1f5f4e;
+  background: var(--success-light);
+  border: 1px solid var(--success);
+  color: var(--success);
 }
 
 .error {
-  background: rgb(204 71 71 / 0.12);
-  border: 1px solid rgb(204 71 71 / 0.32);
-  color: #7e2424;
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  color: var(--danger);
 }
 
 .note {
   margin-top: 14px;
   font-size: 12px;
   line-height: 1.5;
-  color: #4b6488;
+  color: var(--surface-label);
 }
 
 .noteLink {
   margin-left: 6px;
-  color: #1f5a96;
+  color: var(--accent);
 }

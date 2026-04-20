@@ -9,12 +9,12 @@
 .card {
   width: min(100%, 520px);
   border-radius: 24px;
-  border: 1px solid rgb(126 156 200 / 0.3);
+  border: 1px solid var(--border);
   background:
     radial-gradient(circle at top right, rgb(68 114 179 / 0.14), transparent 40%),
-    linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+    var(--surface);
   padding: 28px;
-  box-shadow: 0 24px 46px rgb(15 46 90 / 0.16);
+  box-shadow: var(--shadow);
 }
 
 .eyebrow {
@@ -22,7 +22,7 @@
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #2b5f9d;
+  color: var(--accent-teal);
 }
 
 .title {
@@ -30,12 +30,12 @@
   font-size: 34px;
   line-height: 1.04;
   letter-spacing: -0.03em;
-  color: #10284e;
+  color: var(--surface-title);
 }
 
 .subtitle {
   margin-top: 12px;
-  color: #2f4e7b;
+  color: var(--surface-body);
   font-size: 15px;
   line-height: 1.55;
 }

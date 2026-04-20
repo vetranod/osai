@@ -16,9 +16,7 @@
 
 /* ---- Form Card ---- */
 .formCard {
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.92), rgb(251 253 255 / 0.98)),
-    var(--surface);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
@@ -28,9 +26,8 @@
 
 .formHeader {
   padding: 28px 36px 18px;
-  border-bottom: 1px solid rgb(168 184 207 / 0.34);
-  background:
-    linear-gradient(180deg, rgb(232 239 248 / 0.74), rgb(251 253 255 / 0.32));
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
 }
 
 .title {
@@ -121,31 +118,26 @@
   padding: 16px 18px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
-  background: rgb(255 255 255 / 0.78);
+  background: var(--surface-raised);
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7);
   transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .optionCard:hover {
-  border-color: rgb(61 115 177 / 0.3);
-  background: rgb(255 255 255 / 0.98);
-  box-shadow: 0 14px 28px rgb(17 41 77 / 0.08);
+  border-color: rgb(61 115 177 / 0.5);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .optionCard:focus-within {
   border-color: var(--accent);
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.75),
-    0 0 0 4px rgb(61 115 177 / 0.16);
+  box-shadow: 0 0 0 4px rgb(61 115 177 / 0.16);
 }
 
 .optionCardSelected {
   border-color: var(--accent) !important;
-  background: linear-gradient(180deg, rgb(232 239 248 / 0.92), rgb(244 248 253 / 0.98)) !important;
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.7),
-    0 16px 30px rgb(18 41 76 / 0.12);
+  background: var(--accent-light) !important;
+  box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
 }
 
@@ -175,31 +167,26 @@
   padding: 14px 16px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
-  background: rgb(255 255 255 / 0.8);
+  background: var(--surface-raised);
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.64);
   transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .optionRow:hover {
-  border-color: rgb(61 115 177 / 0.28);
-  background: rgb(255 255 255 / 0.98);
-  box-shadow: 0 12px 24px rgb(17 41 77 / 0.07);
+  border-color: rgb(61 115 177 / 0.5);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .optionRow:focus-within {
   border-color: var(--accent);
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.75),
-    0 0 0 4px rgb(61 115 177 / 0.16);
+  box-shadow: 0 0 0 4px rgb(61 115 177 / 0.16);
 }
 
 .optionRowSelected {
   border-color: var(--accent) !important;
-  background: linear-gradient(180deg, rgb(232 239 248 / 0.92), rgb(244 248 253 / 0.98)) !important;
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.7),
-    0 14px 28px rgb(18 41 76 / 0.11);
+  background: var(--accent-light) !important;
+  box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
   padding-right: 32px;
 }
@@ -235,22 +222,22 @@
   max-width: 1100px;
   margin: 0 auto 14px;
   padding: 12px 16px;
-  background: #e8f6ef;
-  border: 1px solid #2b8a57;
+  background: var(--success-light);
+  border: 1px solid var(--success);
   border-radius: var(--radius);
   font-size: 13px;
-  color: #123f2f;
+  color: var(--success);
 }
 
 /* ---- Error ---- */
 .errorBox {
   margin-top: 20px;
   padding: 12px 16px;
-  background: #ffe8e8;
-  border: 1px solid #b42323;
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
   border-radius: var(--radius);
   font-size: 13px;
-  color: #5b1111;
+  color: var(--danger);
 }
 
 /* ---- Submit ---- */
@@ -315,21 +302,20 @@
   min-width: 108px;
   height: 42px;
   padding: 0 20px;
-  background: rgb(255 255 255 / 0.8);
+  background: var(--surface-raised);
   color: var(--surface-label);
   font-size: 14px;
   font-weight: 600;
-  border: 1px solid rgb(61 115 177 / 0.2);
+  border: 1px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7);
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   white-space: nowrap;
 }
 
 .btnSecondary:hover {
-  background: #fff;
-  border-color: rgb(61 115 177 / 0.4);
+  background: var(--surface);
+  border-color: var(--border-strong);
   color: var(--accent);
 }
 
@@ -371,8 +357,8 @@
 .contextBanner {
   margin: 24px 0 4px;
   padding: 16px 18px;
-  background: linear-gradient(135deg, rgb(232 239 248 / 0.9), rgb(242 247 252 / 0.94));
-  border: 1px solid rgb(61 115 177 / 0.2);
+  background: var(--accent-light);
+  border: 1px solid var(--border);
   border-left: 4px solid var(--accent);
   border-radius: 0 var(--radius) var(--radius) 0;
 }
@@ -397,8 +383,8 @@
 .regulatedGate {
   margin-top: 16px;
   padding: 14px 18px;
-  background: #fdeeee;
-  border: 1px solid #cf5c5c;
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
   border-radius: var(--radius);
 }
 
@@ -406,13 +392,13 @@
   display: block;
   font-size: 14px;
   font-weight: 700;
-  color: #8b1f1f;
+  color: var(--danger);
   margin-bottom: 6px;
 }
 
 .regulatedGateBody {
   font-size: 13px;
-  color: #5b1d1d;
+  color: var(--surface-body);
   line-height: 1.6;
   margin: 0;
 }
@@ -433,16 +419,16 @@
 .nameLabel {
   font-size: 12px;
   font-weight: 600;
-  color: #1e3f6f;
+  color: var(--surface-label);
 }
 
 .nameInput {
   height: 42px;
   padding: 0 14px;
-  border: 1.5px solid #6f8db8;
+  border: 1.5px solid var(--border-strong);
   border-radius: var(--radius);
-  background: #fff;
-  color: #0f2447;
+  background: var(--surface-raised);
+  color: var(--foreground);
   font-size: 14px;
   font-family: inherit;
   outline: none;
@@ -450,13 +436,13 @@
 }
 
 .nameInput::placeholder {
-  color: #4f6990;
+  color: var(--surface-label);
 }
 
 .nameInput:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgb(61 115 177 / 0.12);
-  background: #fff;
+  background: var(--surface-raised);
 }
 
 .nameInput:disabled {
@@ -471,7 +457,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #294d7e;
+  color: var(--surface-body);
   cursor: pointer;
   margin-bottom: 14px;
 }
@@ -487,11 +473,11 @@
 .soloNote {
   margin-top: 12px;
   font-size: 13px;
-  color: #123825;
+  color: var(--surface-body-strong);
   line-height: 1.6;
   padding: 10px 14px;
-  background: #e7f5ee;
-  border-left: 3px solid #2b8a57;
+  background: var(--success-light);
+  border-left: 3px solid var(--success);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
