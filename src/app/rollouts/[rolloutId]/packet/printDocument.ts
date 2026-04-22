@@ -214,12 +214,12 @@ function sectionHtml(artifact: ArtifactRow, rollout: RolloutMeta, index: number)
 
 function getPrintCss(pageSize: string): string {
   return `
-  @page { size: ${pageSize}; margin: 14mm 14mm 16mm; }
+  @page { size: ${pageSize}; margin: 0; }
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #fff; color: #102345; font-family: "Inter", "Segoe UI", Arial, sans-serif; }
   body { -webkit-font-smoothing: antialiased; }
-  .document { width: 100%; }
+  .document { width: 100%; padding: 14mm 14mm 16mm; box-sizing: border-box; }
   .cover, .contents, .packet-section { background: #fff; page-break-inside: avoid; }
 
   .cover { padding: 30px 0 28px; padding-left: 20px; border-top: 3px solid #102345; border-left: 4px solid #17355F; border-bottom: 1px solid #D7DFEB; page-break-after: always; }
