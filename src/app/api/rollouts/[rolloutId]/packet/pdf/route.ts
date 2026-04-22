@@ -178,7 +178,7 @@ export async function GET(
       return Response.json({ ok: false, message: "Packet is not ready for export yet." }, { status: 409 });
     }
 
-    const rawFormat = url.searchParams.get("format");
+    const rawFormat = new URL(request.url).searchParams.get("format");
     const pageFormat: PageFormat = rawFormat === "a4" ? "a4" : "letter";
 
     const packetHtml = buildPacketDocumentHtml(packetData.rollout, packetData.artifacts, {
