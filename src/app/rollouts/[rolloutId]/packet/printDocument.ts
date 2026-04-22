@@ -213,7 +213,7 @@ function sectionHtml(artifact: ArtifactRow, rollout: RolloutMeta, index: number)
 }
 
 const PRINT_CSS = `
-  @page { size: Letter portrait; margin: 0; }
+  @page { size: Letter portrait; margin: 14mm 14mm 16mm; }
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #fff; color: #102345; font-family: "Inter", "Segoe UI", Arial, sans-serif; }

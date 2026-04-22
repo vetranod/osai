@@ -145,7 +145,7 @@ async function renderPacketPdfBuffer(documentHtml: string): Promise<Buffer> {
       printBackground: true,
       preferCSSPageSize: true,
       displayHeaderFooter: false,
-      margin: { top: "14mm", right: "14mm", bottom: "16mm", left: "14mm" },
+      margin: { top: "0", right: "0", bottom: "0", left: "0" },
     });
 
     await page.close();
