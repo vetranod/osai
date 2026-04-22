@@ -4,6 +4,7 @@ import { fromCheckoutMetadata } from "@/server/checkoutPayload";
 import { createRolloutFromInputs, findRolloutByCheckoutSessionId } from "@/server/rolloutCreation";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 function isRolloutCreationReady(session: Stripe.Checkout.Session): boolean {
   return session.payment_status === "paid" || session.payment_status === "no_payment_required";

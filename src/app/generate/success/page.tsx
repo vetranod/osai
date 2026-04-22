@@ -26,6 +26,7 @@ function SuccessInner() {
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timedOut, setTimedOut] = useState(false);
+  const [recovering, setRecovering] = useState(false);
 
   useEffect(() => {
     const currentSessionId = sessionId;
@@ -110,7 +111,32 @@ function SuccessInner() {
         setTimeout(poll, 2200);
       } else if (!cancelled) {
         setTimedOut(true);
+        // Payment confirmed but rollout not linked — try recovering via /mine
+        void recoverFromMine();
       }
+    }
+
+    async function recoverFromMine() {
+      setRecovering(true);
+      try {
+        const headers = await buildClientAuthHeaders();
+        const res = await fetch("/api/rollouts/mine", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers,
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { ok?: boolean; rollout?: { dashboard_url?: string } | null };
+          if (data.ok && data.rollout?.dashboard_url) {
+            router.replace(data.rollout.dashboard_url);
+            return;
+          }
+        }
+      } catch {
+        // non-fatal — fall through to support message
+      }
+      setRecovering(false);
     }
 
     void poll();
@@ -140,10 +166,14 @@ function SuccessInner() {
         )}
 
         {timedOut ? (
-          <p className={styles.error}>
-            This is taking longer than expected. Your payment may be complete, but the rollout has not been linked yet.
-            You can retry this page shortly or contact support with your checkout session id.
-          </p>
+          recovering ? (
+            <p className={styles.pending}>Checking your account for a linked rollout...</p>
+          ) : (
+            <p className={styles.error}>
+              Your payment is confirmed but the rollout is taking longer than expected to set up.
+              {" "}Try reloading in a minute, or contact support with your checkout session ID below.
+            </p>
+          )
         ) : null}
 
         {error ? <p className={styles.error}>{error}</p> : null}
@@ -151,13 +181,13 @@ function SuccessInner() {
         {timedOut && sessionId ? <p className={styles.body}>Checkout session: <code>{sessionId}</code></p> : null}
 
         <div className={styles.actions}>
-          {sessionId ? (
+          {timedOut && !recovering ? (
             <button
               className={styles.link}
               onClick={() => window.location.reload()}
               type="button"
             >
-              Check again
+              Reload and try again
             </button>
           ) : null}
           <Link className={styles.link} href="/generate">
