@@ -66,9 +66,9 @@ export function PrintActions({ rolloutId }: { rolloutId: string }) {
         bridgeMode: "background",
       });
 
-      const pdfUrl = `/api/rollouts/${rolloutId}/packet/pdf?format=${pageFormat}`;
+      const pdfApiUrl = `/api/rollouts/${rolloutId}/packet/pdf?format=${pageFormat}`;
 
-      let response = await fetch(pdfUrl, {
+      let response = await fetch(pdfApiUrl, {
         credentials: "include",
         cache: "no-store",
         headers,
@@ -80,7 +80,7 @@ export function PrintActions({ rolloutId }: { rolloutId: string }) {
           headers = await buildClientAuthHeaders(undefined, {
             preferServerToken: true,
           });
-          response = await fetch(pdfUrl, {
+          response = await fetch(pdfApiUrl, {
             credentials: "include",
             cache: "no-store",
             headers,
