@@ -460,7 +460,7 @@
 @media print {
   @page {
     size: Letter portrait;
-    margin: 14mm 14mm 16mm;
+    margin: 0;
   }
 
   .page {
