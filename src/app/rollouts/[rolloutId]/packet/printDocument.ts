@@ -129,7 +129,7 @@ function renderArtifactHtml(type: ArtifactType, json: Record<string, unknown>, r
         ? (json.sections as Array<{ id: string; title: string; items: Array<{ label?: string; value?: unknown }> }>)
         : [];
       return `
-        ${fieldGridHtml([[type === "REVIEW_MODEL" ? "Review Depth" : "Policy Tone", type === "REVIEW_MODEL" ? json.review_depth : json.policy_tone]])}
+        ${fieldGridHtml([["Review Depth", json.review_depth]])}
         ${sections
           .map(
             (section) => `
@@ -377,7 +377,6 @@ export function buildPacketDocumentHtml(
             ...(industryVertical ? [["Firm Type", industryVertical] as [string, unknown]] : []),
             ["Sensitivity Tier", rollout.sensitivity_tier],
             ["Review Depth", rollout.review_depth],
-            ["Policy Tone", rollout.policy_tone],
             ["Maturity State", rollout.maturity_state],
             ["Needs Stabilization", rollout.needs_stabilization],
           ])}

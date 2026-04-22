@@ -175,7 +175,7 @@ function renderArtifactContent(type: ArtifactType, json: Record<string, unknown>
       return (
         <>
           <FieldGrid
-            rows={type === "REVIEW_MODEL" ? [["Review Depth", json.review_depth]] : [["Policy Tone", json.policy_tone]]}
+            rows={[["Review Depth", json.review_depth]]}
           />
           {sections.map((section) => (
             <div key={section.id} className={styles.subsection}>
@@ -390,7 +390,6 @@ export default function RolloutPacketPage() {
               ...(industryVertical ? [["Firm Type", industryVertical] as [string, unknown]] : []),
               ["Sensitivity Tier", rollout.sensitivity_tier],
               ["Review Depth", rollout.review_depth],
-              ["Policy Tone", rollout.policy_tone],
               ["Maturity State", rollout.maturity_state],
               ["Needs Stabilization", rollout.needs_stabilization],
             ]}
