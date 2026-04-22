@@ -49,7 +49,7 @@
 }
 
 .backLink {
-  color: var(--surface-body);
+  color: #334b71;
   border: 1px solid #cfd8e5;
   background: #fff;
 }
@@ -128,7 +128,7 @@
   max-width: 720px;
   font-size: 15px;
   line-height: 1.75;
-  color: var(--surface-body);
+  color: #334b71;
 }
 
 .metaGrid,
@@ -157,19 +157,19 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--surface-label);
+  color: #3f587f;
 }
 
 .fieldValue,
 .metaValue {
   font-size: 15px;
   line-height: 1.55;
-  color: var(--surface-title);
+  color: #102345;
 }
 
 .metaValue code {
   font-size: 12px;
-  color: var(--surface-body);
+  color: #334b71;
 }
 
 .contents {
@@ -181,7 +181,7 @@
   margin: 0 0 16px;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 22px;
-  color: var(--surface-title);
+  color: #102345;
 }
 
 .contentsList {
@@ -217,13 +217,13 @@
   margin-bottom: 4px;
   font-size: 14px;
   font-weight: 700;
-  color: var(--surface-title);
+  color: #102345;
 }
 
 .contentsItemBody {
   font-size: 13px;
   line-height: 1.55;
-  color: var(--surface-body);
+  color: #334b71;
 }
 
 .packetSection {
@@ -261,7 +261,7 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  color: var(--surface-label);
+  color: #3f587f;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -272,7 +272,7 @@
   margin: 0 0 20px;
   font-size: 14px;
   line-height: 1.65;
-  color: var(--surface-body);
+  color: #334b71;
 }
 
 .subsection {
@@ -287,7 +287,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--surface-label);
+  color: #3f587f;
 }
 
 .callout,
@@ -303,13 +303,13 @@
 .callout {
   font-size: 14px;
   line-height: 1.65;
-  color: var(--surface-title);
+  color: #102345;
 }
 
 .longValue {
   font-size: 15px;
   line-height: 1.65;
-  color: var(--surface-title);
+  color: #102345;
 }
 
 .ruleList,
@@ -331,7 +331,7 @@
   gap: 12px;
   font-size: 14px;
   line-height: 1.65;
-  color: var(--surface-title);
+  color: #102345;
 }
 
 .ruleBullet {
@@ -389,7 +389,7 @@
 .zoneText {
   font-size: 14px;
   line-height: 1.55;
-  color: var(--surface-title);
+  color: #102345;
 }
 
 .phaseNumber {
@@ -410,14 +410,14 @@
   margin-bottom: 4px;
   font-size: 15px;
   font-weight: 700;
-  color: var(--surface-title);
+  color: #102345;
 }
 
 .phaseBody {
   margin: 0;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--surface-body);
+  color: #334b71;
 }
 
 .footer {
@@ -426,7 +426,7 @@
   text-align: left;
   font-size: 12px;
   line-height: 1.6;
-  color: var(--foreground-muted);
+  color: #526684;
 }
 
 @media (max-width: 900px) {
