@@ -50,15 +50,14 @@ function AuthContinuePageInner() {
 
     async function continueToTarget() {
       const restoredFromHash = await applyHashSessionToBrowser().catch(() => false);
+
       if (restoredFromHash) {
-        const serverToken = await ensureServerSession({ attempts: 2, pauseMs: 200 });
-        if (serverToken) {
-          window.location.assign(next);
-          return;
-        }
+        // Give Supabase browser client time to commit the session to IndexedDB
+        // before the bridge attempts to read it back.
+        await new Promise((resolve) => setTimeout(resolve, 150));
       }
 
-      const serverToken = await ensureServerSession();
+      const serverToken = await ensureServerSession({ attempts: 4, pauseMs: 400 });
       if (serverToken) {
         window.location.assign(next);
         return;

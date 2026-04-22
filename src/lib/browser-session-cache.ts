@@ -57,6 +57,15 @@ export function getCachedBrowserSession(): CachedBrowserSession | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<CachedBrowserSession>;
     if (!parsed.access_token || !parsed.refresh_token) return null;
+
+    // Purge if the access token expired more than 5 minutes ago — the refresh
+    // token may still be valid, but the cached AT is too stale to be useful
+    // and could cause setSession calls to behave unpredictably.
+    if (typeof parsed.expires_at === "number" && parsed.expires_at < Math.floor(Date.now() / 1000) - 300) {
+      try { window.sessionStorage.removeItem(SESSION_CACHE_KEY); } catch {}
+      return null;
+    }
+
     return {
       access_token: parsed.access_token,
       refresh_token: parsed.refresh_token,

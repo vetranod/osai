@@ -3,7 +3,6 @@
 import { Suspense, FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import { ensureServerSession, hasRecoverableBrowserSession } from "@/lib/browser-auth-client";
 import { cacheBrowserSession } from "@/lib/browser-session-cache";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -125,44 +124,56 @@ function LoginPageInner() {
     setStatus(null);
 
     try {
-      const supabase = getSupabaseBrowserClient();
-
       if (mode === "sign_in") {
-        const { data, error: signInError } = await withTimeout(
-          supabase.auth.signInWithPassword({
-            email,
-            password,
+        // Sign in server-side so SSR cookies are set directly — no bridge needed.
+        const res = await withTimeout(
+          fetch("/api/auth/sign-in", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
           }),
           AUTH_TIMEOUT_MS
         );
 
-        if (signInError || !data.session) {
-          setError(signInError?.message ?? "Sign-in failed.");
+        const resData = (await res.json()) as {
+          ok: boolean;
+          message?: string;
+          access_token?: string;
+          refresh_token?: string;
+          expires_at?: number | null;
+          user?: { id: string; email: string | null; email_confirmed_at: string | null };
+        };
+
+        if (!res.ok || !resData.ok) {
+          setError(resData.message ?? "Sign-in failed.");
           return;
         }
 
-        cacheBrowserSession(data.session);
-        const bridged = await bridgeBrowserSessionToServer();
-        const protectedTarget =
-          nextPath.startsWith("/rollouts/") ||
-          nextPath.startsWith("/generate/success") ||
-          nextPath.startsWith("/demo/generate");
-
-        if (!bridged.ok || protectedTarget || nextPath === "/generate") {
-          await ensureServerSession({ attempts: 3, pauseMs: 200 });
+        // Sync the browser Supabase client so client-side operations have the
+        // session (e.g. magic-link flows, any future browser-side Supabase calls).
+        if (resData.access_token && resData.refresh_token) {
+          try {
+            const supabase = getSupabaseBrowserClient();
+            const { data: syncData } = await supabase.auth.setSession({
+              access_token: resData.access_token,
+              refresh_token: resData.refresh_token,
+            });
+            if (syncData.session) cacheBrowserSession(syncData.session);
+          } catch {
+            // Non-fatal: SSR cookies are already set server-side.
+          }
         }
 
-        // For returning users, skip the wizard entirely and go straight to
-        // their dashboard.  We only do this when the login was not initiated
-        // from a specific destination (i.e. nextPath is the default /generate).
+        // For returning users, skip the wizard and go straight to their dashboard.
         if (nextPath === "/generate") {
           try {
             const mineRes = await fetch("/api/rollouts/mine", {
               method: "GET",
               credentials: "include",
               cache: "no-store",
-              headers: data.session.access_token
-                ? { Authorization: `Bearer ${data.session.access_token}` }
+              headers: resData.access_token
+                ? { Authorization: `Bearer ${resData.access_token}` }
                 : {},
             });
             if (mineRes.ok) {
@@ -186,6 +197,7 @@ function LoginPageInner() {
         return;
       }
 
+      const supabase = getSupabaseBrowserClient();
       const { error: signUpError } = await withTimeout(
         supabase.auth.signUp({
           email,

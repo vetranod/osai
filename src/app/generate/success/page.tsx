@@ -43,8 +43,10 @@ function SuccessInner() {
       try {
         const readStatus = async (): Promise<{ res: Response; data: SessionStatus }> => {
           const requestUrl = `/api/checkout/session?session_id=${encodeURIComponent(sid)}`;
+          // Await the bridge so SSR cookies are confirmed fresh before the first
+          // request fires — not fire-and-forget.
           const headers = await buildClientAuthHeaders(undefined, {
-            bridgeMode: "background",
+            bridgeMode: "await",
           });
           let res = await fetch(requestUrl, {
             method: "GET",
@@ -87,13 +89,12 @@ function SuccessInner() {
 
         let { res, data } = await readStatus();
         if (cancelled) return;
-        setStatus(data);
 
-        if (res.status === 401) {
-          router.replace(
-            `/auth/continue?next=${encodeURIComponent(`/generate/success?session_id=${encodeURIComponent(sid)}`)}`
-          );
-          return;
+        // Only surface status to the UI on a non-auth-error response. Showing
+        // "Authentication required" as an error would be confusing — auth
+        // recovery is handled internally and the poll will retry naturally.
+        if (res.status !== 401) {
+          setStatus(data);
         }
 
         if (res.ok && data.ok && data.rollout_id) {

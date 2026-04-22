@@ -13,6 +13,7 @@ function isProtectedApiPath(pathname: string): boolean {
 function isPageSessionRefreshPath(pathname: string): boolean {
   return (
     pathname === "/generate" ||
+    pathname === "/generate/success" ||
     pathname === "/demo/generate" ||
     pathname === "/auth/confirmed" ||
     pathname === "/login" ||
@@ -111,6 +112,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 export const config = {
   matcher: [
     "/generate",
+    "/generate/success",
     "/demo/generate",
     "/auth/confirmed",
     "/rollouts/:path*",

@@ -58,6 +58,17 @@ async function getBridgeableBrowserSession(): Promise<{
           refreshToken: data.session.refresh_token,
         };
       }
+
+      // Refresh failed but the existing AT might still have seconds left.
+      // The bridge-session route validates it independently with getUser(),
+      // so send it rather than giving up entirely.
+      if (session.access_token) {
+        cacheBrowserSession(session);
+        return {
+          accessToken: session.access_token,
+          refreshToken: session.refresh_token,
+        };
+      }
     }
   } catch {
     // Fall through to cached-session recovery.
