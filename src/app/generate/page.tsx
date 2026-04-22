@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { bridgeBrowserSessionToServer } from "@/lib/browser-auth-bridge";
 import { getCachedBrowserSession } from "@/lib/browser-session-cache";
@@ -1041,6 +1041,7 @@ function GeneratePageInner() {
     | { step: "finalize_deferred"; output: EngineOutput; inputs: FormState };
 
   const [stage, setStage] = useState<Stage>({ step: "intake" });
+  const hasNavigatedBack = useRef(false);
   const [resumeLoading, setResumeLoading] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
 
@@ -1108,7 +1109,7 @@ function GeneratePageInner() {
     let active = true;
 
     async function resumeFinalizeStage() {
-      if (!shouldResumeFinalize || stage.step !== "intake") return;
+      if (!shouldResumeFinalize || stage.step !== "intake" || hasNavigatedBack.current) return;
       setResumeError(null);
       setResumeLoading(true);
       try {
@@ -1166,7 +1167,10 @@ function GeneratePageInner() {
         inputs={stage.inputs}
         initialIdentity={prefill.identity}
         showDemoCta={demoQueryEnabled}
-        onBackToQuestions={() => setStage({ step: "intake" })}
+        onBackToQuestions={() => {
+          hasNavigatedBack.current = true;
+          setStage({ step: "intake" });
+        }}
       />
     </>
   );
