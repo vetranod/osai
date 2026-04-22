@@ -212,7 +212,8 @@ function sectionHtml(artifact: ArtifactRow, rollout: RolloutMeta, index: number)
   `;
 }
 
-const PRINT_CSS = `
+function getPrintCss(pageSize: string): string {
+  return `
   @page { size: ${pageSize}; margin: 14mm 14mm 16mm; }
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -282,7 +283,8 @@ const PRINT_CSS = `
 
   .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #D7DFEB; font-size: 10px; line-height: 1.7; color: #526684; display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
   .footer-site { color: #526684; font-weight: 600; flex-shrink: 0; }
-`;
+`;}
+
 
 function extractIndustryVertical(artifacts: ArtifactRow[]): string | null {
   const profile = artifacts.find((a) => a.artifact_type === "PROFILE");
@@ -320,7 +322,7 @@ export function buildPacketDocumentHtml(
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Governance Framework Packet | ${escapeHtml(rollout.id)}</title>
-    <style>${PRINT_CSS}</style>
+    <style>${getPrintCss(pageSize)}</style>
   </head>
   <body>
     <main class="document">
