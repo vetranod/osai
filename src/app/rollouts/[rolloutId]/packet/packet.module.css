@@ -12,8 +12,48 @@
 .actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+.formatToggle {
+  display: flex;
+  border: 1px solid #cfd8e5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.formatOption,
+.formatActive {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.formatOption {
+  background: #fff;
+  color: #526684;
+}
+
+.formatOption:hover:not(:disabled) {
+  background: #f4f7fb;
+  color: #334b71;
+}
+
+.formatActive {
+  background: #102345;
+  color: #fff;
+}
+
+.formatOption:disabled,
+.formatActive:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .printButton,

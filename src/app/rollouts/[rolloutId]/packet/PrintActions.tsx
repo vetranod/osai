@@ -18,10 +18,13 @@ function getErrorMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
+type PageFormat = "letter" | "a4";
+
 export function PrintActions({ rolloutId }: { rolloutId: string }) {
   const router = useRouter();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
+  const [pageFormat, setPageFormat] = useState<PageFormat>("letter");
 
   async function handleBackToDashboard(): Promise<void> {
     if (isReturning) return;
@@ -63,7 +66,9 @@ export function PrintActions({ rolloutId }: { rolloutId: string }) {
         bridgeMode: "background",
       });
 
-      let response = await fetch(`/api/rollouts/${rolloutId}/packet/pdf`, {
+      const pdfUrl = `/api/rollouts/${rolloutId}/packet/pdf?format=${pageFormat}`;
+
+      let response = await fetch(pdfUrl, {
         credentials: "include",
         cache: "no-store",
         headers,
@@ -75,7 +80,7 @@ export function PrintActions({ rolloutId }: { rolloutId: string }) {
           headers = await buildClientAuthHeaders(undefined, {
             preferServerToken: true,
           });
-          response = await fetch(`/api/rollouts/${rolloutId}/packet/pdf`, {
+          response = await fetch(pdfUrl, {
             credentials: "include",
             cache: "no-store",
             headers,
@@ -130,6 +135,24 @@ export function PrintActions({ rolloutId }: { rolloutId: string }) {
 
   return (
     <div className={styles.actions}>
+      <div className={styles.formatToggle}>
+        <button
+          type="button"
+          className={pageFormat === "letter" ? styles.formatActive : styles.formatOption}
+          onClick={() => setPageFormat("letter")}
+          disabled={isGeneratingPdf}
+        >
+          Letter
+        </button>
+        <button
+          type="button"
+          className={pageFormat === "a4" ? styles.formatActive : styles.formatOption}
+          onClick={() => setPageFormat("a4")}
+          disabled={isGeneratingPdf}
+        >
+          A4
+        </button>
+      </div>
       <button
         type="button"
         className={styles.printButton}

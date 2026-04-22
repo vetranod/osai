@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 
-import { buildPacketDocumentHtml } from "@/app/rollouts/[rolloutId]/packet/printDocument";
+import { buildPacketDocumentHtml, type PageFormat } from "@/app/rollouts/[rolloutId]/packet/printDocument";
 import type {
   ArtifactRow,
   ArtifactType,
@@ -131,7 +131,7 @@ async function getPacketExportData(rolloutId: string): Promise<PacketExportData 
   };
 }
 
-async function renderPacketPdfBuffer(documentHtml: string): Promise<Buffer> {
+async function renderPacketPdfBuffer(documentHtml: string, pageFormat: PageFormat): Promise<Buffer> {
   const browser = await launchPacketPdfBrowser();
 
   try {
@@ -141,7 +141,7 @@ async function renderPacketPdfBuffer(documentHtml: string): Promise<Buffer> {
     });
 
     const pdf = await page.pdf({
-      format: "Letter",
+      format: pageFormat === "a4" ? "A4" : "Letter",
       printBackground: true,
       preferCSSPageSize: true,
       displayHeaderFooter: false,
@@ -178,12 +178,16 @@ export async function GET(
       return Response.json({ ok: false, message: "Packet is not ready for export yet." }, { status: 409 });
     }
 
+    const rawFormat = url.searchParams.get("format");
+    const pageFormat: PageFormat = rawFormat === "a4" ? "a4" : "letter";
+
     const packetHtml = buildPacketDocumentHtml(packetData.rollout, packetData.artifacts, {
       autoPrint: true,
+      pageFormat,
     });
 
     try {
-      const pdfBuffer = await renderPacketPdfBuffer(packetHtml);
+      const pdfBuffer = await renderPacketPdfBuffer(packetHtml, pageFormat);
 
       return new Response(new Uint8Array(pdfBuffer), {
         status: 200,

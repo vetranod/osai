@@ -213,7 +213,7 @@ function sectionHtml(artifact: ArtifactRow, rollout: RolloutMeta, index: number)
 }
 
 const PRINT_CSS = `
-  @page { size: Letter portrait; margin: 14mm 14mm 16mm; }
+  @page { size: ${pageSize}; margin: 14mm 14mm 16mm; }
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #fff; color: #102345; font-family: "Inter", "Segoe UI", Arial, sans-serif; }
@@ -290,12 +290,16 @@ function extractIndustryVertical(artifacts: ArtifactRow[]): string | null {
   return typeof raw === "string" && raw.length > 0 ? raw : null;
 }
 
+export type PageFormat = "letter" | "a4";
+
 export function buildPacketDocumentHtml(
   rollout: RolloutMeta,
   artifacts: ArtifactRow[],
-  options?: { autoPrint?: boolean }
+  options?: { autoPrint?: boolean; pageFormat?: PageFormat }
 ): string {
   const autoPrint = options?.autoPrint ?? false;
+  const pageFormat = options?.pageFormat ?? "letter";
+  const pageSize = pageFormat === "a4" ? "A4 portrait" : "Letter portrait";
   const industryVertical = extractIndustryVertical(artifacts);
   const contentsHtml = artifacts
     .map(
