@@ -15,7 +15,7 @@
 
 import type { SensitivityTier } from "@/governance/content/sensitivityTier";
 import type { ReviewDepth, RolloutMode } from "@/decision-engine/engine";
-import type { LeadershipPosture } from "@/decision-engine/options";
+import type { LeadershipPosture, PrimaryGoal, IndustryVertical } from "@/decision-engine/options";
 
 export type Clause = Readonly<{ text: string }>;
 
@@ -277,4 +277,142 @@ export function getExpansionCriteria(
   return {
     text: "Expansion may proceed when review compliance meets defined thresholds, error rates remain within acceptable limits, and no active escalation events remain unresolved. Where regulated information is involved, leadership approval is required prior to expansion regardless of posture. Where leadership posture is cautious, expansion requires formal review prior to authorization.",
   };
+}
+
+// ------------------------------
+// 12. External Facing Disclosure
+// Driver: primary_goal (external-facing goals only)
+// Returns null for internal goals — caller skips section.
+// Surface: POLICY S7
+// ------------------------------
+
+const EXTERNAL_FACING_DISCLOSURE: Readonly<Partial<Record<PrimaryGoal, Clause>>> = {
+  MARKETING_CONTENT: {
+    text: "AI-assisted content in marketing materials must be reviewed and approved before external release. Employees are responsible for ensuring that AI-generated text, images, or media does not misrepresent firm capabilities, project history, or published claims. Substantive AI contributions to public-facing materials must be confirmed accurate before distribution.",
+  },
+  SALES_PROPOSALS: {
+    text: "AI-assisted language in proposals and sales materials must be reviewed for accuracy before submission. Claims regarding firm experience, project outcomes, technical qualifications, and pricing must be independently verified. AI-generated proposal content may not be submitted as final without documented review and sign-off by a qualified reviewer.",
+  },
+  CLIENT_COMMUNICATION: {
+    text: "AI-assisted drafts in client-facing correspondence must be reviewed before transmission. The sender is accountable for confirming that the content is accurate, appropriately attributed, and consistent with firm communication standards. AI may not be used to represent positions, commitments, or deliverable terms not yet reviewed by qualified firm personnel.",
+  },
+};
+
+export function getExternalFacingDisclosure(goal: PrimaryGoal): Clause | null {
+  return EXTERNAL_FACING_DISCLOSURE[goal] ?? null;
+}
+
+// ------------------------------
+// 13. External Representation Restrictions
+// Driver: primary_goal (external-facing goals only)
+// Returns null for internal goals — caller skips section.
+// Surface: POLICY S7
+// ------------------------------
+
+const EXTERNAL_REPRESENTATION_RESTRICTIONS: Readonly<Partial<Record<PrimaryGoal, Clause>>> = {
+  MARKETING_CONTENT: {
+    text: "AI tools may not be used to fabricate project experience, generate synthetic imagery presented as actual firm work, or produce content implying conditions, capabilities, or outcomes that do not exist. AI-generated visuals must not be presented as representative of firm projects, client environments, or real-world conditions unless explicitly disclosed.",
+  },
+  SALES_PROPOSALS: {
+    text: "AI tools may not be used to fabricate project references, misrepresent scope or technical qualifications, or imply experience with project types the firm has not performed. Proposal language must accurately represent the firm's capabilities and prior work. AI may not generate guarantees, warranty language, or commitment terms.",
+  },
+  CLIENT_COMMUNICATION: {
+    text: "AI tools may not be used to misrepresent firm positions, generate false commitments, or imply technical conclusions not confirmed by qualified personnel. AI-assisted correspondence must not contain claims of expertise, deliverable scope, or timeline commitments that have not been reviewed and approved.",
+  },
+};
+
+export function getExternalRepresentationRestrictions(goal: PrimaryGoal): Clause | null {
+  return EXTERNAL_REPRESENTATION_RESTRICTIONS[goal] ?? null;
+}
+
+// ------------------------------
+// 14. IP Ownership Acknowledgment
+// Driver: sensitivity_tier
+// Surface: POLICY S8
+// ------------------------------
+
+const IP_OWNERSHIP_ACKNOWLEDGMENT: Readonly<Record<SensitivityTier, Clause>> = {
+  LOW: {
+    text: "Employees should be aware that AI-generated content may not receive the same intellectual property protections as original firm work. AI outputs used in firm deliverables must comply with applicable platform terms of service.",
+  },
+  CLIENT: {
+    text: "AI-generated content incorporated into client deliverables must comply with the applicable platform's terms of service and any client-specific IP requirements. Employees must not submit client-owned content to public AI systems without documented authorization.",
+  },
+  HIGH: {
+    text: "AI tools may not produce output that incorporates proprietary firm data in a way that could constitute unauthorized disclosure. AI-generated outputs derived from financial or operational records may not be treated as firm intellectual property without review of the applicable platform terms.",
+  },
+  REGULATED: {
+    text: "AI-generated content involving regulated or protected information must comply with all applicable data protection, licensing, and ownership requirements. Outputs derived from regulated inputs are subject to the same handling requirements as the underlying information and may not be treated as unencumbered firm property.",
+  },
+};
+
+export function getIpOwnershipAcknowledgment(tier: SensitivityTier): Clause {
+  return IP_OWNERSHIP_ACKNOWLEDGMENT[tier];
+}
+
+// ------------------------------
+// 15. Media AI Controls
+// Driver: primary_goal (MARKETING_CONTENT only)
+// Single block — callers check goal before invoking.
+// Surface: POLICY S8
+// ------------------------------
+
+const MEDIA_AI_CONTROLS: Clause = {
+  text: "AI-generated images, video, audio, and content sourced from AI-integrated stock platforms require additional review before external use. AI-generated visuals must not imply real project conditions, site environments, or client assets unless clearly and explicitly disclosed. Third-party platforms incorporating AI-generated media must be used in compliance with platform licensing terms and firm brand standards. AI-generated media that creates confusion, misrepresentation, or reputational risk is not permitted for external publication.",
+};
+
+export function getMediaAiControls(): Clause {
+  return MEDIA_AI_CONTROLS;
+}
+
+// ------------------------------
+// 16. Industry Vertical Supplement
+// Driver: industry_vertical + primary_goal
+// Returns null when no supplement exists for the combination.
+// Surface: POLICY S7 (appended to external content section)
+// ------------------------------
+
+export function getIndustryVerticalSupplement(
+  vertical: IndustryVertical | undefined,
+  goal: PrimaryGoal
+): Clause | null {
+  if (!vertical || vertical === "GENERAL") return null;
+
+  const isExternalFacing =
+    goal === "MARKETING_CONTENT" ||
+    goal === "SALES_PROPOSALS" ||
+    goal === "CLIENT_COMMUNICATION";
+
+  if (!isExternalFacing) return null;
+
+  switch (vertical) {
+    case "ENGINEERING_CONSULTING":
+      return {
+        text: "AI tools may not be used to represent professional engineering credentials, certifications, project experience, or technical outcomes that have not been independently validated. Content representing firm project work must accurately reflect actual scope, conditions, and results. Professional standards of care and obligations under applicable engineering ethics codes apply to all AI-assisted external communications.",
+      };
+    case "LEGAL_SERVICES":
+      return {
+        text: "AI tools may not be used in a manner that constitutes the unauthorized practice of law, creates implied attorney-client relationships, or misrepresents the nature or scope of legal services provided. Confidentiality obligations under applicable rules of professional conduct apply to all AI-assisted work involving client or matter information.",
+      };
+    case "FINANCIAL_SERVICES":
+      return {
+        text: "AI tools may not be used to generate investment recommendations, financial projections, or regulatory representations that have not been reviewed by a qualified professional. AI-assisted external communications must comply with applicable disclosure requirements and may not imply regulatory endorsement or guaranteed outcomes.",
+      };
+    case "HEALTHCARE":
+      return {
+        text: "AI tools may not be used to generate clinical recommendations, diagnostic claims, or representations of patient outcomes for external communications. AI-assisted content must not imply medical endorsement, regulatory approval, or clinical evidence not supported by documented sources.",
+      };
+    case "MARKETING_AGENCY":
+      return {
+        text: "AI tools may not be used to fabricate performance claims, attribution data, or case study results in materials representing firm work to clients or prospects. AI-generated creative assets presented as original firm work must be disclosed to the client when required by engagement terms.",
+      };
+    case "REAL_ESTATE":
+      return {
+        text: "AI tools may not be used to generate property descriptions, market valuations, or condition representations that have not been verified by a licensed professional. AI-assisted content must not imply regulatory endorsement, licensure, or property conditions that have not been independently confirmed.",
+      };
+    default: {
+      const _never: never = vertical;
+      return _never;
+    }
+  }
 }

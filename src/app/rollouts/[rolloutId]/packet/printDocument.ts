@@ -284,12 +284,19 @@ const PRINT_CSS = `
   .footer-site { color: #526684; font-weight: 600; flex-shrink: 0; }
 `;
 
+function extractIndustryVertical(artifacts: ArtifactRow[]): string | null {
+  const profile = artifacts.find((a) => a.artifact_type === "PROFILE");
+  const raw = profile?.content_json?.industry_vertical;
+  return typeof raw === "string" && raw.length > 0 ? raw : null;
+}
+
 export function buildPacketDocumentHtml(
   rollout: RolloutMeta,
   artifacts: ArtifactRow[],
   options?: { autoPrint?: boolean }
 ): string {
   const autoPrint = options?.autoPrint ?? false;
+  const industryVertical = extractIndustryVertical(artifacts);
   const contentsHtml = artifacts
     .map(
       (artifact, index) => `
@@ -367,6 +374,7 @@ export function buildPacketDocumentHtml(
           <!-- Summary grid -->
           ${fieldGridHtml([
             ["Primary Goal", rollout.primary_goal],
+            ...(industryVertical ? [["Firm Type", industryVertical] as [string, unknown]] : []),
             ["Sensitivity Tier", rollout.sensitivity_tier],
             ["Review Depth", rollout.review_depth],
             ["Policy Tone", rollout.policy_tone],

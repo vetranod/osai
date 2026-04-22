@@ -34,6 +34,11 @@ import {
   getStabilizationControls,
   getRollbackAdjustmentTrigger,
   getExpansionCriteria,
+  getExternalFacingDisclosure,
+  getExternalRepresentationRestrictions,
+  getIpOwnershipAcknowledgment,
+  getMediaAiControls,
+  getIndustryVerticalSupplement,
 } from "@/governance/content/clauseLibrary";
 
 // ------------------------------
@@ -102,6 +107,7 @@ export function generateProfileArtifact(ctx: ArtifactInputs): Record<string, unk
     adoption_state: inputs.adoption_state,
     sensitivity_anchor: inputs.sensitivity_anchor,
     leadership_posture: inputs.leadership_posture,
+    industry_vertical: inputs.industry_vertical ?? null,
     maturity_state: outputs.maturity_state,
     primary_risk_driver: outputs.primary_risk_driver,
     needs_stabilization: outputs.needs_stabilization,
@@ -783,18 +789,33 @@ export function generatePolicyArtifact(ctx: ArtifactInputs): Record<string, unkn
   const { inputs, outputs, identity } = ctx;
   const tier = outputs.sensitivity_tier;
 
+  const isExternalFacing =
+    inputs.primary_goal === "MARKETING_CONTENT" ||
+    inputs.primary_goal === "SALES_PROPOSALS" ||
+    inputs.primary_goal === "CLIENT_COMMUNICATION";
+
+  const sections: Record<string, unknown>[] = [
+    buildPurposeAndScope(outputs.policy_tone, inputs.primary_goal),
+    buildPermittedUses(outputs.policy_tone, tier),
+    buildProhibitedUses(outputs.policy_tone, tier),
+    buildReviewAndOversight(outputs.review_depth, tier, outputs.policy_tone, identity),
+    buildDataHandlingStandards(outputs.review_depth, tier, identity),
+    buildPolicyModificationClause(outputs.policy_tone, tier),
+  ];
+
+  if (isExternalFacing) {
+    sections.push(buildExternalContentStandards(inputs.primary_goal, inputs.industry_vertical));
+  }
+
+  if (isExternalFacing || tier === "CLIENT" || tier === "HIGH" || tier === "REGULATED") {
+    sections.push(buildIpAndMediaStandards(tier, inputs.primary_goal));
+  }
+
   return {
     artifact_type:  "POLICY",
     schema_version: 2,
     policy_tone:    outputs.policy_tone,
-    sections: [
-      buildPurposeAndScope(outputs.policy_tone, inputs.primary_goal),
-      buildPermittedUses(outputs.policy_tone, tier),
-      buildProhibitedUses(outputs.policy_tone, tier),
-      buildReviewAndOversight(outputs.review_depth, tier, outputs.policy_tone, identity),
-      buildDataHandlingStandards(outputs.review_depth, tier, identity),
-      buildPolicyModificationClause(outputs.policy_tone, tier),
-    ],
+    sections,
   };
 }
 
@@ -907,6 +928,63 @@ function buildPolicyModificationClause(
   return {
     id:    "policy_modification_clause",
     title: "Policy Modification Clause",
+    items,
+  };
+}
+
+// ------------------------------
+// POLICY S7: External Content Standards
+// Appears only when primary_goal is external-facing.
+// ------------------------------
+
+function buildExternalContentStandards(
+  goal: DecisionInputs["primary_goal"],
+  vertical: DecisionInputs["industry_vertical"]
+): Record<string, unknown> {
+  const items: Array<Record<string, unknown>> = [];
+
+  const disclosure = getExternalFacingDisclosure(goal);
+  if (disclosure) {
+    items.push({ label: "Disclosure standard", value: disclosure.text });
+  }
+
+  const restrictions = getExternalRepresentationRestrictions(goal);
+  if (restrictions) {
+    items.push({ label: "Representation restrictions", value: restrictions.text });
+  }
+
+  const supplement = getIndustryVerticalSupplement(vertical, goal);
+  if (supplement) {
+    items.push({ label: "Professional standards", value: supplement.text, conditional: true });
+  }
+
+  return {
+    id:    "external_content_standards",
+    title: "External Content Standards",
+    items,
+  };
+}
+
+// ------------------------------
+// POLICY S8: IP and Media Standards
+// Appears for external-facing goals and CLIENT/HIGH/REGULATED tiers.
+// ------------------------------
+
+function buildIpAndMediaStandards(
+  tier: DecisionOutput["sensitivity_tier"],
+  goal: DecisionInputs["primary_goal"]
+): Record<string, unknown> {
+  const items: Array<Record<string, unknown>> = [
+    { label: "IP and ownership", value: getIpOwnershipAcknowledgment(tier).text },
+  ];
+
+  if (goal === "MARKETING_CONTENT") {
+    items.push({ label: "AI media controls", value: getMediaAiControls().text, conditional: true });
+  }
+
+  return {
+    id:    "ip_and_media_standards",
+    title: "IP and Media Standards",
     items,
   };
 }

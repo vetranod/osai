@@ -44,11 +44,22 @@ const LEADERSHIP_OPTIONS = [
   { value: "CAUTIOUS",     label: "Carefully",     desc: "We want thorough controls before expanding AI use" },
 ] as const;
 
+const INDUSTRY_VERTICAL_OPTIONS = [
+  { value: "ENGINEERING_CONSULTING", label: "Engineering & Consulting", desc: "Architecture, engineering, technical consulting, and AEC firms" },
+  { value: "LEGAL_SERVICES",         label: "Legal Services",           desc: "Law firms, legal departments, and legal services providers" },
+  { value: "FINANCIAL_SERVICES",     label: "Financial Services",       desc: "Accounting, financial advisory, banking, and investment firms" },
+  { value: "HEALTHCARE",             label: "Healthcare",               desc: "Medical practices, health systems, and healthcare services" },
+  { value: "MARKETING_AGENCY",       label: "Marketing & Creative",     desc: "Marketing agencies, advertising, design, and creative services" },
+  { value: "REAL_ESTATE",            label: "Real Estate",              desc: "Real estate firms, property management, and brokerage" },
+  { value: "GENERAL",                label: "Other / General",          desc: "Professional services firms not listed above" },
+] as const;
+
 // ---- Types ----
 
 type FormState = {
   primary_goal: string;
   adoption_state: string;
+  industry_vertical: string;
   sensitivity_anchor: string;
   leadership_posture: string;
 };
@@ -123,6 +134,7 @@ function loadGenerateDraft(): PrefillData | null {
       inputs: {
         primary_goal: parsed.inputs?.primary_goal ?? "",
         adoption_state: parsed.inputs?.adoption_state ?? "",
+        industry_vertical: parsed.inputs?.industry_vertical ?? "",
         sensitivity_anchor: parsed.inputs?.sensitivity_anchor ?? "",
         leadership_posture: parsed.inputs?.leadership_posture ?? "",
       },
@@ -171,6 +183,7 @@ function buildGenerateResumePath(inputs: FormState, identity: FinalizeState): st
   params.set("resume", "finalize");
   params.set("primary_goal", inputs.primary_goal);
   params.set("adoption_state", inputs.adoption_state);
+  if (inputs.industry_vertical) params.set("industry_vertical", inputs.industry_vertical);
   params.set("sensitivity_anchor", inputs.sensitivity_anchor);
   params.set("leadership_posture", inputs.leadership_posture);
   if (identity.initiative_lead_name) params.set("initiative_lead_name", identity.initiative_lead_name);
@@ -188,6 +201,7 @@ function hasCompleteIntake(inputs: FormState): boolean {
   return Boolean(
     inputs.primary_goal &&
     inputs.adoption_state &&
+    inputs.industry_vertical &&
     inputs.sensitivity_anchor &&
     inputs.leadership_posture
   );
@@ -210,6 +224,7 @@ function readPrefill(searchParams: { get(name: string): string | null }): Prefil
     inputs: {
       primary_goal: searchParams.get("primary_goal") ?? "",
       adoption_state: searchParams.get("adoption_state") ?? "",
+      industry_vertical: searchParams.get("industry_vertical") ?? "",
       sensitivity_anchor: searchParams.get("sensitivity_anchor") ?? "",
       leadership_posture: searchParams.get("leadership_posture") ?? "",
     },
@@ -242,6 +257,11 @@ const WIZARD_STEPS: Array<{
     field: "adoption_state",
     category: "Current AI Usage",
     question: "How widely are AI tools already being used today?",
+  },
+  {
+    field: "industry_vertical",
+    category: "Firm Type",
+    question: "What best describes your firm?",
   },
   {
     field: "sensitivity_anchor",
@@ -477,6 +497,30 @@ function IntakeForm({
           {wizardStep === 2 && (
             <fieldset className={styles.fieldset}>
               <div className={styles.optionList}>
+                {INDUSTRY_VERTICAL_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`${styles.optionRow} ${form.industry_vertical === opt.value ? styles.optionRowSelected : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="industry_vertical"
+                      value={opt.value}
+                      checked={form.industry_vertical === opt.value}
+                      onChange={(e) => setForm((f) => ({ ...f, industry_vertical: e.target.value }))}
+                      className={styles.radioHidden}
+                    />
+                    <span className={styles.optionLabel}>{opt.label}</span>
+                    <span className={styles.optionDesc}>{opt.desc}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
+          {wizardStep === 3 && (
+            <fieldset className={styles.fieldset}>
+              <div className={styles.optionList}>
                 {SENSITIVITY_OPTIONS.map((opt) => (
                   <label
                     key={opt.value}
@@ -498,7 +542,7 @@ function IntakeForm({
             </fieldset>
           )}
 
-          {wizardStep === 3 && (
+          {wizardStep === 4 && (
             <fieldset className={styles.fieldset}>
               <div className={styles.optionGrid3}>
                 {LEADERSHIP_OPTIONS.map((opt) => (

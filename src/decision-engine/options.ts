@@ -1,3 +1,12 @@
+export type IndustryVertical =
+  | "ENGINEERING_CONSULTING"
+  | "LEGAL_SERVICES"
+  | "FINANCIAL_SERVICES"
+  | "HEALTHCARE"
+  | "MARKETING_AGENCY"
+  | "REAL_ESTATE"
+  | "GENERAL";
+
 export type PrimaryGoal =
   | "CLIENT_COMMUNICATION"
   | "INTERNAL_DOCUMENTATION"
@@ -30,6 +39,7 @@ export type DecisionInputs = Readonly<{
   adoption_state: AdoptionState;
   sensitivity_anchor: SensitivityAnchor;
   leadership_posture: LeadershipPosture;
+  industry_vertical?: IndustryVertical;
 }>;
 
 export type Option<T extends string> = Readonly<{
@@ -61,6 +71,16 @@ export const SENSITIVITY_ANCHOR_OPTIONS: ReadonlyArray<Option<SensitivityAnchor>
   { value: "CLIENT_MATERIALS", label: "Client materials", order: 3 },
   { value: "FINANCIAL_OPERATIONAL_RECORDS", label: "Financial/operational records", order: 4 },
   { value: "REGULATED_CONFIDENTIAL", label: "Regulated/confidential data", order: 5 },
+] as const;
+
+export const INDUSTRY_VERTICAL_OPTIONS: ReadonlyArray<Option<IndustryVertical>> = [
+  { value: "ENGINEERING_CONSULTING", label: "Engineering & Consulting" },
+  { value: "LEGAL_SERVICES",         label: "Legal Services" },
+  { value: "FINANCIAL_SERVICES",     label: "Financial Services" },
+  { value: "HEALTHCARE",             label: "Healthcare" },
+  { value: "MARKETING_AGENCY",       label: "Marketing & Creative" },
+  { value: "REAL_ESTATE",            label: "Real Estate" },
+  { value: "GENERAL",                label: "Other / General" },
 ] as const;
 
 export const LEADERSHIP_POSTURE_OPTIONS: ReadonlyArray<Option<LeadershipPosture>> = [
@@ -117,6 +137,7 @@ const PRIMARY_GOAL_VALUES = valuesOf(PRIMARY_GOAL_OPTIONS);
 const ADOPTION_STATE_VALUES = valuesOf(ADOPTION_STATE_OPTIONS);
 const SENSITIVITY_ANCHOR_VALUES = valuesOf(SENSITIVITY_ANCHOR_OPTIONS);
 const LEADERSHIP_POSTURE_VALUES = valuesOf(LEADERSHIP_POSTURE_OPTIONS);
+const INDUSTRY_VERTICAL_VALUES = valuesOf(INDUSTRY_VERTICAL_OPTIONS);
 
 function missingField(field: keyof DecisionInputs): ValidationError {
   return {
@@ -150,6 +171,7 @@ export function validateDecisionInputs(body: unknown): ValidationResult {
   const adoption_state = body.adoption_state;
   const sensitivity_anchor = body.sensitivity_anchor;
   const leadership_posture = body.leadership_posture;
+  const industry_vertical = body.industry_vertical;
 
   if (primary_goal === undefined) return missingField("primary_goal");
   if (adoption_state === undefined) return missingField("adoption_state");
@@ -178,6 +200,13 @@ export function validateDecisionInputs(body: unknown): ValidationResult {
     return invalidValue("leadership_posture", LEADERSHIP_POSTURE_VALUES);
   }
 
+  if (
+    industry_vertical !== undefined &&
+    (typeof industry_vertical !== "string" || !INDUSTRY_VERTICAL_VALUES.includes(industry_vertical as IndustryVertical))
+  ) {
+    return invalidValue("industry_vertical" as keyof DecisionInputs, INDUSTRY_VERTICAL_VALUES);
+  }
+
   return {
     ok: true,
     value: {
@@ -185,6 +214,7 @@ export function validateDecisionInputs(body: unknown): ValidationResult {
       adoption_state: adoption_state as AdoptionState,
       sensitivity_anchor: sensitivity_anchor as SensitivityAnchor,
       leadership_posture: leadership_posture as LeadershipPosture,
+      ...(industry_vertical !== undefined && { industry_vertical: industry_vertical as IndustryVertical }),
     },
   };
 }

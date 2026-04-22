@@ -229,6 +229,11 @@ export default function RolloutPacketPage() {
   );
   const [rollout, setRollout] = useState<RolloutMeta | null>(null);
   const [artifacts, setArtifacts] = useState<ArtifactRow[]>([]);
+  const industryVertical = useMemo(() => {
+    const profile = artifacts.find((a) => a.artifact_type === "PROFILE");
+    const raw = profile?.content_json?.industry_vertical;
+    return typeof raw === "string" && raw.length > 0 ? raw : null;
+  }, [artifacts]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -382,6 +387,7 @@ export default function RolloutPacketPage() {
           <FieldGrid
             rows={[
               ["Primary Goal", rollout.primary_goal],
+              ...(industryVertical ? [["Firm Type", industryVertical] as [string, unknown]] : []),
               ["Sensitivity Tier", rollout.sensitivity_tier],
               ["Review Depth", rollout.review_depth],
               ["Policy Tone", rollout.policy_tone],
