@@ -1034,7 +1034,7 @@ function GeneratePageInner() {
     return queryPrefill;
   }, [queryPrefill, storedPrefill]);
   const restoredFromDraft = !hasCompleteIntake(queryPrefill.inputs) && hasCompleteIntake(prefill.inputs);
-  const shouldResumeFinalize = (resume === "finalize" || restoredFromDraft) && hasCompleteIntake(prefill.inputs);
+  const shouldResumeFinalize = resume === "finalize" && hasCompleteIntake(prefill.inputs);
 
   type Stage =
     | { step: "intake" }
